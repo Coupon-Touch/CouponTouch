@@ -3,6 +3,9 @@ import { ApolloServer } from '@apollo/server';
 import bodyParser from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
 import cors from 'cors';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -21,6 +24,13 @@ import { validateToken } from './back-end/jwt.js';
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
+
+
+// Required to get the current directory in ES6 modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+app.use(express.static(join(__dirname, './client/dist')));
 
 async function startServer() {
   try {
