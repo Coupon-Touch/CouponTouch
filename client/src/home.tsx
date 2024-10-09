@@ -61,29 +61,29 @@ export default function Home() {
   );
 }
 
-function Section(props: { image: string; title: string; description: string }) {
-  return (
-    <>
-      <section className="w-full  flex justify-center pb-36">
-        <div className="container ">
-          <div className="flex ">
-            <div>
-              <img src={props.image} />
-            </div>
-            <div className="w-full flex justify-center items-center">
-              <h2 className="text-3xl">{props.title}</h2>
-            </div>
-          </div>
-          <div className="flex justify-end ">
-            <div className="w-full md:w-1/2 flex flex-col gap-4">
-              <div className="bg-black w-full h-1"></div>
-              <div>
-                <span>{props.description}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
+// function Section(props: { image: string; title: string; description: string }) {
+//   return (
+//     <>
+//       <section className="w-full  flex justify-center pb-36">
+//         <div className="container ">
+//           <div className="flex ">
+//             <div>
+//               <img src={props.image} />
+//             </div>
+//             <div className="w-full flex justify-center items-center">
+//               <h2 className="text-3xl">{props.title}</h2>
+//             </div>
+//           </div>
+//           <div className="flex justify-end ">
+//             <div className="w-full md:w-1/2 flex flex-col gap-4">
+//               <div className="bg-black w-full h-1"></div>
+//               <div>
+//                 <span>{props.description}</span>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </section>
+//     </>
+//   );
+// }
