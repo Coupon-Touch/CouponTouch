@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --env-file=.env server.js",
-    "dev": "nodemon --env-file=.env server.js"
+    "dev": "nodemon --env-file=.env server.js",
+    "build":"cd client && npm i && npm run build"
   },
   "author": "surya, aryan, arun",
   "license": "ISC",
