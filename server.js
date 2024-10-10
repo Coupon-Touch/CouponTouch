@@ -16,8 +16,6 @@ import { connectToDatabase } from './back-end/config/database.js';
 // Type Definitions
 import { typeDefs, resolvers } from './back-end/graphql.js';
 
-// User Models
-
 // JWT Validators
 import { validateToken } from './back-end/jwt.js';
 
@@ -25,11 +23,11 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-
 // Required to get the current directory in ES6 modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Serve static files from React build directory
 app.use(express.static(join(__dirname, './client/dist')));
 
 async function startServer() {
@@ -68,6 +66,12 @@ async function startServer() {
           },
         })
       );
+
+      // Catch-all route for React (after the /api routes)
+      app.get('*', (req, res) => {
+        res.sendFile(join(__dirname, './client/dist/index.html'));
+      });
+
       const PORT = process.env.PORT || 8000;
       app.listen(PORT, () => {
         console.log('Server Up and Running on Port:', PORT);
