@@ -52,7 +52,7 @@ export default function Home() {
       bodyElement.style.backgroundColor = bodyColor;
     };
   }, []);
-
+  // write useEffect
   useEffect(() => {
     if (routeElementRef.current) {
       routeElementRef.current.scrollIntoView({ behavior: 'instant' }); // Scroll to the route element on route change
