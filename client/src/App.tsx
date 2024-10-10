@@ -1,8 +1,9 @@
-import Home from './home'
+import Home from './home/main'
 
 function App() {
   return (
     <>
+      {/* <Home /> */}
       <Home />
     </ >
   )
