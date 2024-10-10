@@ -8,7 +8,8 @@ import { Link, Route, Routes } from 'react-router-dom';
 import GameCard from './gameCard';
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 
 const Games = [
@@ -37,39 +38,50 @@ const Games = [
     image: gamification4
   },
 ]
-
 export default function Home() {
+  const routeElementRef = useRef<HTMLDivElement>(null); // Step 1: Create a ref for route elements
+  const location = useLocation(); // Get current location
+
   useEffect(() => {
     const bodyElement = document.body;
     const computedStyles = getComputedStyle(bodyElement);
     const bodyColor = computedStyles.backgroundColor;
-    bodyElement.style.backgroundColor = "black"
-    return () => {
-      bodyElement.style.backgroundColor = bodyColor
-    }
+    bodyElement.style.backgroundColor = "black";
 
-  })
+    return () => {
+      bodyElement.style.backgroundColor = bodyColor;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (routeElementRef.current) {
+      routeElementRef.current.scrollIntoView({ behavior: 'instant' }); // Scroll to the route element on route change
+    }
+  }, [location]); // Trigger when the location changes
+
   return (
     <>
       <div className='flex justify-center bg-black'>
         <div className="font-mono container flex flex-col w-full min-h-screen bg-black text-white items-center">
-          <Navbar></Navbar>
-          <Routes>
-            <Route path={"/"} element={<Landing />} />
-            {Games.map((game) => (
-              <Route
-                key={game.title}
-                path={game.link}
-                element={
-                  <Section
-                    title={game.title}
-                    description={game.description}
-                    image={game.image} />
-                }
-              />
-
-            ))}
-          </Routes>
+          <Navbar />
+          <div ref={routeElementRef}> {/* Step 2: Attach ref here */}
+            <Routes>
+              <Route path={"/"} element={<Landing />} />
+              {Games.map((game) => (
+                <Route
+                  key={game.title}
+                  path={game.link}
+                  element={
+                    <Section
+                      title={game.title}
+                      description={game.description}
+                      image={game.image}
+                    />
+                  }
+                />
+              ))}
+            </Routes>
+          </div>
           <ContactForm />
           <footer className="mt-8 text-center text-gray-500 text-sm">
             © {(new Date()).getFullYear()} CouponTouch Loyalty Solution. All rights reserved. Terms and conditions apply.
