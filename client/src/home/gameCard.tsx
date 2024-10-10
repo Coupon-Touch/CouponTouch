@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 export default function GameCard(props: { className?: string; image: string; content: string; name: string, link: string }) {
   return (
+    <Link to={props.link}>
     <div className={cn(`rounded-lg transition-all hover:scale-105 hover:border-[1px] p-3 pb-5 bg-gray-900/70 backdrop-blur-lg border-gray-800 cursor-pointer`, props.className)}>
       <div className='h-72 flex justify-center'>
         <img className="rounded-lg object-contain" src={props.image} alt={props.name} />
@@ -21,5 +22,7 @@ export default function GameCard(props: { className?: string; image: string; con
         </Link>
       </div>
     </div>
+    </Link>
+
   );
 }
