@@ -6,7 +6,7 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: './dist', // Output to the /client/dist directory
+    outDir: './dist', // Output to the /front-end/dist directory
   },
   server: {
     proxy: {

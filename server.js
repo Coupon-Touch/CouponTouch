@@ -28,7 +28,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Serve static files from React build directory
-app.use(express.static(join(__dirname, './client/dist')));
+app.use(express.static(join(__dirname, './front-end/dist')));
 
 async function startServer() {
   try {
@@ -69,7 +69,7 @@ async function startServer() {
 
       // Catch-all route for React (after the /api routes)
       app.get('*', (req, res) => {
-        res.sendFile(join(__dirname, './client/dist/index.html'));
+        res.sendFile(join(__dirname, './front-end/dist/index.html'));
       });
 
       const PORT = process.env.PORT || 8000;

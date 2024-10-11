@@ -7,7 +7,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "client/package.json",
+      "src": "front-end/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "dist"
