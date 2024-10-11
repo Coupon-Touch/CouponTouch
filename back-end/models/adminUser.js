@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 /**
  * prospect - Data provided but hasn't paid or hasn't been contacted or has decided to not take subscription when contacted by support
  * subsrciber = Data provided and paid.
@@ -11,3 +13,17 @@
   companyName - string
 
 */
+
+const adminUserSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+export const AdminUser = mongoose.model('AdminUser', adminUserSchema);
