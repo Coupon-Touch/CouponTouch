@@ -22,12 +22,16 @@ export default function Navbar() {
 }
 
 export function ContactUs() {
-  return <>
-    <a href="#contactUs">
-
-      <Button type="submit" className=" bg-orange-500 hover:bg-orange-600  text-white text-lg lg:text-xl py-2 px-4 lg:py-3 lg:px-6 transition-all">
-        Contact Us
-      </Button>
-    </a>
-  </>
+  return (
+    <>
+      <a href="#contactUs">
+        <Button
+          type="submit"
+          className=" bg-orange-500 hover:bg-orange-600  text-white text-lg lg:text-xl py-2 px-4 lg:py-3 lg:px-6 transition-all"
+        >
+          Contact Us
+        </Button>
+      </a>
+    </>
+  );
 }

@@ -2,7 +2,6 @@ import { gql } from 'graphql-tag';
 
 // Model Imports
 
-
 // GraphQL
 export const typeDefs = gql`
   type Query {

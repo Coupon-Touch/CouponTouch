@@ -5,7 +5,7 @@ export const validateToken = token => {
     if (token === null) {
       return { userId: null, isValid: false };
     }
-    
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const currentTime = Math.floor(Date.now() / 1000);

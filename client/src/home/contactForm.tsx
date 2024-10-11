@@ -1,11 +1,11 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useFormik } from "formik";
-import * as Yup from "yup";
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import emailjs from '@emailjs/browser';
-import React from "react";
+import React from 'react';
 
 const EmailJs = {
   SERVICE_ID: 'service_m4qup47',
@@ -18,29 +18,29 @@ export default function ContactForm() {
   const [emailError, setEmailError] = React.useState(false);
   // Form validation schema
   const validationSchema = Yup.object({
-    customer_name: Yup.string().required("Name is required"),
-    email: Yup.string().email("Invalid email address").required("Email is required"),
+    customer_name: Yup.string().required('Name is required'),
+    email: Yup.string()
+      .email('Invalid email address')
+      .required('Email is required'),
     company: Yup.string().nullable(),
-    website: Yup.string().url("Invalid URL").nullable(),
+    website: Yup.string().url('Invalid URL').nullable(),
     message: Yup.string().nullable(),
   });
 
   // Initialize Formik
   const formik = useFormik({
     initialValues: {
-      customer_name: "",
-      email: "",
-      company: "",
-      website: "",
-      message: "",
+      customer_name: '',
+      email: '',
+      company: '',
+      website: '',
+      message: '',
     },
     validationSchema,
     onSubmit: () => {
-
       if (!contactForm.current) return;
       emailjs
         .sendForm(
-
           EmailJs.SERVICE_ID,
           EmailJs.YOUR_TEMPLATE_ID,
           contactForm.current,
@@ -48,36 +48,49 @@ export default function ContactForm() {
         )
         .then(
           () => {
-            alert("Thanks For Contacting Us. We will get back to you soon.")
+            alert('Thanks For Contacting Us. We will get back to you soon.');
             formik.resetForm();
-            setEmailError(false)
+            setEmailError(false);
           },
-          (error) => {
-            setEmailError(true)
+          error => {
+            setEmailError(true);
             console.log('Error: ', error.text);
-
           }
         );
     },
   });
 
   return (
-    <Card id="contactUs" className="mt-12 w-full md:w-auto bg-gray-900/70 backdrop-blur-lg border-gray-800 text-white">
+    <Card
+      id="contactUs"
+      className="mt-12 w-full md:w-auto bg-gray-900/70 backdrop-blur-lg border-gray-800 text-white"
+    >
       <CardContent className="p-6">
         <h4 className="text-2xl font-semibold text-center mb-6">Contact Us</h4>
-        {emailError &&
+        {emailError && (
           <h4 className="text-red-500 text-wrap max-w-96">
             <span className="pr-1">
-
               Something went wrong please contact us by sending a mail to
             </span>
-            <a className="text-blue-500 underline" href="mailto:hello@coupontools.net">hello@coupontools.net</a>
+            <a
+              className="text-blue-500 underline"
+              href="mailto:hello@coupontools.net"
+            >
+              hello@coupontools.net
+            </a>
           </h4>
-        }
-        <form onSubmit={formik.handleSubmit} className="space-y-4 text-black" ref={contactForm}>
+        )}
+        <form
+          onSubmit={formik.handleSubmit}
+          className="space-y-4 text-black"
+          ref={contactForm}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="customer_name" className="text-sm font-medium text-gray-300">
+              <label
+                htmlFor="customer_name"
+                className="text-sm font-medium text-gray-300"
+              >
                 Name
               </label>
               <Input
@@ -90,11 +103,16 @@ export default function ContactForm() {
                 required
               />
               {formik.touched.customer_name && formik.errors.customer_name && (
-                <p className="text-red-500 text-sm">{formik.errors.customer_name}</p>
+                <p className="text-red-500 text-sm">
+                  {formik.errors.customer_name}
+                </p>
               )}
             </div>
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-300">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-300"
+              >
                 Email
               </label>
               <Input
@@ -114,7 +132,10 @@ export default function ContactForm() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="company" className="text-sm font-medium text-gray-300">
+              <label
+                htmlFor="company"
+                className="text-sm font-medium text-gray-300"
+              >
                 Company Name
               </label>
               <Input
@@ -127,7 +148,10 @@ export default function ContactForm() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="website" className="text-sm font-medium text-gray-300">
+              <label
+                htmlFor="website"
+                className="text-sm font-medium text-gray-300"
+              >
                 Company Website
               </label>
               <Input
@@ -145,7 +169,10 @@ export default function ContactForm() {
             </div>
           </div>
           <div className="space-y-2">
-            <label htmlFor="message" className="text-sm font-medium text-gray-300">
+            <label
+              htmlFor="message"
+              className="text-sm font-medium text-gray-300"
+            >
               Comment
             </label>
             <Textarea
@@ -158,7 +185,10 @@ export default function ContactForm() {
               onBlur={formik.handleBlur}
             />
           </div>
-          <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600">
+          <Button
+            type="submit"
+            className="w-full bg-orange-500 hover:bg-orange-600"
+          >
             Send Message
           </Button>
         </form>

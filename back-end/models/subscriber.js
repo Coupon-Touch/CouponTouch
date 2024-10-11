@@ -4,8 +4,8 @@
  * emirateID: string (optional)
  * mobile: number (required)
  * comment: string (optional)
- * 
+ *
  *   isContacted - boolean
  *  isPaid - boolea
- * 
+ *
  */

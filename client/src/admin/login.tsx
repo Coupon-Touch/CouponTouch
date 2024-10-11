@@ -1,11 +1,11 @@
-import { useEffect } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import background from "@/assets/albanian/bg.png"
-import NavBar from './navbar'
-import { Formik, Field, Form, ErrorMessage } from 'formik'
-import * as Yup from 'yup'
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import background from '@/assets/albanian/bg.png';
+import NavBar from './navbar';
+import { Formik, Field, Form, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
 export default function Login() {
   useEffect(() => {
@@ -17,13 +17,13 @@ export default function Login() {
     const oldBackgroundRepeat = computedStyle.backgroundRepeat;
 
     body.style.backgroundImage = `url('${background}')`;
-    body.style.backgroundRepeat = "repeat";
+    body.style.backgroundRepeat = 'repeat';
 
     return () => {
-      body.style.backgroundImage = oldBackgroundImage
-      body.style.backgroundRepeat = oldBackgroundRepeat
-    }
-  }, [])
+      body.style.backgroundImage = oldBackgroundImage;
+      body.style.backgroundRepeat = oldBackgroundRepeat;
+    };
+  }, []);
 
   const validationSchema = Yup.object({
     username: Yup.string()
@@ -32,11 +32,11 @@ export default function Login() {
     password: Yup.string()
       .min(6, 'Password must be at least 6 characters')
       .required('Password is required'),
-  })
+  });
 
-  const handleSubmit = (values: { username: string, password: string }) => {
-    console.log('Login attempted with:', values)
-  }
+  const handleSubmit = (values: { username: string; password: string }) => {
+    console.log('Login attempted with:', values);
+  };
 
   return (
     <div className="min-h-screen bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover">
@@ -60,7 +60,11 @@ export default function Login() {
                     className="w-full"
                     as={Input}
                   />
-                  <ErrorMessage name="username" component="div" className="text-red-600 text-sm mt-1" />
+                  <ErrorMessage
+                    name="username"
+                    component="div"
+                    className="text-red-600 text-sm mt-1"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="password">Password</Label>
@@ -71,9 +75,17 @@ export default function Login() {
                     className="w-full"
                     as={Input}
                   />
-                  <ErrorMessage name="password" component="div" className="text-red-600 text-sm mt-1" />
+                  <ErrorMessage
+                    name="password"
+                    component="div"
+                    className="text-red-600 text-sm mt-1"
+                  />
                 </div>
-                <Button type="submit" className="w-full bg-[#772639] hover:bg-[#772639]/90" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="w-full bg-[#772639] hover:bg-[#772639]/90"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? 'Logging in...' : 'Login'}
                 </Button>
               </Form>
@@ -82,5 +94,5 @@ export default function Login() {
         </div>
       </div>
     </div>
-  )
+  );
 }
