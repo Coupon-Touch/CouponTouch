@@ -6,9 +6,18 @@ import background from '@/assets/albanian/bg.png';
 import NavBar from './navbar';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { useMutation } from '@apollo/client';
+import { ADMIN_LOGIN } from '@/apiRequests';
+import { isJWTTokenValid } from '@/jwtUtils';
 
 export default function Login() {
+  const [login, { data, loading, error }] = useMutation(ADMIN_LOGIN);
+
   useEffect(() => {
+    if (isJWTTokenValid()) {
+      // Redirect to admin dashboard here
+      console.log('Already logged in');
+    }
     const body = document.body;
 
     const computedStyle = window.getComputedStyle(body);
@@ -34,8 +43,33 @@ export default function Login() {
       .required('Password is required'),
   });
 
-  const handleSubmit = (values: { username: string; password: string }) => {
-    console.log('Login attempted with:', values);
+  const handleSubmit = async (values: {
+    username: string;
+    password: string;
+  }) => {
+    try {
+      const { username, password } = values;
+      const response = await login({ variables: { username, password } });
+
+      if (response && response.data) {
+        const { adminLogin } = response.data;
+
+        if (adminLogin && adminLogin.isSuccessful) {
+          localStorage.setItem('token', adminLogin.jwtToken);
+          // Redirect to admin dashboard here
+          console.log(adminLogin.message);
+        } else {
+          console.error(
+            'Login failed:',
+            adminLogin?.message || 'Unknown error'
+          );
+        }
+      } else {
+        console.error('Unexpected response structure:', response);
+      }
+    } catch (err) {
+      console.error('Error logging in:', err);
+    }
   };
 
   return (

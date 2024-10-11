@@ -18,3 +18,11 @@ export const validateToken = token => {
     return { userId: null, isValid: false };
   }
 };
+
+export const prepareAdminToken = (user) => {
+  return jwt.sign(
+    { id: user._id, username: user.username },
+    process.env.JWT_SECRET,
+    { expiresIn: '1d' }
+  );
+};
