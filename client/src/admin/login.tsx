@@ -73,7 +73,7 @@ export default function Login() {
                   />
                   <ErrorMessage name="password" component="div" className="text-red-600 text-sm mt-1" />
                 </div>
-                <Button type="submit" className="w-full bg-[#772639]" disabled={isSubmitting}>
+                <Button type="submit" className="w-full bg-[#772639] hover:bg-[#772639]/90" disabled={isSubmitting}>
                   {isSubmitting ? 'Logging in...' : 'Login'}
                 </Button>
               </Form>
