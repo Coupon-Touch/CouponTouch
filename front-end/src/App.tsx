@@ -9,9 +9,18 @@ function App() {
 
       <Routes>
         <Route path={'/admin'} element={<Login />} />
+        <Route
+          path={'/albanian'}
+          element={
+            <iframe
+              src="https://digicpn.com/p/rptbsd&web=true"
+              seamless={true}
+              className="border-0 w-full h-screen"
+            />
+          }
+        />
         <Route path="/*" element={<Home />} />
       </Routes>
-      {/* <iframe src="https://digicpn.com/p/rptbsd&web=true" width="100%" height="100%" margin="0" padding="0" seamless="seamless" scrolling="yes" className='border-0 w-full h-screen'></iframe> */}
     </>
   );
 }
