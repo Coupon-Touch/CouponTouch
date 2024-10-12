@@ -1,3 +1,4 @@
+import AdminPanel from './admin/createCoupon/adminPanel';
 import Login from './admin/login';
 import Home from './home/main';
 import { Route, Routes } from 'react-router-dom';
@@ -9,6 +10,7 @@ function App() {
 
       <Routes>
         <Route path={'/admin'} element={<Login />} />
+        <Route path={'/panel'} element={<AdminPanel />} />
         <Route
           path={'/albanian'}
           element={
