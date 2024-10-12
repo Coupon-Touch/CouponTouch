@@ -8,30 +8,16 @@ import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useMutation } from '@apollo/client';
 import { ADMIN_LOGIN } from '@/apiRequests';
-import { isJWTTokenValid } from '@/jwtUtils';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [login, { data, loading, error }] = useMutation(ADMIN_LOGIN);
 
   useEffect(() => {
-    if (isJWTTokenValid()) {
-      // Redirect to admin dashboard here
-      console.log('Already logged in');
-    }
-    const body = document.body;
 
-    const computedStyle = window.getComputedStyle(body);
 
-    const oldBackgroundImage = computedStyle.backgroundImage;
-    const oldBackgroundRepeat = computedStyle.backgroundRepeat;
-
-    body.style.backgroundImage = `url('${background}')`;
-    body.style.backgroundRepeat = 'repeat';
-
-    return () => {
-      body.style.backgroundImage = oldBackgroundImage;
-      body.style.backgroundRepeat = oldBackgroundRepeat;
-    };
   }, []);
 
   const validationSchema = Yup.object({
@@ -55,8 +41,10 @@ export default function Login() {
         const { adminLogin } = response.data;
 
         if (adminLogin && adminLogin.isSuccessful) {
+          navigate('../bulkupload')
           localStorage.setItem('token', adminLogin.jwtToken);
           // Redirect to admin dashboard here
+
           console.log(adminLogin.message);
         } else {
           console.error(
@@ -73,8 +61,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover">
-      <NavBar />
+    <div className="bg-cover">
       <div className="container mx-auto mt-20 max-w-md">
         <div className="bg-white/80 p-8 rounded-lg shadow-lg">
           <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
