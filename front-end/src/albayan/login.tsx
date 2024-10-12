@@ -8,16 +8,15 @@ import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useMutation } from '@apollo/client';
 import { ADMIN_LOGIN } from '@/apiRequests';
-import { isJWTTokenValid } from '@/jwtUtils';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [login, { data, loading, error }] = useMutation(ADMIN_LOGIN);
 
   useEffect(() => {
-    if (isJWTTokenValid()) {
-      // Redirect to admin dashboard here
-      console.log('Already logged in');
-    }
+
 
   }, []);
 
@@ -42,8 +41,10 @@ export default function Login() {
         const { adminLogin } = response.data;
 
         if (adminLogin && adminLogin.isSuccessful) {
+          navigate('../bulkupload')
           localStorage.setItem('token', adminLogin.jwtToken);
           // Redirect to admin dashboard here
+
           console.log(adminLogin.message);
         } else {
           console.error(

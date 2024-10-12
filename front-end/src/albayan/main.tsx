@@ -4,9 +4,16 @@ import NavBar from './navbar';
 import BulkUpload from './bulkUpload';
 import { useEffect } from 'react';
 import background from '@/assets/albanian/bg.png';
+import { useNavigate } from 'react-router-dom';
+import { isJWTTokenValid } from '@/jwtUtils';
 
 export default function Albayan() {
+  const navigate = useNavigate();
   useEffect(() => {
+    if (isJWTTokenValid()) {
+      // Redirect to admin dashboard here
+      navigate("bulkupload")
+    }
     const body = document.body;
 
     const computedStyle = window.getComputedStyle(body);
