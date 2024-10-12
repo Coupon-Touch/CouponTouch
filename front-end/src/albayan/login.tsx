@@ -18,20 +18,7 @@ export default function Login() {
       // Redirect to admin dashboard here
       console.log('Already logged in');
     }
-    const body = document.body;
 
-    const computedStyle = window.getComputedStyle(body);
-
-    const oldBackgroundImage = computedStyle.backgroundImage;
-    const oldBackgroundRepeat = computedStyle.backgroundRepeat;
-
-    body.style.backgroundImage = `url('${background}')`;
-    body.style.backgroundRepeat = 'repeat';
-
-    return () => {
-      body.style.backgroundImage = oldBackgroundImage;
-      body.style.backgroundRepeat = oldBackgroundRepeat;
-    };
   }, []);
 
   const validationSchema = Yup.object({
@@ -73,8 +60,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover">
-      <NavBar />
+    <div className="bg-cover">
       <div className="container mx-auto mt-20 max-w-md">
         <div className="bg-white/80 p-8 rounded-lg shadow-lg">
           <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
