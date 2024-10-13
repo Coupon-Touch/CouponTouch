@@ -7,6 +7,8 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import dotenv from 'dotenv';
+import { createRouteHandler } from 'uploadthing/express';
+import { uploadRouter } from './uploadThing.js';
 
 dotenv.config();
 
@@ -41,6 +43,12 @@ async function startServer() {
     await server.start();
 
     if (dbConnected) {
+      app.use(
+        '/api/uploadthing',
+        createRouteHandler({
+          router: uploadRouter,
+        })
+      );
       app.use(
         '/api',
         expressMiddleware(server, {

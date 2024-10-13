@@ -9,43 +9,85 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { PlusCircle, Trash2, Edit } from 'lucide-react'
-import NavBar from '../navbar'
+import { ChangeEvent } from 'react';
+import { UploadButton } from '@/uploadThing/dropZone'
+
+const generator = (function* incrementingGenerator(start: number = 0): Generator<number> {
+  let counter = start;
+  while (true) {
+    yield counter++;
+  }
+})()
+
+
+interface Prizes {
+  id: number,
+  image: string | null,
+  bias: number,
+}
+
+
+interface Location {
+  companyName: string;
+  contactName?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  openingHours?: string;
+  address?: string;
+  zipCode?: number;
+  city?: string;
+  country?: string;
+  state?: string;
+  latitude?: string;
+  longitude?: string;
+}
+
+
 
 export default function AdminPanel() {
-  const [prizes, setPrizes] = useState([])
-  const [locations, setLocations] = useState([])
-  const [currentLocation, setCurrentLocation] = useState({})
+  const [prizes, setPrizes] = useState<Prizes[]>([])
+  const [locations, setLocations] = useState<Location[]>([])
+  const [currentLocation, setCurrentLocation] = useState<Location>({ companyName: '', })
   const [isAddingLocation, setIsAddingLocation] = useState(false)
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false)
 
-  const handleFileUpload = (event, setter) => {
-    // Handle file upload logic here
-  }
+  const handleFileUpload = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0]; // Get the first file from the file input
+
+    return ''
+  };
 
   const addPrize = () => {
-    setPrizes([...prizes, { image: null, bias: 0 }])
+    setPrizes([...prizes, { image: null, bias: 0, id: generator.next().value }])
   }
 
-  const updatePrize = (index, field, value) => {
+  const updatePrize = <T extends 'image' | 'bias'>(
+    id: number,
+    field: T,
+    value: T extends 'image' ? string : number
+  ) => {
     const updatedPrizes = [...prizes]
-    updatedPrizes[index][field] = value
+    updatedPrizes[id][field] = value as Prizes[T];
     setPrizes(updatedPrizes)
   }
 
   const openAddLocationSheet = () => {
-    setCurrentLocation({})
+    setCurrentLocation({ companyName: '' })
     setIsAddingLocation(true)
     setIsLocationSheetOpen(true)
   }
 
-  const openEditLocationSheet = (location) => {
+  const openEditLocationSheet = (location: Location) => {
     setCurrentLocation(location)
     setIsAddingLocation(false)
     setIsLocationSheetOpen(true)
   }
 
   const saveLocation = () => {
-    if (isAddingLocation) {
+    if (isAddingLocation && currentLocation) {
       setLocations([...locations, currentLocation])
     } else {
       const updatedLocations = locations.map(loc =>
@@ -56,13 +98,13 @@ export default function AdminPanel() {
     setIsLocationSheetOpen(false)
   }
 
-  const updateCurrentLocation = (field, value) => {
-    setCurrentLocation({ ...currentLocation, [field]: value })
+  const updateCurrentLocation = <K extends keyof Location>(field: K, value: Location[K] extends number ? number : string) => {
+    if (currentLocation)
+      setCurrentLocation({ ...currentLocation, [field]: value })
   }
 
   return (
     <>
-      <NavBar />
       <div className="container mx-auto p-4 min-h-screen">
         <Tabs defaultValue="logo-upload" className="space-y-4">
           <TabsList className="flex flex-col sm:flex-row h-auto">
@@ -81,11 +123,16 @@ export default function AdminPanel() {
               <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="logo-upload">Company Logo</Label>
-                  <Input id="logo-upload" type="file" onChange={(e) => handleFileUpload(e, 'setLogo')} />
+                  <UploadButton endpoint='logoUpload' onComplete={(file) => {
+                    // file 
+                  }} />
+                  {/* <Input id="logo-upload" type="file" onChange={(e) => handleFileUpload(e)} /> */}
                 </div>
                 <div>
                   <Label htmlFor="scratch-image-upload">Scratch Card Background</Label>
-                  <Input id="scratch-image-upload" type="file" onChange={(e) => handleFileUpload(e, 'setScratchImage')} />
+                  <UploadButton endpoint='scratchCardBackground' onComplete={(file) => {
+                    // file 
+                  }} />
                 </div>
               </CardContent>
             </Card>
@@ -98,20 +145,32 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {prizes.map((prize, index) => (
-                  <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                    <Input type="file" onChange={(e) => handleFileUpload(e, (file) => updatePrize(index, 'image', file))} />
-                    <Input
-                      type="number"
-                      placeholder="Bias (0-100)"
-                      value={prize.bias}
-                      onChange={(e) => updatePrize(index, 'bias', e.target.value)}
-                      min="0"
-                      max="100"
-                      className="w-full sm:w-auto"
-                    />
-                    <Button variant="destructive" size="icon" onClick={() => setPrizes(prizes.filter((_, i) => i !== index))}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div key={index} className="flex  sm:flex-row items-end h-full sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                    <div className='h-full'>
+                      <Label htmlFor={'prizeImage' + index}>Prize Image</Label>
+                      <UploadButton endpoint='prizeImage' onComplete={(file) => {
+                        updatePrize(index, 'image', file[0].url)
+                      }} />
+                    </div>
+                    <div className='h-full'>
+
+                      <Label htmlFor={'prizeBias' + index}>Prize Bias</Label>
+                      <Input
+                        id={'prizeBias' + index}
+                        type="number"
+                        placeholder="Bias (0-100)"
+                        value={prize.bias}
+                        onChange={(e) => updatePrize(index, 'bias', parseInt(e.target.value))}
+                        min="0"
+                        max="100"
+                        className="w-full sm:w-auto"
+                      />
+                    </div>
+                    <div className=' flex h-full justify-end items-end'>
+                      <Button variant="destructive" size="icon" className="" onClick={() => setPrizes(prizes.filter((_, i) => i !== index))}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 <Button onClick={addPrize}>
@@ -119,7 +178,7 @@ export default function AdminPanel() {
                 </Button>
                 <div>
                   <Label htmlFor="losing-image-upload">Losing Image</Label>
-                  <Input id="losing-image-upload" type="file" onChange={(e) => handleFileUpload(e, 'setLosingImage')} />
+                  <Input id="losing-image-upload" type="file" onChange={(e) => handleFileUpload(e)} />
                 </div>
               </CardContent>
             </Card>
@@ -204,8 +263,8 @@ export default function AdminPanel() {
             <SheetHeader>
               <SheetTitle>{isAddingLocation ? 'Add New Location' : 'Edit Location'}</SheetTitle>
             </SheetHeader>
-            <ScrollArea className="h-[calc(100vh-120px)] pr-4">
-              <div className="grid gap-4 py-4">
+            <ScrollArea className="h-[calc(100vh-120px)]">
+              <div className="grid gap-4 py-4 px-4">
                 <div className="space-y-2">
                   <Label htmlFor="company-name">Company Name</Label>
                   <Input
