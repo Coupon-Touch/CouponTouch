@@ -7,6 +7,7 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import dotenv from 'dotenv';
+import { csvUploadController } from './back-end/controllers/csvFunctions.js';
 
 dotenv.config();
 
@@ -84,11 +85,7 @@ async function startServer() {
         }
 
         try {
-          await csvUploadController(req.body);
-          return res.status(200).json({
-            isSuccessful: true,
-            message: 'CSV uploaded successfully.',
-          });
+          return csvUploadController(req);
         } catch (error) {
           console.error('CSV Upload Failed:', error);
           return res.status(500).json({

@@ -8,8 +8,8 @@ const ajv = new Ajv();
 addFormats(ajv);
 const validate = ajv.compile(csvUserSchema);
 
-export async function csvUploadController(args) {
-  const { file } = args;
+export async function csvUploadController() {
+  let file; // Put the file here bro
   const { createReadStream, mimetype } = await file;
 
   if (mimetype !== 'text/csv') {
@@ -64,4 +64,3 @@ export async function csvUploadController(args) {
       .pipe(stream);
   });
 }
-
