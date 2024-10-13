@@ -23,12 +23,30 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-// Required to get the current directory in ES6 modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Serve static files from React build directory
 app.use(express.static(join(__dirname, './front-end/dist')));
+
+const authMiddleware = (req, res, next) => {
+  const authorizationHeader = req.headers.authorization;
+  if (authorizationHeader) {
+    const token = authorizationHeader.replace('Bearer ', '');
+    const { decodedToken, isValid } = validateToken(token);
+    req.context = {
+      decodedToken,
+      isValid,
+    };
+  } else {
+    req.context = {
+      decodedToken: null,
+      isValid: false,
+    };
+  }
+  next();
+};
+
+app.use(authMiddleware);
 
 async function startServer() {
   try {
@@ -36,6 +54,8 @@ async function startServer() {
     const server = new ApolloServer({
       typeDefs,
       resolvers,
+      introspection: true,
+      playground: true,
     });
 
     await server.start();
@@ -45,29 +65,39 @@ async function startServer() {
         '/api',
         expressMiddleware(server, {
           context: ({ req, res }) => {
-            const authorizationHeader = req.headers.authorization;
-            if (authorizationHeader) {
-              const token = authorizationHeader.replace('Bearer ', '');
-              const { userId, isValid } = validateToken(token);
-              return {
-                userId: userId,
-                isValid: isValid,
-                req: req,
-                res: res,
-              };
-            } else {
-              return {
-                userId: null,
-                isValid: false,
-                req: req,
-                res: res,
-              };
-            }
+            return {
+              ...req.context,
+              req,
+              res,
+            };
           },
         })
       );
 
-      // Catch-all route for React (after the /api routes)
+      app.get('/uploadCSV', async (req, res) => {
+        const { decodedToken, isValid } = req.context;
+        if (!isValid || decodedToken.userType !== UserRole.ADMINUSER) {
+          return res.status(401).json({
+            isSuccessful: false,
+            message: 'Unauthorized to perform this operation.',
+          });
+        }
+
+        try {
+          await csvUploadController(req.body);
+          return res.status(200).json({
+            isSuccessful: true,
+            message: 'CSV uploaded successfully.',
+          });
+        } catch (error) {
+          console.error('CSV Upload Failed:', error);
+          return res.status(500).json({
+            isSuccessful: false,
+            message: 'Some error occurred',
+          });
+        }
+      });
+
       app.get('*', (req, res) => {
         res.sendFile(join(__dirname, './front-end/dist/index.html'));
       });
