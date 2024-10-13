@@ -1,11 +1,13 @@
-/**
- * name: string (optional)
- * email: string (optional)
- * emirateID: string (optional)
- * mobile: number (required)
- * comment: string (optional)
- *
- *   isContacted - boolean
- *  isPaid - boolea
- *
- */
+import mongoose from 'mongoose';
+
+const subscriberSchema = new mongoose.Schema({
+  name: { type: String },
+  email: { type: String },
+  emirateID: { type: String },
+  mobile: { type: String, required: true },
+  comment: { type: String, default: '' },
+  isContacted: { type: Boolean, default: false },
+  isPaid: { type: Boolean, default: false },
+});
+
+export const Subscriber = mongoose.model('Subscriber', subscriberSchema);

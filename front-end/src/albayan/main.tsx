@@ -11,8 +11,9 @@ export default function Albayan() {
   const navigate = useNavigate();
   useEffect(() => {
     if (isJWTTokenValid()) {
-      // Redirect to admin dashboard here
-      navigate("bulkupload")
+      navigate('bulkupload');
+    } else {
+      navigate('adminLogin');
     }
     const body = document.body;
 
@@ -29,17 +30,17 @@ export default function Albayan() {
       body.style.backgroundRepeat = oldBackgroundRepeat;
     };
   }, []);
-  return <>
-    <NavBar />
-    <div className='flex justify-center'>
-
-      <div className='container mt-5'>
-        <Routes>
-          <Route path={'/adminLogin'} element={<Login />} />
-          <Route path={'/bulkupload'} element={<BulkUpload />} />
-        </Routes>
+  return (
+    <>
+      <NavBar />
+      <div className="flex justify-center">
+        <div className="container mt-5">
+          <Routes>
+            <Route path={'/adminLogin'} element={<Login />} />
+            <Route path={'/bulkupload'} element={<BulkUpload />} />
+          </Routes>
+        </div>
       </div>
-    </div>
-
-  </>
+    </>
+  );
 }
