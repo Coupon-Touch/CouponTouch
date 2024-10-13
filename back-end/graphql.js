@@ -1,11 +1,18 @@
 import { gql } from 'graphql-tag';
 import { adminLoginController } from './controllers/loginFunctions.js';
 import { initialDumpController } from './controllers/initialDump.js';
+import { CountryCodes } from './utilities/countryCodes.js';
 
 // GraphQL
 export const typeDefs = gql`
+  type CountryCode {
+    countryName: String
+    countryCode: String
+    countryISO: String
+  }
+
   type Query {
-    sayHello: String
+    getCountryCodes: [CountryCode]
   }
 
   type AdminLoginInfo {
@@ -27,8 +34,8 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Query: {
-    sayHello: (_, args, context) => {
-      return 'Hello, from GraphQL!';
+    getCountryCodes: (_, args, context) => {
+      return CountryCodes;
     },
   },
   Mutation: {

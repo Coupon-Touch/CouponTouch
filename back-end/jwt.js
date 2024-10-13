@@ -1,27 +1,32 @@
 import jwt from 'jsonwebtoken';
+import { UserRole } from './utilities/userRoles.js';
 
 export const validateToken = token => {
   try {
     if (token === null) {
-      return { userId: null, isValid: false };
+      return { decodedToken: null, isValid: false };
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const currentTime = Math.floor(Date.now() / 1000);
     if (decoded.exp < currentTime) {
-      return { userId: null, isValid: false };
+      return { decodedToken: decoded, isValid: false };
     }
 
-    return { userId: decoded.userId, isValid: true };
+    return { decodedToken: decoded, isValid: true };
   } catch (error) {
-    return { userId: null, isValid: false };
+    return { decodedToken: decoded, isValid: false };
   }
 };
 
-export const prepareAdminToken = (user) => {
+export const prepareAdminToken = user => {
   return jwt.sign(
-    { id: user._id, username: user.username },
+    {
+      userType: UserRole.ADMINUSER,
+      adminId: user._id,
+      adminUserName: user.username,
+    },
     process.env.JWT_SECRET,
     { expiresIn: '1d' }
   );

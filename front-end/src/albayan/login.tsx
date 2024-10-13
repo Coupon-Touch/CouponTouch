@@ -15,10 +15,7 @@ export default function Login() {
 
   const [login, { data, loading, error }] = useMutation(ADMIN_LOGIN);
 
-  useEffect(() => {
-
-
-  }, []);
+  useEffect(() => {}, []);
 
   const validationSchema = Yup.object({
     username: Yup.string()
@@ -41,10 +38,8 @@ export default function Login() {
         const { adminLogin } = response.data;
 
         if (adminLogin && adminLogin.isSuccessful) {
-          navigate('../bulkupload')
+          navigate('../bulkupload');
           localStorage.setItem('token', adminLogin.jwtToken);
-          // Redirect to admin dashboard here
-
           console.log(adminLogin.message);
         } else {
           console.error(

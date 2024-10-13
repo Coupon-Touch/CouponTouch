@@ -15,7 +15,6 @@ const Paths = [
   { path: "/bulkupload", element: <BulkUpload /> },
   { path: "/couponSettings", element: <AdminPanel /> },
 ]
-const allUrls = new Set(Paths.map((obj) => obj.path))
 
 export default function Albayan() {
   const navigate = useNavigate();
@@ -23,9 +22,10 @@ export default function Albayan() {
     if (isJWTTokenValid()) {
       // Redirect to admin dashboard here
       if (window.location.pathname.endsWith('/adminLogin')) {
-
         navigate("bulkupload")
       }
+    } else {
+      navigate("/adminLogin")
     }
     const body = document.body;
 
@@ -55,6 +55,6 @@ export default function Albayan() {
         </Routes>
       </div>
     </div>
-
   </>
+
 }

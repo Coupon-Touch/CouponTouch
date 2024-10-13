@@ -6,3 +6,8 @@ export const isJWTTokenValid = () => {
   const expirationTime = payload.exp * 1000;
   return Date.now() < expirationTime;
 };
+
+export const extractToken = (): string | null => {
+  const jwtToken = localStorage.getItem('jwtToken');
+  return jwtToken;
+};
