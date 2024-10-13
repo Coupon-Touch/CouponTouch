@@ -25,7 +25,7 @@ export default function Albayan() {
         navigate("bulkupload")
       }
     } else {
-      navigate("/adminLogin")
+      navigate("adminLogin")
     }
     const body = document.body;
 

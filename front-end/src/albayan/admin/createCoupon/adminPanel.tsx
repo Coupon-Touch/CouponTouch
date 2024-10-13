@@ -178,7 +178,9 @@ export default function AdminPanel() {
                 </Button>
                 <div>
                   <Label htmlFor="losing-image-upload">Losing Image</Label>
-                  <Input id="losing-image-upload" type="file" onChange={(e) => handleFileUpload(e)} />
+                  <UploadButton endpoint='prizeImage' onComplete={(file) => {
+                    // file
+                  }} />
                 </div>
               </CardContent>
             </Card>
@@ -390,6 +392,9 @@ export default function AdminPanel() {
             </div>
           </SheetContent>
         </Sheet>
+        <div className='flex justify-end mt-10'>
+          <Button>Submit</Button>
+        </div>
       </div>
     </>
 
