@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import background from '@/assets/albanian/bg.png';
-import NavBar from './navbar';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useMutation } from '@apollo/client';
@@ -12,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const navigate = useNavigate();
-
   const [login, { data, loading, error }] = useMutation(ADMIN_LOGIN);
 
   useEffect(() => {}, []);

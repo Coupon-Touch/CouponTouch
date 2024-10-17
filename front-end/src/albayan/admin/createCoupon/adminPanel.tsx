@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { PlusCircle, Trash2, Edit } from 'lucide-react'
-import { ChangeEvent } from 'react';
 import { UploadButton } from '@/uploadThing/dropZone'
 
 const generator = (function* incrementingGenerator(start: number = 0): Generator<number> {
@@ -51,14 +50,6 @@ export default function AdminPanel() {
   const [currentLocation, setCurrentLocation] = useState<Location>({ companyName: '', })
   const [isAddingLocation, setIsAddingLocation] = useState(false)
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false)
-
-  const handleFileUpload = (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0]; // Get the first file from the file input
-
-    return ''
-  };
 
   const addPrize = () => {
     setPrizes([...prizes, { image: null, bias: 0, id: generator.next().value }])

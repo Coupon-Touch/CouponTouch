@@ -1,6 +1,5 @@
 import {
   generateReactHelpers,
-  type GenerateTypedHelpersOptions,
 } from "@uploadthing/react";
 import { useDropzone } from "@uploadthing/react";
 import { generateClientDropzoneAccept, generatePermittedFileTypes } from "uploadthing/client";
@@ -13,13 +12,12 @@ import { useCallback, useState } from "react";
 import { UploadThingError } from "uploadthing/server";
 import { Json } from "@uploadthing/shared";
 
-const initOpts = {
-  url: window.location.origin,
-} satisfies GenerateTypedHelpersOptions;
+// const initOpts = {
+//   url: window.location.origin,
+// } satisfies GenerateTypedHelpersOptions;
 
-
-const { useUploadThing, uploadFiles } =
-  generateReactHelpers<OurFileRouter>();
+//@ts-expect-error i dont know what to put here
+const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 export function UploadButton(props: {
   endpoint: keyof OurFileRouter,

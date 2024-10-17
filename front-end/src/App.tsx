@@ -14,7 +14,6 @@ function App() {
           <Route path="/*" element={<Home />} />
         </Routes>
       </ApolloProvider>
-      {/* <iframe src="https://digicpn.com/p/rptbsd&web=true" width="100%" height="100%" margin="0" padding="0" seamless="seamless" scrolling="yes" className='border-0 w-full h-screen'></iframe> */}
     </>
   );
 }

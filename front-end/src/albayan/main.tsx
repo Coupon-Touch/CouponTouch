@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { isJWTTokenValid } from '@/jwtUtils';
 import AdminPanel from './admin/createCoupon/adminPanel';
 import NotFound from './404';
+import Coupon from './game/coupon';
 
 
 const Paths = [
@@ -46,11 +47,12 @@ export default function Albayan() {
     <NavBar />
     <div className='flex justify-center'>
 
-      <div className='container mt-5'>
+      <div className='container'>
         <Routes>
           {Paths.map((path, index) => (
             <Route key={index} path={path.path} element={path.element} />
           ))}
+          <Route path={"/"} element={<Coupon />} />
           <Route path={"/*"} element={<NotFound />} />
         </Routes>
       </div>
