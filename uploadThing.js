@@ -6,7 +6,7 @@ export const uploadRouter = {
   logoUpload: f({
     image: { maxFileSize: '100KB', maxFileCount: 1, minFileCount: 1 },
   })
-    .middleware(({ req }) => auth(req))
+    // .middleware(({ req }) => auth(req))
     .onUploadComplete(data => console.log('Logo uploaded', data)),
 
   // Scratch Card Background route - allows PNG, JPEG, WEBP with max file size of 500KB
