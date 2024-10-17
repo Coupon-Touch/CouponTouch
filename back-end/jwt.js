@@ -16,7 +16,7 @@ export const validateToken = token => {
 
     return { decodedToken: decoded, isValid: true };
   } catch (error) {
-    return { decodedToken: decoded, isValid: false };
+    return { decodedToken: null, isValid: false };
   }
 };
 

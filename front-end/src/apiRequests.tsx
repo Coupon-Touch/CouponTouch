@@ -10,3 +10,17 @@ export const ADMIN_LOGIN = gql`
   }
 `;
 
+export const STORE_COUPONSETTINGS = gql`
+  mutation StoreCouponSettings($input: JSON!) {
+    storeCouponSettings(input: $input) {
+      isSuccessful
+      message
+    }
+  }
+`;
+
+export const GET_COUPONSETTINGS = gql`
+  query Query {
+    getCouponSettingsAlbayan
+  }
+`;
