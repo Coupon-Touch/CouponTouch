@@ -22,6 +22,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { ChangeEvent } from 'react';
 import { UploadButton } from '@/uploadThing/dropZone';
+import { STORE_COUPONSETTINGS } from '@/apiRequests';
+import { GET_COUPONSETTINGS } from '@/apiRequests';
+import { useMutation } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 
 const generator = (function* incrementingGenerator(
   start: number = 0
@@ -72,6 +76,37 @@ interface AdminPanelState {
 }
 
 export default function AdminPanel() {
+  const [storeCouponSettings, { data, loading, error }] =
+    useMutation(STORE_COUPONSETTINGS);
+
+  const {
+    data: dataFetched,
+    loading: loadingCoupon,
+    error: errorCoupon,
+  } = useQuery(GET_COUPONSETTINGS);
+
+  const getExistingSettings = () => {
+    if (loadingCoupon) {
+      console.log('Loading...');
+      return;
+    }
+
+    if (errorCoupon) {
+      console.error('Error fetching coupon settings:', errorCoupon);
+      return;
+    }
+
+    if (dataFetched) {
+      // TODO Existing coupon settings
+      console.log(
+        'Fetched coupon settings:',
+        dataFetched.getCouponSettingsAlbayan
+      );
+    }
+  };
+
+  getExistingSettings();
+
   const [state, setState] = useState<AdminPanelState>({
     prizes: [],
     locations: [],
@@ -162,20 +197,18 @@ export default function AdminPanel() {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Log the entire state if all images are uploaded
     console.log(state);
 
     if (state.companyLogoUrl === '' || state.scratchCardBackground === '') {
       // TODO Show this bro
       console.log('Company Logo and Scratch Card Background not yet uploaded!');
-      return;
     }
 
     if (state.losingPrizeUrl === '') {
       // TODO Show this bro
       console.log('Losing Image not yet uploaded!');
-      return;
     }
 
     if (state.prizes && state.prizes.length > 0) {
@@ -184,14 +217,38 @@ export default function AdminPanel() {
         if (isNaN(prize.bias)) {
           // TODO Show this bro
           console.log(`Prize bias at index ${index} is invalid!`);
-          return;
         }
         if (prize.image === null || prize.image === '') {
           // TODO Show this bro
           console.log(`Prize image at index ${index} is not uploaded!`);
-          return;
         }
       }
+    }
+
+    // TODO check all fields set bro then only let him hit the backend
+    try {
+      const response = await storeCouponSettings({
+        variables: {
+          input: state,
+        },
+      });
+
+      // TODO Show this bro
+      if (response && response.data) {
+        const { isSuccessful, message } = response.data.storeCouponSettings;
+
+        if (isSuccessful) {
+          // TODO success message bro
+          console.log(message);
+        } else {
+          // TODO error message bro
+          console.log(message);
+        }
+      } else {
+        console.error('Unexpected response structure:', response);
+      }
+    } catch (error) {
+      console.error('Error in storing coupon settings:', error);
     }
   };
 

@@ -2,17 +2,16 @@ import { gql } from 'graphql-tag';
 import { adminLoginController } from './controllers/loginFunctions.js';
 import { initialDumpController } from './controllers/initialDump.js';
 import { CountryCodes } from './utilities/countryCodes.js';
+import { storeCouponSettingsController } from './controllers/couponSettings.js';
+import { getLatestCouponSettingsAlbayanController } from './controllers/couponSettings.js';
 
 // GraphQL
 export const typeDefs = gql`
-  type CountryCode {
-    countryName: String
-    countryCode: String
-    countryISO: String
-  }
+  scalar JSON
 
   type Query {
-    getCountryCodes: [CountryCode]
+    getCountryCodes: [Int]
+    getCouponSettingsAlbayan: JSON
   }
 
   type AdminLoginInfo {
@@ -26,9 +25,15 @@ export const typeDefs = gql`
     message: String
   }
 
+  type isCouponStoredInfo {
+    isSuccessful: Boolean
+    message: String
+  }
+
   type Mutation {
     adminLogin(username: String, password: String): AdminLoginInfo
     dumpInitialDatabase: DumpDatabaseInfo
+    storeCouponSettings(input: JSON!): isCouponStoredInfo
   }
 `;
 
@@ -36,6 +41,14 @@ export const resolvers = {
   Query: {
     getCountryCodes: (_, args, context) => {
       return CountryCodes;
+    },
+    getCouponSettingsAlbayan: async (_, args, context) => {
+      try {
+        return await getLatestCouponSettingsAlbayanController();
+      } catch (error) {
+        console.log('Error Fetching coupon settings : ', error);
+        return {};
+      }
     },
   },
   Mutation: {
@@ -56,6 +69,17 @@ export const resolvers = {
           isSuccessful: false,
           message: 'Some error occurred',
           jwtToken: null,
+        };
+      }
+    },
+    storeCouponSettings: async (_, { input }, context) => {
+      try {
+        return await storeCouponSettingsController(input, context);
+      } catch (error) {
+        console.log('Store Coupon Settings Failed : ', error);
+        return {
+          isSuccessful: false,
+          message: 'Some error occurred',
         };
       }
     },
