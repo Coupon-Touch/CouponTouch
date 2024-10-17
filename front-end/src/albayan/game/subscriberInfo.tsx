@@ -132,6 +132,7 @@ export default function SubscriberInfo({ successCallback }: { successCallback: (
 
               {showAdditionalFields && (
                 <>
+                  <div className=" text-red-400">You need To Subscribe to Play the Game</div>
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
                     <Input

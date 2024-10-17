@@ -11,8 +11,8 @@ export default function NavBar() {
           {/* Replace with your logo */}
           <img src={logo} className="w-full h-full object-contain" />
         </div>
+        {localStorage.getItem("isNewUser") ? <button className='bg-black p-1 rounded-md text-white text-sm' onClick={() => { localStorage.removeItem("isNewUser"); window.location.reload() }}>Reset</button> : <></>}
         <div>
-
           <Link to="/albayan">
             <Button variant="ghost">Campaign</Button>
           </Link>

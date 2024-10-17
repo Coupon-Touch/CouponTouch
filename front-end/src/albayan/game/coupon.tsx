@@ -27,7 +27,7 @@ export default function Coupon() {
     }
   }
   return <>
-    <div className='w-full h-full flex justify-center'>
+    <div className='w-full h-full flex justify-center mt-5'>
       {/* <script src="https://hosting4images.com/popup/popup_0e095e054ee94774d6a496099eb1cf6a.js"></script> */}
       {isNewUser && <SubscriberInfo successCallback={handleMobileSubmit} />}
       <div className={cn('w-96', (!isNewUser && isSubscribed ? "" : 'hidden'))}>
