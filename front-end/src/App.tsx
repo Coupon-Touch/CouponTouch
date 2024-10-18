@@ -1,7 +1,7 @@
 import Home from './home/main';
 import { Route, Routes } from 'react-router-dom';
 import { ApolloProvider } from '@apollo/client';
-import client from './apolloClient';
+import client from './graphQL/apolloClient';
 import Albayan from './albayan/main';
 
 function App() {

@@ -5,17 +5,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { useFormik } from 'formik'
+import { Formik, Field, Form, ErrorMessage } from 'formik';
+
 import { FormEvent, useState } from "react"
 import * as Yup from 'yup'
 
-
-// const countryCodes = [
-//   { code: '+1', country: 'USA' },
-//   { code: '+44', country: 'UK' },
-//   { code: '+91', country: 'India' },
-//   { code: '+81', country: 'Japan' },
-//   { code: '+86', country: 'China' },
-// ]
 const countryCodes = [1, 7, 20, 21, 27, 27, 29, 30, 31, 32, 33, 34, 36, 39, 40, 41, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 81, 86, 90, 91, 92, 93, 95, 98, 212, 213, 216, 218, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 240, 241, 242, 243, 244, 245, 246, 249, 250, 251, 252, 254, 255, 256, 257, 258, 260, 261, 263, 264, 265, 267, 268, 297, 299, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 370, 371, 372, 373, 374, 375, 376, 377, 378, 380, 381, 382, 385, 386, 387, 389, 420, 421, 423, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 673, 687, 689, 852, 870, 886, 961, 962, 963, 964, 965, 966, 967, 968, 971, 972, 973, 974, 975, 976, 977, 992, 993, 994, 995, 996, 998, 1758, 1868]
 countryCodes.sort((a, b) => a - b)
 const validationSchema = Yup.object({
@@ -58,13 +52,17 @@ export default function SubscriberInfo({ successCallback }: { successCallback: (
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
-      console.log(values)
-      // TODO: Make API call to save the subscriber info
 
-      successCallback() // call this if the API call is successful
-      setIsLoading(false)
     },
   })
+
+  const handleSubmit = (values) => {
+    console.log(values)
+    // TODO: Make API call to save the subscriber info
+
+    successCallback() // call this if the API call is successful
+    setIsLoading(false)
+  }
 
   const checkPhoneNumber = (event: FormEvent) => {
     event.preventDefault()
@@ -91,6 +89,13 @@ export default function SubscriberInfo({ successCallback }: { successCallback: (
           <CardTitle>Phone Verification</CardTitle>
         </CardHeader>
         <CardContent>
+          <Formik
+            initialValues={{ username: '', password: '' }}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+          >
+
+          </Formik>
           <form onSubmit={showAdditionalFields ? formik.handleSubmit : checkPhoneNumber}>
             <div className="space-y-4">
               <div className="space-y-2">

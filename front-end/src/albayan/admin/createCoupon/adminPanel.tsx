@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,12 +20,12 @@ import {
 } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlusCircle, Trash2, Edit } from 'lucide-react';
-import { ChangeEvent } from 'react';
 import { UploadButton } from '@/uploadThing/dropZone';
-import { STORE_COUPONSETTINGS } from '@/apiRequests';
-import { GET_COUPONSETTINGS } from '@/apiRequests';
+import { STORE_COUPONSETTINGS } from '@/graphQL/apiRequests';
+import { GET_COUPONSETTINGS } from '@/graphQL/apiRequests';
 import { useMutation } from '@apollo/client';
 import { useQuery } from '@apollo/client';
+import * as yup from 'yup';
 
 const generator = (function* incrementingGenerator(
   start: number = 0
@@ -36,44 +36,61 @@ const generator = (function* incrementingGenerator(
   }
 })();
 
-interface Prizes {
-  id: number;
-  image: string | null;
-  bias: number;
-}
+const prizeSchema = yup.object({
+  id: yup.number(),
+  image: yup.string().required(),
+  bias: yup.number().required('Bias is required').min(0).max(100),
+});
 
-interface Location {
-  companyName: string;
-  contactName?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  openingHours?: string;
-  address?: string;
-  zipCode?: number;
-  city?: string;
-  country?: string;
-  state?: string;
-  latitude?: string;
-  longitude?: string;
-}
+const locationSchema = yup.object({
+  companyName: yup.string().required('Company Name is required'),
+  contactName: yup.string().optional(),
+  phone: yup
+    .string()
+    .optional()
+    .matches(/^[0-9]+$/, 'Phone must be numeric'),
+  email: yup.string().optional().email('Must be a valid email'),
+  website: yup.string().optional().url('Must be a valid URL'),
+  openingHours: yup.string().optional(),
+  address: yup.string().optional(),
+  zipCode: yup.number().optional().positive().integer(),
+  city: yup.string().optional(),
+  country: yup.string().optional(),
+  state: yup.string().optional(),
+  latitude: yup.string().optional(),
+  longitude: yup.string().optional(),
+});
 
-interface AdminPanelState {
-  prizes: Prizes[];
-  locations: Location[];
-  currentLocation: Location;
-  isAddingLocation: boolean;
-  isLocationSheetOpen: boolean;
-  companyLogoUrl: string;
-  scratchCardBackground: string;
-  losingPrizeUrl: string;
-  couponTitle: string;
-  couponSubtitle: string;
-  description: string;
-  terms: string;
-  congrats: string;
-  validationTitle: string;
-}
+const adminPanelStateSchema = yup.object({
+  prizes: yup.array().of(prizeSchema).required(),
+  locations: yup.array().of(locationSchema).required(),
+  currentLocation: locationSchema.required(),
+  isAddingLocation: yup.boolean().required(),
+  isLocationSheetOpen: yup.boolean().required(),
+  companyLogoUrl: yup
+    .string()
+    .required('Company Logo URL is required')
+    .url('Must be a valid URL'),
+  scratchCardBackground: yup
+    .string()
+    .required('Scratch Card Background is required')
+    .url('Must be a valid URL'),
+  losingPrizeUrl: yup
+    .string()
+    .required('Losing Prize URL is required')
+    .url('Must be a valid URL'),
+  couponTitle: yup.string().required('Coupon Title is required'),
+  couponSubtitle: yup.string().required('Coupon Subtitle is required'),
+  description: yup.string().required('Description is required'),
+  terms: yup.string().required('Terms are required'),
+  congrats: yup.string().required('Congrats message is required'),
+  validationTitle: yup.string().required('Validation Title is required'),
+});
+
+type AdminPanelState = yup.InferType<typeof adminPanelStateSchema>;
+
+type Prizes = yup.InferType<typeof prizeSchema>;
+type Location = yup.InferType<typeof locationSchema>;
 
 export default function AdminPanel() {
   const [storeCouponSettings, { data, loading, error }] =
@@ -87,7 +104,6 @@ export default function AdminPanel() {
 
   const getExistingSettings = () => {
     if (loadingCoupon) {
-      console.log('Loading...');
       return;
     }
 
@@ -98,10 +114,10 @@ export default function AdminPanel() {
 
     if (dataFetched) {
       // TODO Existing coupon settings
-      console.log(
-        'Fetched coupon settings:',
-        dataFetched.getCouponSettingsAlbayan
-      );
+      // console.log(
+      //   'Fetched coupon settings:',
+      //   dataFetched.getCouponSettingsAlbayan
+      // );
     }
   };
 
@@ -124,6 +140,15 @@ export default function AdminPanel() {
     validationTitle: '',
   });
 
+  const [adminPanelErrors, setAdminPanelErrors] = useState<
+    Record<string, string>
+  >({});
+  const [locationPanelErrors, setLocationPanelErrors] = useState<
+    Record<string, string>
+  >({});
+  const [prizePanelErrors, setPrizePanelErrors] = useState<
+    Record<string, string>
+  >({});
 
   const addPrize = () => {
     setState({
@@ -148,7 +173,6 @@ export default function AdminPanel() {
   const openAddLocationSheet = () => {
     setState({
       ...state,
-      currentLocation: { companyName: '' },
       isAddingLocation: true,
       isLocationSheetOpen: true,
     });
@@ -164,22 +188,36 @@ export default function AdminPanel() {
   };
 
   const saveLocation = () => {
-    if (state.isAddingLocation && state.currentLocation) {
-      setState({
-        ...state,
-        locations: [...state.locations, state.currentLocation],
-        isLocationSheetOpen: false,
+    locationSchema
+      .validate(state.currentLocation, { abortEarly: false })
+      .then(data => {
+        setLocationPanelErrors({});
+        if (state.isAddingLocation && state.currentLocation) {
+          setState({
+            ...state,
+            currentLocation: { companyName: '' },
+            locations: [...state.locations, state.currentLocation],
+            isLocationSheetOpen: false,
+          });
+        } else {
+          const updatedLocations = state.locations.map(loc =>
+            loc === state.currentLocation ? { ...state.currentLocation } : loc
+          );
+          setState({
+            ...state,
+            currentLocation: { companyName: '' },
+            locations: updatedLocations,
+            isLocationSheetOpen: false,
+          });
+        }
+      })
+      .catch(err => {
+        const errors: Record<string, string> = {};
+        err.inner.forEach((error: { path: string; message: string }) => {
+          errors[error.path] = error.message; // error.path is the field, error.message is the error message
+        });
+        setLocationPanelErrors(errors);
       });
-    } else {
-      const updatedLocations = state.locations.map(loc =>
-        loc === state.currentLocation ? { ...state.currentLocation } : loc
-      );
-      setState({
-        ...state,
-        locations: updatedLocations,
-        isLocationSheetOpen: false,
-      });
-    }
   };
 
   const updateCurrentLocation = <K extends keyof Location>(
@@ -191,33 +229,41 @@ export default function AdminPanel() {
       currentLocation: { ...state.currentLocation, [field]: value },
     });
   };
-
+  const getError = (fieldPath: string, error: Record<string, string>) => {
+    return error[fieldPath] || null;
+  };
   const handleSubmit = async () => {
     // Log the entire state if all images are uploaded
-    console.log(state);
+    let prizeValidation = false;
+    let adminValidation = false;
+    prizeSchema
+      .validate(state, { abortEarly: false })
+      .then(() => {
+        prizeValidation = true;
+      })
+      .catch(err => {
+        const errors: Record<string, string> = {};
+        err.inner.forEach((error: { path: string; message: string }) => {
+          errors[error.path] = error.message; // error.path is the field, error.message is the error message
+        });
+        setPrizePanelErrors(errors);
+      });
 
+    adminPanelStateSchema
+      .validate(state, { abortEarly: false })
+      .then(() => {
+        adminValidation = true;
+      })
+      .catch(err => {
+        const errors: Record<string, string> = {};
+        err.inner.forEach((error: { path: string; message: string }) => {
+          errors[error.path] = error.message; // error.path is the field, error.message is the error message
+        });
+        setAdminPanelErrors(errors);
+      });
+    if (!prizeValidation || !adminValidation) return;
     if (state.companyLogoUrl === '' || state.scratchCardBackground === '') {
       // TODO Show this bro
-      console.log('Company Logo and Scratch Card Background not yet uploaded!');
-    }
-
-    if (state.losingPrizeUrl === '') {
-      // TODO Show this bro
-      console.log('Losing Image not yet uploaded!');
-    }
-
-    if (state.prizes && state.prizes.length > 0) {
-      for (let index = 0; index < state.prizes.length; index++) {
-        const prize = state.prizes[index];
-        if (isNaN(prize.bias)) {
-          // TODO Show this bro
-          console.log(`Prize bias at index ${index} is invalid!`);
-        }
-        if (prize.image === null || prize.image === '') {
-          // TODO Show this bro
-          console.log(`Prize image at index ${index} is not uploaded!`);
-        }
-      }
     }
 
     // TODO check all fields set bro then only let him hit the backend
@@ -247,24 +293,64 @@ export default function AdminPanel() {
     }
   };
 
+  type ErrorType = keyof AdminPanelState | keyof Location | keyof Prizes;
+
+  const ErrorMessage = ({
+    field,
+    error,
+  }: {
+    field: ErrorType;
+    error: Record<string, string>;
+  }) =>
+    getError(field, error) && (
+      <span className="text-red-600">{getError(field, error)}</span>
+    );
+  const tabHasError = (tab: string) => {
+    console.log(tab, adminPanelErrors)
+    const hasFields = (fields: string[]) => {
+      for (const field of fields) {
+        if (adminPanelErrors[field]) return true;
+      }
+
+    }
+    switch (tab) {
+      case 'logo-upload':
+        return Object.keys(adminPanelErrors).length > 0;
+      case 'prizes':
+        return Object.keys(prizePanelErrors).length > 0;
+      case 'coupon-info':
+        return hasFields(['couponTitle', 'couponSubtitle', 'description', 'terms', 'congrats']);
+      case 'locations':
+        return Object.keys(locationPanelErrors).length > 0;
+      case 'validation':
+        return Object.keys(adminPanelErrors).length > 0;
+      default:
+        return false;
+    }
+  };
   return (
     <>
       <div className="container mx-auto p-4 min-h-screen">
         <Tabs defaultValue="logo-upload" className="space-y-4">
-          <TabsList className="flex flex-col sm:flex-row h-auto">
-            <TabsTrigger value="logo-upload" className="w-full sm:w-auto">
+          <TabsList className="flex flex-col sm:flex-row h-auto gap-2">
+            <TabsTrigger value="logo-upload" className='w-full sm:w-auto relative'>
+              {tabHasError('prizes') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
               Logo & Image
             </TabsTrigger>
-            <TabsTrigger value="prizes" className="w-full sm:w-auto">
+            <TabsTrigger value="prizes" className='w-full sm:w-auto relative'>
+              {tabHasError('prizes') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
               Prizes
             </TabsTrigger>
-            <TabsTrigger value="coupon-info" className="w-full sm:w-auto">
+            <TabsTrigger value="coupon-info" className='w-full sm:w-auto relative'>
+              {tabHasError('coupon-info') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
               Coupon Info
             </TabsTrigger>
-            <TabsTrigger value="locations" className="w-full sm:w-auto">
+            <TabsTrigger value="locations" className='w-full sm:w-auto relative'>
+              {tabHasError('locations') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
               Locations
             </TabsTrigger>
-            <TabsTrigger value="validation" className="w-full sm:w-auto">
+            <TabsTrigger value="validation" className='w-full sm:w-auto relative'>
+              {tabHasError('validation') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
               Validation
             </TabsTrigger>
           </TabsList>
@@ -289,6 +375,10 @@ export default function AdminPanel() {
                       // file
                     }}
                   />
+                  <ErrorMessage
+                    field="companyLogoUrl"
+                    error={adminPanelErrors}
+                  />
                   {/* <Input id="logo-upload" type="file" onChange={(e) => handleFileUpload(e)} /> */}
                 </div>
                 <div>
@@ -306,6 +396,10 @@ export default function AdminPanel() {
                       }
                       // file
                     }}
+                  />
+                  <ErrorMessage
+                    field="scratchCardBackground"
+                    error={adminPanelErrors}
                   />
                 </div>
               </CardContent>
@@ -331,6 +425,7 @@ export default function AdminPanel() {
                           updatePrize(index, 'image', file[0].url);
                         }}
                       />
+                      <ErrorMessage field="image" error={prizePanelErrors} />
                     </div>
                     <div className="h-full">
                       <Label htmlFor={'prizeBias' + index}>Prize Bias</Label>
@@ -379,6 +474,10 @@ export default function AdminPanel() {
                       }
                     }}
                   />
+                  <ErrorMessage
+                    field="losingPrizeUrl"
+                    error={adminPanelErrors}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -400,6 +499,7 @@ export default function AdminPanel() {
                       setState({ ...state, couponTitle: e.target.value })
                     }
                   />
+                  <ErrorMessage field="couponTitle" error={adminPanelErrors} />
                 </div>
                 <div>
                   <Label htmlFor="coupon-subtitle">Coupon Subtitle</Label>
@@ -410,6 +510,10 @@ export default function AdminPanel() {
                     onChange={e =>
                       setState({ ...state, couponSubtitle: e.target.value })
                     }
+                  />
+                  <ErrorMessage
+                    field="couponSubtitle"
+                    error={adminPanelErrors}
                   />
                 </div>
                 <div>
@@ -422,6 +526,7 @@ export default function AdminPanel() {
                       setState({ ...state, description: e.target.value })
                     }
                   />
+                  <ErrorMessage field="description" error={adminPanelErrors} />
                 </div>
                 <div>
                   <Label htmlFor="terms">Terms & Conditions</Label>
@@ -433,6 +538,7 @@ export default function AdminPanel() {
                       setState({ ...state, terms: e.target.value })
                     }
                   />
+                  <ErrorMessage field="terms" error={adminPanelErrors} />
                 </div>
                 <div>
                   <Label htmlFor="congrats">Congratulations Description</Label>
@@ -444,6 +550,7 @@ export default function AdminPanel() {
                       setState({ ...state, congrats: e.target.value })
                     }
                   />
+                  <ErrorMessage field="congrats" error={adminPanelErrors} />
                 </div>
               </CardContent>
             </Card>
@@ -548,6 +655,10 @@ export default function AdminPanel() {
                       updateCurrentLocation('companyName', e.target.value)
                     }
                   />
+                  <ErrorMessage
+                    field="companyName"
+                    error={locationPanelErrors}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contact-name">Contact Name</Label>
@@ -557,6 +668,10 @@ export default function AdminPanel() {
                     onChange={e =>
                       updateCurrentLocation('contactName', e.target.value)
                     }
+                  />
+                  <ErrorMessage
+                    field="contactName"
+                    error={locationPanelErrors}
                   />
                 </div>
                 <div className="space-y-2">
@@ -569,6 +684,7 @@ export default function AdminPanel() {
                       updateCurrentLocation('email', e.target.value)
                     }
                   />
+                  <ErrorMessage field="email" error={locationPanelErrors} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
@@ -579,6 +695,7 @@ export default function AdminPanel() {
                       updateCurrentLocation('phone', e.target.value)
                     }
                   />
+                  <ErrorMessage field="phone" error={locationPanelErrors} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="website">Website</Label>
@@ -589,6 +706,7 @@ export default function AdminPanel() {
                       updateCurrentLocation('website', e.target.value)
                     }
                   />
+                  <ErrorMessage field="website" error={locationPanelErrors} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="hours">Opening Hours</Label>
@@ -598,6 +716,10 @@ export default function AdminPanel() {
                     onChange={e =>
                       updateCurrentLocation('openingHours', e.target.value)
                     }
+                  />
+                  <ErrorMessage
+                    field="openingHours"
+                    error={locationPanelErrors}
                   />
                 </div>
                 <div className="space-y-2">
@@ -609,6 +731,7 @@ export default function AdminPanel() {
                       updateCurrentLocation('address', e.target.value)
                     }
                   />
+                  <ErrorMessage field="address" error={locationPanelErrors} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="zip">Zip/Postal Code</Label>
@@ -619,6 +742,7 @@ export default function AdminPanel() {
                       updateCurrentLocation('zipCode', e.target.value)
                     }
                   />
+                  <ErrorMessage field="zipCode" error={locationPanelErrors} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
@@ -629,6 +753,7 @@ export default function AdminPanel() {
                       updateCurrentLocation('city', e.target.value)
                     }
                   />
+                  <ErrorMessage field="city" error={locationPanelErrors} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="country">Country</Label>
@@ -644,10 +769,10 @@ export default function AdminPanel() {
                     <SelectContent>
                       <SelectItem value="us">United States</SelectItem>
                       <SelectItem value="ca">Canada</SelectItem>
-                      <SelectItem value="uk">United Kingdom</SelectItem>
-                      {/* Add more countries as needed */}
+                      <SelectItem value="uk">UAE</SelectItem>
                     </SelectContent>
                   </Select>
+                  <ErrorMessage field="country" error={locationPanelErrors} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">Province/State</Label>
@@ -669,6 +794,7 @@ export default function AdminPanel() {
                       updateCurrentLocation('latitude', e.target.value)
                     }
                   />
+                  <ErrorMessage field="latitude" error={locationPanelErrors} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="longitude">Longitude</Label>
@@ -680,6 +806,7 @@ export default function AdminPanel() {
                       updateCurrentLocation('longitude', e.target.value)
                     }
                   />
+                  <ErrorMessage field="longitude" error={locationPanelErrors} />
                 </div>
               </div>
             </ScrollArea>
