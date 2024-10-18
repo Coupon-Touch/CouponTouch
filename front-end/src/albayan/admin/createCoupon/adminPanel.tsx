@@ -155,7 +155,7 @@ export default function AdminPanel() {
       ...state,
       prizes: [
         ...state.prizes,
-        { image: null, bias: 0, id: generator.next().value },
+        { image: '', bias: 0, id: generator.next().value },
       ],
     });
   };
@@ -280,10 +280,10 @@ export default function AdminPanel() {
 
         if (isSuccessful) {
           // TODO success message bro
-          console.log(message);
+          // console.log(message);
         } else {
           // TODO error message bro
-          console.log(message);
+          // console.log(message);
         }
       } else {
         console.error('Unexpected response structure:', response);
@@ -306,7 +306,7 @@ export default function AdminPanel() {
       <span className="text-red-600">{getError(field, error)}</span>
     );
   const tabHasError = (tab: string) => {
-    console.log(tab, adminPanelErrors)
+    // console.log(tab, adminPanelErrors)
     const hasFields = (fields: string[]) => {
       for (const field of fields) {
         if (adminPanelErrors[field]) return true;
@@ -365,6 +365,7 @@ export default function AdminPanel() {
                   <Label htmlFor="logo-upload">Company Logo</Label>
                   <UploadButton
                     endpoint="logoUpload"
+                    files={state.companyLogoUrl}
                     onComplete={file => {
                       if (file) {
                         setState({
@@ -387,6 +388,7 @@ export default function AdminPanel() {
                   </Label>
                   <UploadButton
                     endpoint="scratchCardBackground"
+                    files={state.scratchCardBackground}
                     onComplete={file => {
                       if (file) {
                         setState({
@@ -421,6 +423,7 @@ export default function AdminPanel() {
                       <Label htmlFor={'prizeImage' + index}>Prize Image</Label>
                       <UploadButton
                         endpoint="prizeImage"
+                        files={state.prizes[index].image}
                         onComplete={file => {
                           updatePrize(index, 'image', file[0].url);
                         }}
@@ -458,6 +461,14 @@ export default function AdminPanel() {
                     </div>
                   </div>
                 ))}
+                {state.prizes.length > 0 &&
+                  <div>
+                    Total Bias: {state.prizes.reduce((total, data) => {
+                      return total + data.bias
+                    }, 0)}
+                    /100
+                  </div>
+                }
                 <Button onClick={addPrize}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Prize
                 </Button>
@@ -465,6 +476,7 @@ export default function AdminPanel() {
                   <Label htmlFor="losing-image-upload">Losing Image</Label>
                   <UploadButton
                     endpoint="prizeImage"
+                    files={state.losingPrizeUrl}
                     onComplete={file => {
                       if (file) {
                         setState({

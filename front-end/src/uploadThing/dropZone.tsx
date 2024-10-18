@@ -24,6 +24,8 @@ export function UploadButton(props: {
   onComplete: (file: ClientUploadedFileData<null>[]) => void;
   onError?: (err: UploadThingError<Json>) => void;
   uploadBegin?: (file: string) => void;
+  files?: string;
+
 }) {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
@@ -60,37 +62,50 @@ export function UploadButton(props: {
       generatePermittedFileTypes(routeConfig).fileTypes
     ),
   });
-
+  const alreadyUploadedFiles = !(!props.files || props.files.length === 0) || uploadedFiles.length < 0;
+  console.log(props.files, uploadedFiles.length, alreadyUploadedFiles)
   return (
     <div>
       <div
         {...getRootProps()}
         className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition duration-200 ease-in-out"
       >
-        <input {...getInputProps()} className="hidden" />
+        {!alreadyUploadedFiles && (
+          <input {...getInputProps()} className="hidden" />
+        )}
         <div className="text-center">
           {uploading ? (
             <p className="text-blue-600 mt-2">Uploading...</p>
           ) : (
-            uploadedFiles.length === 0 && (
+              !alreadyUploadedFiles && (
               <p className="text-gray-600 mb-2">Drop files here to upload!</p>
             )
           )}
           {/* Display Uploaded Files */}
-          {uploadedFiles.length > 0 && (
+          {alreadyUploadedFiles && (
             <div className="mt-4">
               <h4 className="font-semibold">Image Upload Successful!</h4>
               <ul className="list-disc list-inside">
-                {uploadedFiles.map((file, index) => (
+                {uploadedFiles.length > 0 ? uploadedFiles.map((file, index) => (
                   <a
                     key={index}
                     href={file.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="text-blue-600 underline"
                   >
                     {file.name}
                   </a>
-                ))}
+                )) :
+                  <a
+                    href={props.files}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    {props.files}
+                  </a>}
+
               </ul>
             </div>
           )}
