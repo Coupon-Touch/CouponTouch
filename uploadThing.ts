@@ -8,6 +8,7 @@ export const uploadRouter = {
     image: { maxFileSize: '100KB', maxFileCount: 1, minFileCount: 1 },
   })
     // .middleware(({ req }) => auth(req))
+    // @ts-ignore
     .onUploadComplete(data => console.log('Logo uploaded', data)),
 
   // Scratch Card Background route - allows PNG, JPEG, WEBP with max file size of 500KB
@@ -16,6 +17,7 @@ export const uploadRouter = {
     image: { maxFileSize: '500KB', maxFileCount: 1, minFileCount: 1 },
   })
     // .middleware(({ req }) => auth(req))
+    // @ts-ignore
     .onUploadComplete(data =>
       console.log('Scratch Card Background uploaded', data)
     ),
@@ -25,6 +27,7 @@ export const uploadRouter = {
     image: { maxFileSize: '1MB', maxFileCount: 1, minFileCount: 1 },
   })
     // .middleware(({ req }) => auth(req))
+    // @ts-ignore
     .onUploadComplete(data => console.log('Prize Image uploaded', data)),
 } satisfies FileRouter;
 
