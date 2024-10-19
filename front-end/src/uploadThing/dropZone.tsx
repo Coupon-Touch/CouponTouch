@@ -8,7 +8,7 @@ import {
   generatePermittedFileTypes,
 } from 'uploadthing/client';
 
-import { OurFileRouter } from '../../../uploadThing.ts';
+import { OurFileRouter } from '../uploadThing.ts';
 import { ClientUploadedFileData } from 'uploadthing/types';
 import { UploadThingError } from 'uploadthing/server';
 import { Json } from '@uploadthing/shared';
@@ -17,7 +17,6 @@ import { Json } from '@uploadthing/shared';
 //   url: window.location.origin,
 // } satisfies GenerateTypedHelpersOptions;
 
-// @ts-expect-error - upload thing error
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 export function UploadButton(props: {
