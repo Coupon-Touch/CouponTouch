@@ -7,9 +7,25 @@ export default function Coupon() {
   const [isSubscribed, setIsSubscribed] = useState(false); // tells if the user is subscribed
   useEffect(() => {
     // TODO: store these in JWT token dont get it from local storage
+
+    const eventSource = new EventSource('/api/events');
+
+    eventSource.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      console.log(data)
+    };
+
+    eventSource.onerror = function (error) {
+      console.error('Error:', error);
+    };
+
     const isNewUser = Boolean(window.localStorage.getItem('isNewUser'));
     setIsNewUser(!isNewUser);
     setIsSubscribed(Boolean(window.localStorage.getItem('isSubscribed')));
+
+    return () => {
+      eventSource.close();
+    }
   });
   const handleMobileSubmit = () => {
     setIsNewUser(false);

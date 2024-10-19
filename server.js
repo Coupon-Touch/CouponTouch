@@ -70,6 +70,33 @@ async function startServer() {
           router: uploadRouter,
         })
       );
+      app.get('/api/events', (req, res) => {
+        // Set headers to indicate an SSE connection
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        // Send an initial message to the client
+        res.write(`data: ${JSON.stringify({ message: 'Connected' })}\n\n`);
+
+        // Function to send periodic data to the client
+        const sendEvent = data => {
+          res.write(`data: ${JSON.stringify(data)}\n\n`);
+        };
+
+        // Example: Send data every 5 seconds
+        const intervalId = setInterval(() => {
+          const currentTime = new Date().toISOString();
+          sendEvent({ message: 'Current time is', time: currentTime });
+        }, 5000);
+
+        // Cleanup when the client disconnects
+        req.on('close', () => {
+          clearInterval(intervalId);
+          res.end();
+        });
+      });
+
       app.use(
         '/api',
         expressMiddleware(server, {
