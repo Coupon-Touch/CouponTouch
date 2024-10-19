@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import SubscriberInfo from './subscriberInfo';
 import { cn } from '@/lib/utils';
+import AfterGame from './afterGame';
 
 export default function Coupon() {
   const [isNewUser, setIsNewUser] = useState(false); // tells if the user has session or not
@@ -40,6 +41,7 @@ export default function Coupon() {
             seamless={true}
             className="border-0 w-full h-screen m-0 p-0"
           ></iframe>
+          <AfterGame />
         </div>
       </div>
     </>
