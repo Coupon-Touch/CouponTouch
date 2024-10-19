@@ -28,7 +28,7 @@ export default function Coupon() {
   };
   return (
     <>
-      <div className="w-full h-full flex justify-center">
+      <div className="w-full h-full flex justify-center mt-5">
         {/* <script src="https://hosting4images.com/popup/popup_0e095e054ee94774d6a496099eb1cf6a.js"></script> */}
         {isNewUser && <SubscriberInfo successCallback={handleMobileSubmit} />}
         <div
@@ -38,7 +38,7 @@ export default function Coupon() {
             id="coupontools"
             src="https://digicpn.com/p/rptbsd&web=true"
             seamless={true}
-            className="border-0 w-full min-h-screen m-0 p-0"
+            className="border-0 w-full h-screen m-0 p-0"
           ></iframe>
         </div>
       </div>

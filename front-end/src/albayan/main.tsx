@@ -41,13 +41,15 @@ export default function Albayan() {
     <div className="flex flex-col min-h-screen font-jetbrains">
       <NavBar />
       <div className="flex flex-1 justify-center items-center">
+        <div className="container">
           <Routes>
             {Paths.map((path, index) => (
               <Route key={index} path={path.path} element={path.element} />
             ))}
             <Route path={'/'} element={<Coupon />} />
             <Route path={'/*'} element={<NotFound />} />
-        </Routes>
+          </Routes>
+        </div>
       </div>
       <footer className="mt-8 mb-6 w-full text-center text-gray-500 text-sm">
         © {new Date().getFullYear()} CouponTouch Loyalty Solutions. All rights
