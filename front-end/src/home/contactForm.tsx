@@ -173,12 +173,12 @@ export default function ContactForm() {
               htmlFor="message"
               className="text-sm font-medium text-gray-300"
             >
-              Comment
+              Message
             </label>
             <Textarea
               id="message"
               name="message"
-              placeholder="Your message"
+              placeholder="Your message here"
               rows={4}
               value={formik.values.message}
               onChange={formik.handleChange}

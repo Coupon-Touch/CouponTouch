@@ -9,13 +9,13 @@ export default function GameCard(props: {
   link: string;
 }) {
   return (
-    <Link to={props.link}>
-      <div
-        className={cn(
-          `rounded-lg transition-all hover:scale-105 hover:border-[1px] p-3 pb-5 bg-gray-900/70 backdrop-blur-lg border-gray-800 cursor-pointer`,
-          props.className
-        )}
-      >
+    <Link
+      to={props.link}
+      className={cn(
+        `rounded-lg transition-all w-80 mt-1 hover:scale-105 hover:border-[1px] p-3 pb-5 bg-gray-900/70 backdrop-blur-lg border-gray-800 cursor-pointer`,
+        props.className
+      )}
+    >
         <div className="h-72 flex justify-center">
           <img
             className="rounded-lg object-contain"
@@ -36,7 +36,6 @@ export default function GameCard(props: {
             </span>
           </Link>
         </div>
-      </div>
     </Link>
   );
 }
