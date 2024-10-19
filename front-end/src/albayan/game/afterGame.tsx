@@ -16,6 +16,7 @@ export default function AfterGame() {
   const [comments, setComments] = useState("")
 
   const locations = [
+    // get location from backend
     "New York",
     "Los Angeles",
     "Chicago",
@@ -27,11 +28,8 @@ export default function AfterGame() {
     "Dallas",
     "San Jose",
   ]
+  const dateRange = { fromDate: new Date(), toDate: addDays(new Date(), 5) }
 
-  // Define your date range here
-  const today = new Date()
-  const fromDate = today
-  const toDate = addDays(today, 5) // Set the end date to 30 days from today
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,10 +67,10 @@ export default function AfterGame() {
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    disabled={(date) => date < fromDate || date > toDate}
+                    disabled={(date) => date < dateRange.fromDate || date > dateRange.toDate}
                     initialFocus
-                    fromDate={fromDate}
-                    toDate={toDate}
+                    fromDate={dateRange.fromDate}
+                    toDate={dateRange.toDate}
                   />
                 </PopoverContent>
               </Popover>
