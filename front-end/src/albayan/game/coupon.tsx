@@ -32,13 +32,17 @@ export default function Coupon() {
         {/* <script src="https://hosting4images.com/popup/popup_0e095e054ee94774d6a496099eb1cf6a.js"></script> */}
         {isNewUser && <SubscriberInfo successCallback={handleMobileSubmit} />}
         <div
-          className={cn('w-full', !isNewUser && isSubscribed ? '' : 'hidden')}
+          className={cn(
+            'w-full h-[900px]',
+            !isNewUser && isSubscribed ? '' : 'hidden'
+          )}
         >
           <iframe
             id="coupontools"
             src="https://digicpn.com/p/rptbsd&web=true"
             seamless={true}
-            className="border-0 w-full h-screen m-0 p-0"
+            className="border-0 w-full h-full m-0 p-0"
+            allow="geolocation"
           ></iframe>
         </div>
       </div>
