@@ -13,28 +13,28 @@ import { useLocation } from 'react-router-dom';
 
 const Games = [
   {
-    title: 'SCRATCH & WIN',
+    title: 'Scratch & Win',
     description:
       'Digital Scratch cards are sent to customers through social media or individual invitations. Customer gets various predetermined REWARDS that can be redeemed online or visit to physical stores.',
     link: '/scratch',
     image: gamification3,
   },
   {
-    title: 'SPIN WHEEL',
+    title: 'Spin Wheel',
     description:
       'Unline Scratch & Win, the REWARDS are visible to the customer. This brings more dedicated customers to this game thereby improving the target audience.',
     link: '/spin',
     image: gamification1,
   },
   {
-    title: 'SLOT MACHINE',
+    title: 'Slot Machine',
     description:
       'This could be a nice tool for in-store promotion. Using geo-fencing, customers are offered slot machine and store promotions can be offered if they win the game',
     link: '/slot',
     image: gamification2,
   },
   {
-    title: 'SLIDE PUZZLE',
+    title: 'Slide Puzzle',
     description:
       'Can be used to increase brand recall, especially in fashion stores. Can also be combined with store promotions once the puzzle is solved.',
     link: '/slide',
@@ -63,58 +63,54 @@ export default function Home() {
   }, [location]); // Trigger when the location changes
 
   return (
-    <>
-      <div className="flex justify-center bg-black">
-        <div className="font-mono container flex flex-col w-full min-h-screen bg-black text-white items-center">
-          <Navbar />
-          <div ref={routeElementRef}>
-            {' '}
-            {/* Step 2: Attach ref here */}
-            <Routes>
-              <Route path={'/'} element={<Landing />} />
-              {Games.map(game => (
-                <Route
-                  key={game.title}
-                  path={game.link}
-                  element={
-                    <Section
-                      title={game.title}
-                      description={game.description}
-                      image={game.image}
-                    />
-                  }
+    <div className="flex flex-col font-jetbrains w-full min-h-screen bg-black text-white items-center">
+      <Navbar />
+      <div ref={routeElementRef}>
+        {' '}
+        {/* Step 2: Attach ref here */}
+        <Routes>
+          <Route path={'/'} element={<Landing />} />
+          {Games.map(game => (
+            <Route
+              key={game.title}
+              path={game.link}
+              element={
+                <Section
+                  title={game.title}
+                  description={game.description}
+                  image={game.image}
                 />
-              ))}
-            </Routes>
-          </div>
-          <ContactForm />
-          <footer className="mt-8 text-center text-gray-500 text-sm">
-            © {new Date().getFullYear()} CouponTouch Loyalty Solution. All
-            rights reserved. Terms and conditions apply.
-          </footer>
-        </div>
+              }
+            />
+          ))}
+        </Routes>
       </div>
-    </>
+      <ContactForm />
+      <footer className="mt-8 mb-8 text-center text-gray-500 text-sm">
+        © {new Date().getFullYear()} CouponTouch Loyalty Solutions. All rights
+        reserved. Terms and conditions apply.
+      </footer>
+    </div>
   );
 }
 
 function Landing() {
   return (
     <>
-      <div className="flex flex-1 flex-col w-full justify-center items-center gap-4 m-4">
-        <main className="text-center space-y-6">
-          <h2 className="text-4xl font-bold mx-1">
-            Improve Customer Engagement Through
+      <div className="flex flex-1 flex-col w-full justify-center md:items-center gap-4">
+        <main className="flex flex-col w-96 sm:w-auto md:items-center text-center mt-10">
+          <h2 className="text-xl md:text-4xl mx-1 font-">
+            IMPROVE CUSTOMER ENGAGEMENT THROUGH
           </h2>
-          <h3 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">
-            Gamification
+          <h3 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">
+            GAMIFICATION
           </h3>
-          <p className="text-xl  max-w-2xl mx-2">
+          <p className="text-lg md:text-xl w-full max-w-2xl mt-10 text-center">
             Boost loyalty and increase customer retention with our innovative
             gamification solutions.
           </p>
         </main>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full items-center px-4">
+        <div className="flex flex-col sm:flex-row w-full justify-center items-center gap-3">
           {Games.map(game => (
             <GameCard
               key={game.title}
@@ -135,7 +131,7 @@ function Section(props: { title: string; description: string; image: string }) {
     <>
       <div className="flex-grow flex items-center justify-center p-4">
         <div className="max-w-4xl w-full">
-          <Card className="bg-black border-0 shadow-xl">
+          <Card className="bg-[#0c111b] border-0 shadow-xl">
             <CardContent className="p-6 md:p-10">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
@@ -156,7 +152,7 @@ function Section(props: { title: string; description: string; image: string }) {
             </CardContent>
             <CardFooter className="flex justify-center md:justify-start">
               <Link to="/">
-                <Button>All Games</Button>
+                <Button>View All Games</Button>
               </Link>
             </CardFooter>
           </Card>

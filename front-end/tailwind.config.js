@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        mono: ['JetBrains Mono"', 'monospace'],
+        jetbrains: ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {
         lg: 'var(--radius)',
