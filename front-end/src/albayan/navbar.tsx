@@ -11,19 +11,6 @@ export default function NavBar() {
         {/* Replace with your logo */}
         <img src={logo} className="w-full h-full object-contain" />
       </div>
-      {localStorage.getItem('isNewUser') ? (
-        <button
-          className="bg-black p-1 rounded-md text-white text-sm"
-          onClick={() => {
-            localStorage.removeItem('isNewUser');
-            window.location.reload();
-          }}
-        >
-          Reset
-        </button>
-      ) : (
-        <></>
-      )}
       <img src={albayanLogo} className="w-28 ml-4 lg:ml-0"></img>
       <div className="fixed right-0">
         {window.location.pathname.endsWith('/adminLogin') && (
