@@ -82,6 +82,10 @@ async function startServer() {
           },
         })
       );
+      app.use('/api/hook', (req, res) => {
+        console.log(req.body);
+        res.send('Done');
+      });
 
       app.get('/uploadCSV', async (req, res) => {
         const { decodedToken, isValid } = req.context;
