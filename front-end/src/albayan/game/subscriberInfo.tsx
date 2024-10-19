@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useFormik } from 'formik';
-import { Formik, Field, Form, ErrorMessage } from 'formik';
 
 import { FormEvent, useState } from 'react';
 import * as Yup from 'yup';
@@ -71,23 +70,16 @@ export default function SubscriberInfo({
       pincode: '',
     },
     validationSchema: validationSchema,
-    onSubmit: values => {},
+    onSubmit: () => { },
   });
 
-  const handleSubmit = values => {
-    console.log(values);
-    // TODO: Make API call to save the subscriber info
-
-    successCallback(); // call this if the API call is successful
-    setIsLoading(false);
-  };
 
   const checkPhoneNumber = (event: FormEvent) => {
     event.preventDefault();
     if (formik.errors.phoneNumber || formik.errors.countryCode) return;
     setIsLoading(true);
     const phone = formik.values.phoneNumber;
-    const countryCode = formik.values.countryCode;
+    // const countryCode = formik.values.countryCode;
 
     // TODO: check phone number for existing subscriber, make API call here
 
@@ -117,11 +109,7 @@ export default function SubscriberInfo({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Formik
-          initialValues={{ username: '', password: '' }}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
-        ></Formik>
+
         <form
           onSubmit={
             showAdditionalFields ? formik.handleSubmit : checkPhoneNumber

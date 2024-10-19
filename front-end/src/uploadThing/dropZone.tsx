@@ -17,6 +17,7 @@ import { Json } from '@uploadthing/shared';
 //   url: window.location.origin,
 // } satisfies GenerateTypedHelpersOptions;
 
+// @ts-expect-error - upload thing error
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 export function UploadButton(props: {

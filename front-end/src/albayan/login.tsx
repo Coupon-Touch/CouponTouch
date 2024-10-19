@@ -10,7 +10,9 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [login, { data, loading, error }] = useMutation(ADMIN_LOGIN);
+  const [login,
+    // { data, loading, error }
+  ] = useMutation(ADMIN_LOGIN);
 
   useEffect(() => {}, []);
 
@@ -62,7 +64,7 @@ export default function Login() {
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
           >
-            {({ isSubmitting, validateForm }) => (
+            {({ isSubmitting }) => (
               <Form className="space-y-4">
                 <div>
                   <Label htmlFor="username" className="text-lg">

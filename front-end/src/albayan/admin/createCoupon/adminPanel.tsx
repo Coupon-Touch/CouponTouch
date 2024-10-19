@@ -93,7 +93,10 @@ type Prizes = yup.InferType<typeof prizeSchema>;
 type Location = yup.InferType<typeof locationSchema>;
 
 export default function AdminPanel() {
-  const [storeCouponSettings, { data, loading, error }] =
+
+  const [storeCouponSettings,
+    // { data, loading, error }
+  ] =
     useMutation(STORE_COUPONSETTINGS);
 
   const {
@@ -190,7 +193,7 @@ export default function AdminPanel() {
   const saveLocation = () => {
     locationSchema
       .validate(state.currentLocation, { abortEarly: false })
-      .then(data => {
+      .then(() => {
         setLocationPanelErrors({});
         if (state.isAddingLocation && state.currentLocation) {
           setState({
@@ -276,7 +279,7 @@ export default function AdminPanel() {
 
       // TODO Show this bro
       if (response && response.data) {
-        const { isSuccessful, message } = response.data.storeCouponSettings;
+        const { isSuccessful } = response.data.storeCouponSettings;
 
         if (isSuccessful) {
           // TODO success message bro

@@ -21,6 +21,6 @@ declare module '*.gif' {
 
 declare module '*.svg' {
   import * as React from 'react';
-  const content: React.FunctionComponent<React.SVGAttributes<SVGElement>>;
+  const content: string | undefined;
   export default content;
 }
