@@ -10,7 +10,7 @@ import dotenv from 'dotenv';
 import { createRouteHandler } from 'uploadthing/express';
 import { uploadRouter } from './uploadThing.js';
 import { csvUploadController } from './back-end/controllers/csvFunctions.js';
-
+import multer from 'multer';
 dotenv.config();
 
 // Database Connection
@@ -21,14 +21,14 @@ import { typeDefs, resolvers } from './back-end/graphql.js';
 
 // JWT Validators
 import { validateToken } from './back-end/jwt.js';
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 app.use(express.static(join(__dirname, './front-end/dist')));
 
 const authMiddleware = (req, res, next) => {
@@ -46,7 +46,8 @@ const authMiddleware = (req, res, next) => {
       isValid: false,
     };
   }
-  next();
+  setTimeout(next, 2000);
+  // next();
 };
 
 app.use(authMiddleware);
@@ -64,12 +65,41 @@ async function startServer() {
     await server.start();
 
     if (dbConnected) {
+      app.use('/api/uploadCSV', upload.single('file'), async (req, res) => {
+        console.log(req.file);
+        if (req.file) {
+          const { decodedToken, isValid } = req.context;
+          if (!isValid || decodedToken.userType !== UserRole.ADMINUSER) {
+            return res.status(401).json({
+              isSuccessful: false,
+              message: 'Unauthorized to perform this operation.',
+            });
+          }
+
+          try {
+            return csvUploadController(req.file);
+          } catch (error) {
+            console.error('CSV Upload Failed:', error);
+            return res.status(500).json({
+              isSuccessful: false,
+              message: 'Some error occurred',
+            });
+          }
+        } else {
+          res.status(400).send('No file uploaded.');
+        }
+      });
       app.use(
         '/api/uploadthing',
         createRouteHandler({
           router: uploadRouter,
         })
       );
+      app.use('/api/hook', (req, res) => {
+        console.log(req.body);
+
+        res.send('Done');
+      });
       app.use(
         '/api',
         expressMiddleware(server, {
@@ -82,30 +112,6 @@ async function startServer() {
           },
         })
       );
-      app.use('/api/hook', (req, res) => {
-        console.log(req.body);
-        res.send('Done');
-      });
-
-      app.get('/uploadCSV', async (req, res) => {
-        const { decodedToken, isValid } = req.context;
-        if (!isValid || decodedToken.userType !== UserRole.ADMINUSER) {
-          return res.status(401).json({
-            isSuccessful: false,
-            message: 'Unauthorized to perform this operation.',
-          });
-        }
-
-        try {
-          return csvUploadController(req);
-        } catch (error) {
-          console.error('CSV Upload Failed:', error);
-          return res.status(500).json({
-            isSuccessful: false,
-            message: 'Some error occurred',
-          });
-        }
-      });
 
       app.get('*', (req, res) => {
         res.sendFile(join(__dirname, './front-end/dist/index.html'));
