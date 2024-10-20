@@ -2,40 +2,44 @@ import { useEffect, useState } from 'react';
 import SubscriberInfo from './subscriberInfo';
 import { cn } from '@/lib/utils';
 import AfterGame from './afterGame';
+import { add } from 'date-fns';
+import { decodeJWT } from '@/jwtUtils';
+import CountDown from './countDown';
 
 export default function Coupon() {
-  const [isNewUser, setIsNewUser] = useState(false); // tells if the user has session or not
-  const [isSubscribed, setIsSubscribed] = useState(false); // tells if the user is subscribed
+  const [showScratchCard, setShowScratchCard] = useState(false);
+  const [countDown, setCountDown] = useState(0)
+  const [trigger, setTrigger] = useState(false);
   useEffect(() => {
     // TODO: store these in JWT token dont get it from local storage
-    const isNewUser = Boolean(window.localStorage.getItem('isNewUser'));
-    setIsNewUser(!isNewUser);
-    setIsSubscribed(Boolean(window.localStorage.getItem('isSubscribed')));
-  });
-  const handleMobileSubmit = () => {
-    setIsNewUser(false);
-
-    //TODO: post the values to the server and get true or false if the user is subscribed
-    const isSubscribed = true;
-    window.localStorage.setItem('isNewUser', 'true'); // TODO: store in JWT Token
-
-    if (isSubscribed) {
-      // TODO: store in JWT Token
-      window.localStorage.setItem('isSubscribed', 'true');
-      setIsSubscribed(true);
-    } else {
-      setIsSubscribed(false);
+    const subscriberToken = decodeJWT(window.localStorage.getItem('subscriberToken'));
+    if (subscriberToken) {
+      if (subscriberToken.lastScratchTime) {
+        const lastScratchTime = new Date(subscriberToken.lastScratchTime);
+        const nextScratchTime = add(lastScratchTime, { days: 1 });
+        if (nextScratchTime.getTime() <= new Date().getTime()) {
+          setShowScratchCard(true);
+          setCountDown(0)
+        } else {
+          setCountDown(nextScratchTime.getTime())
+        }
+      }
     }
+  }, [trigger]);
+  const formComplete = () => {
+    setTrigger((prev) => !prev);
+
   };
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
+        {countDown !== 0 && <CountDown targetDate={countDown} onComplete={formComplete} />}
         {/* <script src="https://hosting4images.com/popup/popup_0e095e054ee94774d6a496099eb1cf6a.js"></script> */}
-        {isNewUser && <SubscriberInfo successCallback={handleMobileSubmit} />}
+        {countDown === 0 && !showScratchCard && <SubscriberInfo successCallback={formComplete} />}
         <div
           className={cn(
             'w-full h-[900px]',
-            !isNewUser && isSubscribed ? '' : 'hidden'
+            showScratchCard ? '' : 'hidden'
           )}
         >
           <iframe

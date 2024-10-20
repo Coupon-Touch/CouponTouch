@@ -9,14 +9,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
 import { cn } from '@/lib/utils';
+import { useLazyQuery, useQuery } from '@apollo/client';
 import { useFormik } from 'formik';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import * as Yup from 'yup';
 
+type SubscriberDetails = {
+  isSubscriber: boolean;
+  jwtToken: string;
+  lastScratchTime: string;
+  timeLeftTillNextScratch: number;
+};
 const countryCodes = [
-  1, 7, 20, 21, 27, 27, 29, 30, 31, 32, 33, 34, 36, 39, 40, 41, 43, 44, 45, 46,
+  1, 7, 20, 21, 27, 29, 30, 31, 32, 33, 34, 36, 39, 40, 41, 43, 44, 45, 46,
   47, 48, 49, 51, 52, 53, 54, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 81,
   86, 90, 91, 92, 93, 95, 98, 212, 213, 216, 218, 220, 221, 222, 223, 224, 225,
   226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 240, 241,
@@ -55,14 +63,15 @@ const validationSchema = Yup.object({
 export default function SubscriberInfo({
   successCallback,
 }: {
-  successCallback: () => void;
+    successCallback: (timeTillNextScratch: number) => void;
 }) {
+
+
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const formik = useFormik({
     initialValues: {
-      countryCode: countryCodes.indexOf(971).toString(),
+      countryCode: "971",
       phoneNumber: '',
       emiratesId: '',
       name: '',
@@ -74,22 +83,36 @@ export default function SubscriberInfo({
   });
 
 
-  const checkPhoneNumber = (event: FormEvent) => {
+  const [getSubscriber, { loading, data, error }] = useLazyQuery(GET_SUBSCRIBER)
+
+  const checkPhoneNumber = async (event: FormEvent) => {
     event.preventDefault();
     if (formik.errors.phoneNumber || formik.errors.countryCode || formik.values.phoneNumber.length === 0) return;
-    setIsLoading(true);
     const phone = formik.values.phoneNumber;
-    // const countryCode = formik.values.countryCode;
-
-    // TODO: check phone number for existing subscriber, make API call here
-
-    const exists = phone.toString().startsWith('1'); // just for testing replace it with API response
-    if (exists) {
-      successCallback();
-    } else {
-      setShowAdditionalFields(true);
+    const countryCode = formik.values.countryCode;
+    const data: SubscriberDetails = await new Promise((resolve, reject) => {
+      getSubscriber({
+        variables: { phoneNumber: `${phone}`, countryCode: `${countryCode}` },
+        onCompleted: (data) => {
+          resolve(data.getSubscriberDetails)
+        },
+        onError: (error) => {
+          reject(error)
+        }
+      })
+    })
+    if (data) {
+      console.log(data)
+      const exists = data?.isSubscriber;
+      if (data.jwtToken) {
+        window.localStorage.setItem("subscriberToken", data.jwtToken); // TODO: store in JWT Token
+      }
+      if (exists) {
+        successCallback(data.timeLeftTillNextScratch);
+      } else {
+        setShowAdditionalFields(true);
+      }
     }
-    setIsLoading(false);
   };
 
   return (
@@ -138,7 +161,7 @@ export default function SubscriberInfo({
                     </SelectTrigger>
                     <SelectContent>
                       {countryCodes.map((code, idx) => (
-                        <SelectItem key={`${idx}`} value={`${idx}`}>
+                        <SelectItem key={`${idx}`} value={`${code}`}>
                           {`+${code}`}
                         </SelectItem>
                       ))}
@@ -247,8 +270,8 @@ export default function SubscriberInfo({
               </>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading
                 ? 'Checking...'
                 : showAdditionalFields
                   ? 'Submit'

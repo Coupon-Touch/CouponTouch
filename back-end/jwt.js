@@ -33,14 +33,16 @@ export const prepareAdminToken = user => {
 };
 
 export const prepareSubscriberToken = subscriber => {
-  return jwt.sign(
-    {
-      userType: UserRole.SUBSCRIBER,
-      subscriberId: subscriber._id,
-      subscriberName: subscriber.name,
-      subsriberMobile: subscriber.mobile,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: '1d' }
-  );
+   return jwt.sign(
+     {
+       userType: UserRole.SUBSCRIBER,
+       subscriberId: subscriber._id,
+       subscriberName: subscriber.name,
+       subsriberMobile: subscriber.mobile,
+       subscriberCountryCode: subscriber.countryCode,
+       lastScratchTime: subscriber.lastScratchTime,
+     },
+     process.env.JWT_SECRET,
+     { expiresIn: '1d' }
+   );
 };
