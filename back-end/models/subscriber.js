@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 
 const subscriberSchema = new mongoose.Schema({
-  name: { type: String },
-  email: { type: String },
-  emirateID: { type: String },
+  name: { type: String, default: '' },
+  email: { type: String, default: '' },
+  emirateID: { type: String, default: '' },
   countryCode: { type: String, required: true },
   mobile: { type: String, required: true },
   comment: { type: String, default: '' },
