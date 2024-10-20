@@ -7,6 +7,7 @@ import { getLatestCouponSettingsAlbayanController } from './controllers/couponSe
 import { updateLastScratchTimeController } from './controllers/lastScratchHandler.js';
 import { addSubscriberController } from './controllers/csvFunctions.js';
 import { getSubscriberDetailsController } from './controllers/loginFunctions.js';
+import { updateSubscriberController } from './controllers/subscriberFunctions.js';
 
 // GraphQL
 export const typeDefs = gql`
@@ -55,6 +56,11 @@ export const typeDefs = gql`
     message: String
   }
 
+  type UpdateSubscriberInfo {
+    isSuccessful: Boolean!
+    message: String
+  }
+
   type Mutation {
     adminLogin(username: String, password: String): AdminLoginInfo
     dumpInitialDatabase: DumpDatabaseInfo
@@ -64,13 +70,22 @@ export const typeDefs = gql`
       CountryCode: String!
     ): UpdateScratchTimeInfo
     addSubscriber(
+      name: String!
+      email: String!
+      emirateID: String!
+      countryCode: String!
+      mobile: String!
+      address: String!
+    ): AddSubscriberInfo
+    updateSubscriber(
       name: String
       email: String
       emirateID: String
       countryCode: String!
       mobile: String!
+      address: String
       comment: String
-    ): AddSubscriberInfo
+    ): UpdateSubscriberInfo
   }
 `;
 
@@ -142,7 +157,7 @@ export const resolvers = {
     },
     addSubscriber: async (
       _,
-      { name, email, emirateID, countryCode, mobile, comment }
+      { name, email, emirateID, countryCode, mobile, address }
     ) => {
       try {
         const subscriberInput = {
@@ -151,7 +166,7 @@ export const resolvers = {
           emirateID,
           countryCode,
           mobile,
-          comment,
+          address,
         };
 
         return await addSubscriberController(subscriberInput);
@@ -161,6 +176,22 @@ export const resolvers = {
         return {
           isSuccessful: false,
           message: 'An error occurred while adding the subscriber',
+        };
+      }
+    },
+    updateSubscriber: async (_, args) => {
+      try {
+        const { mobile, countryCode, ...updateFields } = args;
+        return await updateSubscriberController(
+          mobile,
+          countryCode,
+          updateFields
+        );
+      } catch (error) {
+        console.error('Error in updateSubscriber resolver:', error);
+        return {
+          isSuccessful: false,
+          message: 'An error occurred while updating the subscriber',
         };
       }
     },

@@ -95,7 +95,7 @@ export const addSubscriberController = async (
         emirateID: subscriberInput.emirateID,
         mobile: subscriberInput.mobile,
         countryCode: subscriberInput.countryCode,
-        comment: subscriberInput.comment || '',
+        address: subscriberInput.address
       });
     }
 
