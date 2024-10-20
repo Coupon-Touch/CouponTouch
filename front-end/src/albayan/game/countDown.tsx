@@ -17,9 +17,7 @@ const getNewTimeLeft = (target: number) => {
     const hours = Math.floor(
       (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
     );
-    const minutes = Math.floor(
-      (difference % (1000 * 60 * 60)) / (1000 * 60)
-    );
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((difference % (1000 * 60)) / 1000);
     return { days, hours, minutes, seconds };
   } else {
@@ -28,7 +26,7 @@ const getNewTimeLeft = (target: number) => {
 };
 export default function CountDown({
   targetDate = new Date().getTime(),
-  onComplete
+  onComplete,
 }: CountdownProps) {
   const [timeLeft, setTimeLeft] = useState(getNewTimeLeft(targetDate));
   useEffect(() => {
@@ -44,7 +42,7 @@ export default function CountDown({
         newTimeLeft.seconds === 0
       ) {
         clearInterval(interval); // Clear the interval when time is up
-        if (onComplete) onComplete()
+        if (onComplete) onComplete();
       }
     }, 1000);
 
@@ -52,10 +50,11 @@ export default function CountDown({
   }, [targetDate]); // Ensure targetDate is watched for changes
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full lg:max-w-md mx-auto">
       <CardContent className="p-6">
         <h2 className="text-2xl font-bold text-center mb-4">
-          Time Till Next Scratch
+          You've reached your coupon limit for the day. <br></br>{' '}
+          <span className="font-extralight text-lg">See you again in</span>
         </h2>
         <div className="grid grid-cols-4 gap-4 text-center">
           <div className="bg-primary/10 rounded-lg p-3">
@@ -77,16 +76,16 @@ export default function CountDown({
         </div>
       </CardContent>
       <CardFooter className="text-center">
-        <p className="text-muted-foreground">
-          Please wait scratch again or try with different{' '}
+        <p className="text-muted-foreground w-full">
+          Incorrect mobile number?{' '}
           <span
-            className="text-blue-500 hover:underline cursor-pointer"
+            className="text-blue-500 hover:underline cursor-pointer text-center w-full"
             onClick={() => {
               window.localStorage.clear();
               window.location.reload();
             }}
           >
-            Mobile Number
+            Reset
           </span>
         </p>
       </CardFooter>
