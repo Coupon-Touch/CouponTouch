@@ -2,6 +2,7 @@ import { prepareAdminToken, prepareSubscriberToken } from '../jwt.js';
 import { AdminUser } from '../models/adminUser.js';
 import { Subscriber } from '../models/subscriber.js';
 import bcrypt from 'bcryptjs';
+import { addSubscriberController } from './csvFunctions.js';
 
 export async function adminLoginController(args, context) {
   try {
@@ -39,18 +40,26 @@ export const getSubscriberDetailsController = async (
   countryCode
 ) => {
   try {
-    const subscriber = await Subscriber.findOne({
+    let isExistingSubscriber = true;
+    let subscriber = await Subscriber.findOne({
       mobile: phoneNumber,
       countryCode: countryCode,
     });
 
     if (!subscriber) {
-      return {
-        isSubscriber: false,
-        jwtToken: null,
-        lastScratchTime: null,
-        timeLeftTillNextScratch: null,
-      };
+      isExistingSubscriber = false;
+      await addSubscriberController(
+        {
+          mobile: phoneNumber,
+          countryCode: countryCode,
+        },
+        true
+      );
+
+      subscriber = await Subscriber.findOne({
+        mobile: phoneNumber,
+        countryCode: countryCode,
+      });
     }
 
     const jwtToken = prepareSubscriberToken(subscriber);
@@ -69,7 +78,7 @@ export const getSubscriberDetailsController = async (
     }
 
     return {
-      isSubscriber: true,
+      isSubscriber: isExistingSubscriber,
       jwtToken: jwtToken,
       lastScratchTime: lastScratchTime ? lastScratchTime.toISOString() : null,
       timeLeftTillNextScratch: timeLeftTillNextScratch,

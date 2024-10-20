@@ -65,9 +65,11 @@ export async function csvUploadController(file) {
   });
 }
 
-export const addSubscriberController = async subscriberInput => {
+export const addSubscriberController = async (
+  subscriberInput,
+  fromEntryPoint = false
+) => {
   try {
-    console.log(subscriberInput);
     const existingSubscriber = await Subscriber.findOne({
       mobile: subscriberInput.mobile,
       countryCode: subscriberInput.countryCode,
@@ -80,14 +82,22 @@ export const addSubscriberController = async subscriberInput => {
       };
     }
 
-    const newSubscriber = new Subscriber({
-      name: subscriberInput.name,
-      email: subscriberInput.email,
-      emirateID: subscriberInput.emirateID,
-      mobile: subscriberInput.mobile,
-      countryCode: subscriberInput.countryCode,
-      comment: subscriberInput.comment || '',
-    });
+    let newSubscriber;
+    if (fromEntryPoint) {
+      newSubscriber = new Subscriber({
+        mobile: subscriberInput.mobile,
+        countryCode: subscriberInput.countryCode,
+      });
+    } else {
+      newSubscriber = new Subscriber({
+        name: subscriberInput.name,
+        email: subscriberInput.email,
+        emirateID: subscriberInput.emirateID,
+        mobile: subscriberInput.mobile,
+        countryCode: subscriberInput.countryCode,
+        comment: subscriberInput.comment || '',
+      });
+    }
 
     await newSubscriber.save();
 
