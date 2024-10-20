@@ -24,3 +24,12 @@ export const GET_COUPONSETTINGS = gql`
     getCouponSettingsAlbayan
   }
 `;
+
+export const GET_SUBSCRIBER = gql`query GetSubscriberDetails($phoneNumber: String!, $countryCode: String!) {
+  getSubscriberDetails(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+    isSubscriber
+    jwtToken
+    lastScratchTime
+    timeLeftTillNextScratch
+  }
+}`

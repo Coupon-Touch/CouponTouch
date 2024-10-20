@@ -65,7 +65,7 @@ export const getSubscriberDetailsController = async (
       const hoursLeft = 24 * 60 * 60 * 1000 - timeDifference;
       timeLeftTillNextScratch = Math.max(0, hoursLeft);
     } else {
-      timeLeftTillNextScratch = 24 * 60 * 60 * 1000;
+      timeLeftTillNextScratch = 0;
     }
 
     return {
