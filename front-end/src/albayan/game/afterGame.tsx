@@ -1,48 +1,63 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { CalendarIcon } from "lucide-react"
-import { format, addDays } from "date-fns"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { CalendarIcon } from 'lucide-react';
+import { format, addDays } from 'date-fns';
 
 export default function AfterGame() {
-  const [date, setDate] = useState<Date>()
-  const [location, setLocation] = useState("")
-  const [comments, setComments] = useState("")
+  const [date, setDate] = useState<Date>();
+  const [location, setLocation] = useState('');
+  const [comments, setComments] = useState('');
 
   const locations = [
     // get location from backend
-    "New York",
-    "Los Angeles",
-    "Chicago",
-    "Houston",
-    "Phoenix",
-    "Philadelphia",
-    "San Antonio",
-    "San Diego",
-    "Dallas",
-    "San Jose",
-  ]
-  const dateRange = { fromDate: new Date(), toDate: addDays(new Date(), 5) }
-
+    'New York',
+    'Los Angeles',
+    'Chicago',
+    'Houston',
+    'Phoenix',
+    'Philadelphia',
+    'San Antonio',
+    'San Diego',
+    'Dallas',
+    'San Jose',
+  ];
+  const dateRange = { fromDate: new Date(), toDate: addDays(new Date(), 5) };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log({ date, location, comments })
+    e.preventDefault();
+    console.log({ date, location, comments });
     // Handle form submission here
-  }
+  };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Modal</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] font-jetbrains">
         <DialogHeader>
           <DialogTitle>Collection Details</DialogTitle>
         </DialogHeader>
@@ -55,11 +70,11 @@ export default function AfterGame() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={"outline"}
-                    className={`w-full justify-start text-left font-normal ${!date && "text-muted-foreground"}`}
+                    variant={'outline'}
+                    className={`w-full justify-start text-left font-normal ${!date && 'text-muted-foreground'}`}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    {date ? format(date, 'PPP') : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -67,7 +82,9 @@ export default function AfterGame() {
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    disabled={(date) => date < dateRange.fromDate || date > dateRange.toDate}
+                    disabled={date =>
+                      date < dateRange.fromDate || date > dateRange.toDate
+                    }
                     initialFocus
                     fromDate={dateRange.fromDate}
                     toDate={dateRange.toDate}
@@ -84,7 +101,7 @@ export default function AfterGame() {
                   <SelectValue placeholder="Select a location" />
                 </SelectTrigger>
                 <SelectContent>
-                  {locations.map((loc) => (
+                  {locations.map(loc => (
                     <SelectItem key={loc} value={loc}>
                       {loc}
                     </SelectItem>
@@ -100,7 +117,7 @@ export default function AfterGame() {
                 id="comments"
                 placeholder="Enter any additional comments"
                 value={comments}
-                onChange={(e) => setComments(e.target.value)}
+                onChange={e => setComments(e.target.value)}
               />
             </div>
             <Button type="submit" className="w-full">
@@ -110,5 +127,5 @@ export default function AfterGame() {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

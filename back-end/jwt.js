@@ -31,3 +31,16 @@ export const prepareAdminToken = user => {
     { expiresIn: '1d' }
   );
 };
+
+export const prepareSubscriberToken = subscriber => {
+  return jwt.sign(
+    {
+      userType: UserRole.SUBSCRIBER,
+      subscriberId: subscriber._id,
+      subscriberName: subscriber.name,
+      subsriberMobile: subscriber.mobile,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '1d' }
+  );
+};

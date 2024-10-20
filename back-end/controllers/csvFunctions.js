@@ -64,3 +64,43 @@ export async function csvUploadController() {
       .pipe(stream);
   });
 }
+
+export const addSubscriberController = async subscriberInput => {
+  try {
+    console.log(subscriberInput);
+    const existingSubscriber = await Subscriber.findOne({
+      mobile: subscriberInput.mobile,
+      countryCode: subscriberInput.countryCode,
+    });
+
+    if (existingSubscriber) {
+      return {
+        isSuccessful: false,
+        message: 'Subscriber with this phone number already exists',
+      };
+    }
+
+    const newSubscriber = new Subscriber({
+      name: subscriberInput.name,
+      email: subscriberInput.email,
+      emirateID: subscriberInput.emirateID,
+      mobile: subscriberInput.mobile,
+      countryCode: subscriberInput.countryCode,
+      comment: subscriberInput.comment || '',
+    });
+
+    await newSubscriber.save();
+
+    return {
+      isSuccessful: true,
+      message: 'Subscriber successfully added',
+    };
+  } catch (error) {
+    console.log('Error in addSubscriberController:', error);
+
+    return {
+      isSuccessful: false,
+      message: 'Failed to add subscriber',
+    };
+  }
+};
