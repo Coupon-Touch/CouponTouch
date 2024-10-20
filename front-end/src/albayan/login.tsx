@@ -7,14 +7,20 @@ import * as Yup from 'yup';
 import { useMutation } from '@apollo/client';
 import { ADMIN_LOGIN } from '@/graphQL/apiRequests';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import Loader from './loader';
 
 export default function Login() {
   const navigate = useNavigate();
   const [login,
-    // { data, loading, error }
+    { data, loading, error }
   ] = useMutation(ADMIN_LOGIN);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      navigate('../couponSettings');
+    }
+  }, []);
 
   const validationSchema = Yup.object({
     username: Yup.string()
@@ -24,7 +30,7 @@ export default function Login() {
       .min(6, 'Password must be at least 6 characters')
       .required('Password is required.'),
   });
-
+  const { toast } = useToast();
   const handleSubmit = async (values: {
     username: string;
     password: string;
@@ -41,6 +47,13 @@ export default function Login() {
           localStorage.setItem('token', adminLogin.jwtToken);
           console.log(adminLogin.message);
         } else {
+
+          toast({
+            title: 'Invalid Credentials',
+            description: adminLogin?.message || 'Unknown error',
+            variant: "destructive",
+            duration: 5000,
+          })
           console.error(
             'Login failed:',
             adminLogin?.message || 'Unknown error'
@@ -56,6 +69,7 @@ export default function Login() {
 
   return (
     <div className="flex flex-col w-full h-full items-center justify-center bg-cover">
+      {loading && <Loader />}
       <div className="container mx-auto max-w-sm lg:max-w-md">
         <div className="bg-white/80 p-8 rounded-lg shadow-lg">
           <h1 className="text-3xl font-bold mb-6 text-start">Sign-in</h1>
@@ -75,7 +89,6 @@ export default function Login() {
                     name="username"
                     type="text"
                     className="w-full mt-2"
-                    autocomplete="off"
                     as={Input}
                   />
                   <ErrorMessage
@@ -93,7 +106,7 @@ export default function Login() {
                     name="password"
                     type="password"
                     className="w-full mt-2"
-                    autocomplete="off"
+                    autoComplete="off"
                     as={Input}
                   />
                   <ErrorMessage

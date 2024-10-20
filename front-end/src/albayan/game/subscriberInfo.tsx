@@ -76,7 +76,7 @@ export default function SubscriberInfo({
 
   const checkPhoneNumber = (event: FormEvent) => {
     event.preventDefault();
-    if (formik.errors.phoneNumber || formik.errors.countryCode) return;
+    if (formik.errors.phoneNumber || formik.errors.countryCode || formik.values.phoneNumber.length === 0) return;
     setIsLoading(true);
     const phone = formik.values.phoneNumber;
     // const countryCode = formik.values.countryCode;
@@ -119,7 +119,7 @@ export default function SubscriberInfo({
             {!showAdditionalFields && (
               <div className="space-y-2">
                 <Label htmlFor="phone-number">
-                  Enter a valid phone number to get started
+                  Enter your phone number to get started
                 </Label>
                 <div className="flex">
                   <Select
