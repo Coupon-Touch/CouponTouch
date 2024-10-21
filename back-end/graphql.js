@@ -9,6 +9,7 @@ import { addSubscriberController } from './controllers/csvFunctions.js';
 import { getSubscriberDetailsController } from './controllers/loginFunctions.js';
 import { updateSubscriberController } from './controllers/subscriberFunctions.js';
 import { Subscriber } from './models/subscriber.js';
+import { updateCollectionDetailsController } from './controllers/subscriberFunctions.js';
 
 // GraphQL
 export const typeDefs = gql`
@@ -81,6 +82,11 @@ export const typeDefs = gql`
     message: String
   }
 
+  type IsUpdatedInfo {
+    isSuccessful: Boolean
+    message: String
+  }
+
   type Mutation {
     adminLogin(username: String, password: String): AdminLoginInfo
     dumpInitialDatabase: DumpDatabaseInfo
@@ -106,6 +112,13 @@ export const typeDefs = gql`
       address: String
       comment: String
     ): UpdateSubscriberInfo
+    updateCollectionDetails(
+      PhoneNumber: String!
+      CountryCode: String!
+      collectionDate: Date!
+      collectionLocation: String!
+      comments: String!
+    ): IsUpdatedInfo
   }
 `;
 
@@ -253,6 +266,28 @@ export const resolvers = {
         return {
           isSuccessful: false,
           message: 'An error occurred while updating the subscriber',
+        };
+      }
+    },
+    updateCollectionDetails: async (
+      _,
+      { PhoneNumber, CountryCode, collectionDate, collectionLocation, comments }
+    ) => {
+      try {
+        const result = await updateCollectionDetailsController(
+          PhoneNumber,
+          CountryCode,
+          collectionDate,
+          collectionLocation,
+          comments
+        );
+        return result;
+      } catch (error) {
+        console.error('Error in updateCollectionDetails resolver:', error);
+
+        return {
+          isSuccessful: false,
+          message: 'Something went wrong!',
         };
       }
     },

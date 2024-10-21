@@ -66,3 +66,49 @@ export const updateSubscriber = async (mobile, res) => {
     res.status(500);
   }
 };
+
+export const updateCollectionDetailsController = async (
+  PhoneNumber,
+  CountryCode,
+  collectionDate,
+  collectionLocation,
+  comments
+) => {
+  try {
+    let subscriber = await Subscriber.findOne({
+      countryCode: CountryCode,
+      mobile: PhoneNumber,
+    });
+
+    if (!subscriber) {
+      return { isSuccessful: false, message: 'Subscriber not found' };
+    }
+
+    if (subscriber.wonDetails) {
+      subscriber.wonDetails.collectionDate = collectionDate;
+      subscriber.wonDetails.collectionLocation = collectionLocation;
+      subscriber.wonDetails.comments = comments;
+    } else {
+      subscriber.wonDetails = {
+        isWon: true,
+        campaignCode: campaignCodeCurrent,
+        collectionDate,
+        collectionLocation,
+        comments,
+      };
+    }
+
+    await subscriber.save();
+
+    return {
+      isSuccessful: true,
+      message: 'Collection details updated successfully',
+    };
+  } catch (error) {
+    console.error('Error updating subscriber collection details:', error);
+    return {
+      isSuccessful: false,
+      message: 'Failed to update collection details',
+    };
+  }
+};
