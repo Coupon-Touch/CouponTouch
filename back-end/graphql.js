@@ -54,6 +54,7 @@ export const typeDefs = gql`
   type UpdateScratchTimeInfo {
     isSuccessful: Boolean!
     message: String
+    jwtToken: String
   }
 
   type AddSubscriberInfo {

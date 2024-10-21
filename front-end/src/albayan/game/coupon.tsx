@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import SubscriberInfo from './subscriberInfo';
-import { cn } from '@/lib/utils';
+import SubscriberInfo, { SubscriberUpdate } from './subscriberInfo';
 import AfterGame from './afterGame';
-import { add } from 'date-fns';
 import { decodeJWT } from '@/jwtUtils';
 import CountDown from './countDown';
 import PhoneForm, { SubscriberDetails } from './phoneForm';
+import CouponTools from './couponTools';
+import { useLazyQuery } from '@apollo/client';
+import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
+import { useToast } from '@/hooks/use-toast';
 
 
 
@@ -18,12 +20,61 @@ export default function Coupon() {
   const [countDown, setCountDown] = useState(0)
   const [trigger, setTrigger] = useState(false);
 
+  const [getSubscriber] = useLazyQuery(GET_SUBSCRIBER)
+  const updateCountDown = () => {
+    const token = window.localStorage.getItem('subscriberToken');
+    if (token) {
+      const decoded = decodeJWT(token);
 
+      if (decoded) {
+        if (decoded.subsriberMobile) {
+          setAskPhone(false)
+        }
+        if (decoded.isSubscriber) {
+          setIsSubscribed(true);
+        }
+        const lastScratchTime = decoded.lastScratchTime;
+        if (lastScratchTime === null || lastScratchTime === 0) {
+          setCountDown(0)
+        } else {
 
+          console.log(lastScratchTime + 24 * 60 * 60 * 1000)
+          setCountDown(lastScratchTime + 24 * 60 * 60 * 1000)
+        }
+      }
+    }
+  }
+  const { toast } = useToast();
   useEffect(() => {
-    // TODO: store these in JWT token dont get it from local storage
+    const token = window.localStorage.getItem('subscriberToken');
+    if (token) {
+      const decoded = decodeJWT(token);
+      if (decoded) {
+        if (decoded.subsriberMobile) {
+          setAskPhone(false)
+        }
+        if (decoded.isSubscriber) {
+          setIsSubscribed(true);
+        } else if (decoded.subsriberMobile) {
+          getSubscriber({
+            variables: { phoneNumber: `${decoded.subsriberMobile}`, countryCode: `${decoded.subscriberCountryCode}` },
+            onCompleted: (data) => {
+              setData(data.getSubscriberDetails)
+            },
+            onError: () => {
+              toast({
+                variant: 'destructive',
+                description: 'An error occurred. Please try again later.',
+              })
+            }
+          })
+        } else {
+          updateCountDown()
+        }
 
-  }, [trigger]);
+      }
+    }
+  }, []);
 
   const phoneSubmit = (data: SubscriberDetails) => {
     if (data) {
@@ -36,10 +87,19 @@ export default function Coupon() {
     } else {
       setIsSubscribed(false)
     }
+    updateCountDown()
   };
 
-  const subscriberInfoSubmit = (data) => {
-
+  const subscriberInfoSubmit = (data: SubscriberUpdate) => {
+    if (data.jwtToken) {
+      const token = decodeJWT(data.jwtToken);
+      if (token && token.isSubscriber) {
+        setIsSubscribed(true)
+      } else {
+        setIsSubscribed(false)
+      }
+    }
+    updateCountDown()
   }
 
   return (
@@ -48,21 +108,8 @@ export default function Coupon() {
         {askPhone && <PhoneForm successCallback={phoneSubmit} />}
         {countDown !== 0 && <CountDown targetDate={countDown} onComplete={() => setTrigger((prev) => !prev)} />}
         {data && !askPhone && !isSubscribed && <SubscriberInfo subscriber={data} successCallback={subscriberInfoSubmit} />}
-        <div
-          className={cn(
-            'w-full h-[900px]',
-            isSubscribed ? '' : 'hidden'
-          )}
-        >
-          <iframe
-            id="coupontools"
-            src="https://digicpn.com/p/rptbsd&web=true"
-            seamless={true}
-            className="border-0 w-full h-full m-0 p-0"
-            allow="geolocation"
-          ></iframe>
-          <AfterGame />
-        </div>
+        {data && countDown === 0 && !askPhone && isSubscribed && <CouponTools phone={data?.mobile} countryCode={data?.countryCode} />}
+        <AfterGame />
       </div>
     </>
   );

@@ -53,7 +53,9 @@ export const prepareSubscriberToken = subscriber => {
       subscriberName: subscriber.name,
       subsriberMobile: subscriber.mobile,
       subscriberCountryCode: subscriber.countryCode,
-      lastScratchTime: subscriber.lastScratchTime.getTime(),
+      lastScratchTime: subscriber.lastScratchTime
+        ? subscriber.lastScratchTime.getTime()
+        : null,
       isSubscriber: isSubscriber,
     },
     process.env.JWT_SECRET,

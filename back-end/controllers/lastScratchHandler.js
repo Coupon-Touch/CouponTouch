@@ -1,3 +1,4 @@
+import { prepareSubscriberToken } from '../jwt.js';
 import { Subscriber } from '../models/subscriber.js';
 
 export const updateLastScratchTimeController = async (
@@ -13,6 +14,7 @@ export const updateLastScratchTimeController = async (
     if (!subscriber) {
       return {
         isSuccessful: false,
+        jwtToken: null,
         message: 'Subscriber not found',
       };
     }
@@ -21,9 +23,10 @@ export const updateLastScratchTimeController = async (
     subscriber.lastScratchTime = currentTime;
 
     await subscriber.save();
-
+    const jwtToken = prepareSubscriberToken(subscriber);
     return {
       isSuccessful: true,
+      jwtToken: jwtToken,
       message: 'Last scratch time successfully updated',
     };
   } catch (error) {
@@ -31,6 +34,7 @@ export const updateLastScratchTimeController = async (
 
     return {
       isSuccessful: false,
+      jwtToken: null,
       message: 'Failed to update last scratch time',
     };
   }

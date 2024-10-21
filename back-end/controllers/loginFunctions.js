@@ -67,7 +67,9 @@ export const getSubscriberDetailsController = async (
       mobile: subscriber.mobile,
       countryCode: subscriber.countryCode,
       isPaid: subscriber.isPaid,
-      lastScratchTime: subscriber.lastScratchTime.getTime(),
+      lastScratchTime: subscriber.lastScratchTime
+        ? subscriber.lastScratchTime.getTime()
+        : null,
       address: subscriber.address,
       email: subscriber.email,
       emirateID: subscriber.emirateID,

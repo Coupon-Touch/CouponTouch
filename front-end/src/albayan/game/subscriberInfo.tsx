@@ -30,10 +30,13 @@ const validationSchema = Yup.object({
 });
 interface SubscriberInfoProps {
   subscriber: SubscriberDetails;
-  successCallback: (timeTillNextScratch: number) => void;
+  successCallback: (data: SubscriberUpdate) => void;
 }
-export type SubscriberUpdate{
-  isSubscriber: boolean
+export type SubscriberUpdate = {
+  isSuccessful: boolean
+  message: string
+  jwtToken: string
+
 }
 export default function SubscriberInfo({ subscriber, successCallback }: SubscriberInfoProps) {
 
@@ -61,6 +64,7 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
           },
           onCompleted(data) {
             toast({ description: 'Successfully updated subscriber info' })
+            window.localStorage.setItem("subscriberToken", data.updateSubscriber.jwtToken);
             data = data.updateSubscriber
             successCallback(data)
             resolve(data)

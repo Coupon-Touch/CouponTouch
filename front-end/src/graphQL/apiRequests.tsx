@@ -46,3 +46,10 @@ export const UPDATE_SUBSCRIBER = gql`mutation UpdateSubscriber($countryCode: Str
     jwtToken
   }
 }`
+export const UPDATE_LAST_SCRATCH_TIME = gql`mutation UpdateLastScratchTime($phoneNumber: String!, $countryCode: String!) {
+  updateLastScratchTime(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+    isSuccessful
+    message
+    jwtToken
+  }
+}`
