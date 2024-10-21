@@ -40,14 +40,12 @@ export const getSubscriberDetailsController = async (
   countryCode
 ) => {
   try {
-    let isExistingSubscriber = true;
     let subscriber = await Subscriber.findOne({
       mobile: phoneNumber,
       countryCode: countryCode,
     });
 
     if (!subscriber) {
-      isExistingSubscriber = false;
       await addSubscriberController(
         {
           mobile: phoneNumber,
@@ -64,32 +62,30 @@ export const getSubscriberDetailsController = async (
 
     const jwtToken = prepareSubscriberToken(subscriber);
 
-    const currentTime = new Date();
-    const lastScratchTime = subscriber.lastScratchTime;
-
-    let timeLeftTillNextScratch = 0;
-
-    if (lastScratchTime) {
-      const timeDifference = currentTime - lastScratchTime;
-      const hoursLeft = 24 * 60 * 60 * 1000 - timeDifference;
-      timeLeftTillNextScratch = Math.max(0, hoursLeft);
-    } else {
-      timeLeftTillNextScratch = 0;
-    }
-
     return {
-      isSubscriber: isExistingSubscriber,
       jwtToken: jwtToken,
-      lastScratchTime: lastScratchTime ? lastScratchTime.toISOString() : null,
-      timeLeftTillNextScratch: timeLeftTillNextScratch,
+      mobile: subscriber.mobile,
+      countryCode: subscriber.countryCode,
+      isPaid: subscriber.isPaid,
+      lastScratchTime: subscriber.lastScratchTime.getTime(),
+      address: subscriber.address,
+      email: subscriber.email,
+      emirateID: subscriber.emirateID,
+      name: subscriber.name,
     };
   } catch (error) {
     console.log('Error in getSubscriberDetailsController:', error);
     return {
       isSubscriber: false,
       jwtToken: null,
-      lastScratchTime: null,
-      timeLeftTillNextScratch: null,
+      mobile: null,
+      countryCode: null,
+      isPaid: false,
+      lastScratchTime: 0,
+      address: null,
+      email: null,
+      emirateID: null,
+      name: null,
     };
   }
 };

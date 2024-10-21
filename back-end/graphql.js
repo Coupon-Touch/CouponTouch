@@ -15,10 +15,15 @@ export const typeDefs = gql`
   scalar Date
 
   type SubscriberInfo {
-    isSubscriber: Boolean
     jwtToken: String
-    lastScratchTime: Date
-    timeLeftTillNextScratch: Int
+    mobile: String
+    countryCode: String
+    isPaid: Boolean
+    lastScratchTime: Float
+    address: String
+    email: String
+    emirateID: String
+    name: String
   }
 
   type Query {
@@ -58,6 +63,7 @@ export const typeDefs = gql`
 
   type UpdateSubscriberInfo {
     isSuccessful: Boolean!
+    jwtToken: String
     message: String
   }
 
@@ -104,7 +110,11 @@ export const resolvers = {
     },
     getSubscriberDetails: async (_, { PhoneNumber, CountryCode }, context) => {
       try {
-        return await getSubscriberDetailsController(PhoneNumber, CountryCode);
+        const response = await getSubscriberDetailsController(
+          PhoneNumber,
+          CountryCode
+        );
+        return response;
       } catch (error) {
         console.log('Error Fetching Subscriber Details : ', error);
         return {};

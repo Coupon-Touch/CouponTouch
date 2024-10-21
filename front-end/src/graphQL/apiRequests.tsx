@@ -27,9 +27,22 @@ export const GET_COUPONSETTINGS = gql`
 
 export const GET_SUBSCRIBER = gql`query GetSubscriberDetails($phoneNumber: String!, $countryCode: String!) {
   getSubscriberDetails(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
-    isSubscriber
     jwtToken
+    mobile
+    countryCode
+    isPaid
     lastScratchTime
-    timeLeftTillNextScratch
+    address
+    email
+    emirateID
+    name
+  }
+}`
+
+export const UPDATE_SUBSCRIBER = gql`mutation UpdateSubscriber($countryCode: String!, $mobile: String!, $emirateId: String, $email: String, $name: String, $address: String, $comment: String) {
+  updateSubscriber(countryCode: $countryCode, mobile: $mobile, emirateID: $emirateId, email: $email, name: $name, address: $address, comment: $comment) {
+    isSuccessful
+    message
+    jwtToken
   }
 }`

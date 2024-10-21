@@ -1,3 +1,4 @@
+import { prepareSubscriberToken } from '../jwt.js';
 import { Subscriber } from '../models/subscriber.js';
 
 export const updateSubscriberController = async (
@@ -21,18 +22,21 @@ export const updateSubscriberController = async (
     if (!updatedSubscriber) {
       return {
         isSuccessful: false,
+        jwtToken: null,
         message: 'Subscriber not found',
       };
     }
-
+    const jwtToken = prepareSubscriberToken(updatedSubscriber);
     return {
       isSuccessful: true,
+      jwtToken: jwtToken,
       message: 'Subscriber updated successfully',
     };
   } catch (error) {
     console.error('Error updating subscriber:', error);
     return {
       isSuccessful: false,
+      jwtToken: null,
       message: 'An error occurred while updating the subscriber',
     };
   }

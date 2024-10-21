@@ -5,41 +5,53 @@ import AfterGame from './afterGame';
 import { add } from 'date-fns';
 import { decodeJWT } from '@/jwtUtils';
 import CountDown from './countDown';
+import PhoneForm, { SubscriberDetails } from './phoneForm';
+
+
+
 
 export default function Coupon() {
-  const [showScratchCard, setShowScratchCard] = useState(false);
+  const [askPhone, setAskPhone] = useState(true)
+  const [data, setData] = useState<SubscriberDetails | null>(null)
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
   const [countDown, setCountDown] = useState(0)
   const [trigger, setTrigger] = useState(false);
+
+
+
   useEffect(() => {
     // TODO: store these in JWT token dont get it from local storage
-    const subscriberToken = decodeJWT(window.localStorage.getItem('subscriberToken'));
-    if (subscriberToken) {
-      if (subscriberToken.lastScratchTime) {
-        const lastScratchTime = new Date(subscriberToken.lastScratchTime);
-        const nextScratchTime = add(lastScratchTime, { days: 1 });
-        if (nextScratchTime.getTime() <= new Date().getTime()) {
-          setShowScratchCard(true);
-          setCountDown(0)
-        } else {
-          setCountDown(nextScratchTime.getTime())
-        }
-      }
-    }
-  }, [trigger]);
-  const formComplete = () => {
-    setTrigger((prev) => !prev);
 
+  }, [trigger]);
+
+  const phoneSubmit = (data: SubscriberDetails) => {
+    if (data) {
+      setData(data)
+    }
+    setAskPhone(false)
+    const token = decodeJWT(data.jwtToken);
+    if (token && token.isSubscriber) {
+      setIsSubscribed(true)
+    } else {
+      setIsSubscribed(false)
+    }
   };
+
+  const subscriberInfoSubmit = (data) => {
+
+  }
+
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
-        {countDown !== 0 && <CountDown targetDate={countDown} onComplete={formComplete} />}
-        {/* <script src="https://hosting4images.com/popup/popup_0e095e054ee94774d6a496099eb1cf6a.js"></script> */}
-        {countDown === 0 && !showScratchCard && <SubscriberInfo successCallback={formComplete} />}
+        {askPhone && <PhoneForm successCallback={phoneSubmit} />}
+        {countDown !== 0 && <CountDown targetDate={countDown} onComplete={() => setTrigger((prev) => !prev)} />}
+        {data && !askPhone && !isSubscribed && <SubscriberInfo subscriber={data} successCallback={subscriberInfoSubmit} />}
         <div
           className={cn(
             'w-full h-[900px]',
-            showScratchCard ? '' : 'hidden'
+            isSubscribed ? '' : 'hidden'
           )}
         >
           <iframe

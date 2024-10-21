@@ -19,7 +19,7 @@ const Paths = [
 export default function Albayan() {
   const navigate = useNavigate();
   useEffect(() => {
-    if (!isJWTTokenValid() && !window.location.pathname.endsWith('/albayan')) {
+    if (!isJWTTokenValid() && !window.location.pathname.endsWith('/albayan') && !window.location.pathname.endsWith('/albayan/')) {
       navigate('adminLogin');
     }
     const body = document.body;

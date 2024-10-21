@@ -33,16 +33,30 @@ export const prepareAdminToken = user => {
 };
 
 export const prepareSubscriberToken = subscriber => {
-   return jwt.sign(
-     {
-       userType: UserRole.SUBSCRIBER,
-       subscriberId: subscriber._id,
-       subscriberName: subscriber.name,
-       subsriberMobile: subscriber.mobile,
-       subscriberCountryCode: subscriber.countryCode,
-       lastScratchTime: subscriber.lastScratchTime,
-     },
-     process.env.JWT_SECRET,
-     { expiresIn: '1d' }
-   );
+  let isSubscriber = true;
+  if (
+    subscriber.name === '' ||
+    subscriber.name === null ||
+    subscriber.email === '' ||
+    subscriber.email === null ||
+    subscriber.address === '' ||
+    subscriber.address === null ||
+    subscriber.emirateID === '' ||
+    subscriber.emirateID === ''
+  ) {
+    isSubscriber = false;
+  }
+  return jwt.sign(
+    {
+      userType: UserRole.SUBSCRIBER,
+      subscriberId: subscriber._id,
+      subscriberName: subscriber.name,
+      subsriberMobile: subscriber.mobile,
+      subscriberCountryCode: subscriber.countryCode,
+      lastScratchTime: subscriber.lastScratchTime.getTime(),
+      isSubscriber: isSubscriber,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '1d' }
+  );
 };

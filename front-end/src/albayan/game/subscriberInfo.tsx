@@ -2,49 +2,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
-import { cn } from '@/lib/utils';
-import { useLazyQuery, useQuery } from '@apollo/client';
+
+import { Textarea } from '@/components/ui/textarea';
+import { UPDATE_SUBSCRIBER } from '@/graphQL/apiRequests';
+import { useToast } from '@/hooks/use-toast';
+import { useMutation } from '@apollo/client';
 import { useFormik } from 'formik';
 
-import { FormEvent, useEffect, useState } from 'react';
 import * as Yup from 'yup';
+import { SubscriberDetails } from './phoneForm';
+import { decodeJWT } from '@/jwtUtils';
 
-type SubscriberDetails = {
-  isSubscriber: boolean;
-  jwtToken: string;
-  lastScratchTime: string;
-  timeLeftTillNextScratch: number;
-};
-const countryCodes = [
-  1, 7, 20, 21, 27, 29, 30, 31, 32, 33, 34, 36, 39, 40, 41, 43, 44, 45, 46,
-  47, 48, 49, 51, 52, 53, 54, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 81,
-  86, 90, 91, 92, 93, 95, 98, 212, 213, 216, 218, 220, 221, 222, 223, 224, 225,
-  226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 240, 241,
-  242, 243, 244, 245, 246, 249, 250, 251, 252, 254, 255, 256, 257, 258, 260,
-  261, 263, 264, 265, 267, 268, 297, 299, 350, 351, 352, 353, 354, 355, 356,
-  357, 358, 359, 370, 371, 372, 373, 374, 375, 376, 377, 378, 380, 381, 382,
-  385, 386, 387, 389, 420, 421, 423, 500, 501, 502, 503, 504, 505, 506, 507,
-  508, 509, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 673, 687, 689,
-  852, 870, 886, 961, 962, 963, 964, 965, 966, 967, 968, 971, 972, 973, 974,
-  975, 976, 977, 992, 993, 994, 995, 996, 998, 1758, 1868,
-];
-countryCodes.sort((a, b) => a - b);
+
+
 const validationSchema = Yup.object({
-  countryCode: Yup.string().required('Please select a country code.'),
-  phoneNumber: Yup.string()
-    .matches(/^[1-9]\d*$/, "Phone number must not start with '0'.") // Custom regex
-    .min(7, 'Phone number must be at least 7 characters long.')
-    .max(12, 'Phone number must be at most 12 characters long.')
-    .required('Phone number is required.'),
-
   name: Yup.string()
     .min(3, 'Name cannot be less than 3 character')
     .required('Name is required'),
@@ -55,226 +26,145 @@ const validationSchema = Yup.object({
 
   address: Yup.string().required('Address is required'),
 
-  pincode: Yup.string()
-    .matches(/^\d{5,6}$/, 'Pincode must be 5 or 6 digits long')
-    .required('Pincode is required'),
+  email: Yup.string().email('Invalid email format').required('Email is required')
 });
+interface SubscriberInfoProps {
+  subscriber: SubscriberDetails;
+  successCallback: (timeTillNextScratch: number) => void;
+}
+export type SubscriberUpdate{
+  isSubscriber: boolean
+}
+export default function SubscriberInfo({ subscriber, successCallback }: SubscriberInfoProps) {
 
-export default function SubscriberInfo({
-  successCallback,
-}: {
-    successCallback: (timeTillNextScratch: number) => void;
-}) {
-
-
-  const [showAdditionalFields, setShowAdditionalFields] = useState(false);
-
+  const { toast } = useToast()
   const formik = useFormik({
     initialValues: {
-      countryCode: "971",
-      phoneNumber: '',
-      emiratesId: '',
-      name: '',
-      address: '',
-      pincode: '',
+      countryCode: subscriber.countryCode,
+      phoneNumber: subscriber.mobile,
+      emiratesId: subscriber.emirateID,
+      name: subscriber.name,
+      address: subscriber.address,
+      email: subscriber.email,
     },
     validationSchema: validationSchema,
-    onSubmit: () => { },
+    onSubmit: async (values) => {
+      const response = await new Promise((resolve, reject) => {
+        updateSubscriber({
+          variables: {
+            countryCode: subscriber.countryCode,
+            mobile: subscriber.mobile,
+            emirateId: values.emiratesId,
+            email: values.email,
+            name: values.name,
+            address: values.address,
+          },
+          onCompleted(data) {
+            toast({ description: 'Successfully updated subscriber info' })
+            data = data.updateSubscriber
+            successCallback(data)
+            resolve(data)
+          },
+          onError(error) {
+            toast({
+              variant: 'destructive',
+              description: 'An error occurred. Please try again later.'
+            })
+            reject(error)
+          }
+        });
+      })
+
+    },
   });
 
+  const [updateSubscriber, { data, loading, error }] = useMutation(UPDATE_SUBSCRIBER);
 
-  const [getSubscriber, { loading, data, error }] = useLazyQuery(GET_SUBSCRIBER)
-
-  const checkPhoneNumber = async (event: FormEvent) => {
-    event.preventDefault();
-    if (formik.errors.phoneNumber || formik.errors.countryCode || formik.values.phoneNumber.length === 0) return;
-    const phone = formik.values.phoneNumber;
-    const countryCode = formik.values.countryCode;
-    const data: SubscriberDetails = await new Promise((resolve, reject) => {
-      getSubscriber({
-        variables: { phoneNumber: `${phone}`, countryCode: `${countryCode}` },
-        onCompleted: (data) => {
-          resolve(data.getSubscriberDetails)
-        },
-        onError: (error) => {
-          reject(error)
-        }
-      })
-    })
-    if (data) {
-      console.log(data)
-      const exists = data?.isSubscriber;
-      if (data.jwtToken) {
-        window.localStorage.setItem("subscriberToken", data.jwtToken); // TODO: store in JWT Token
-      }
-      if (exists) {
-        successCallback(data.timeLeftTillNextScratch);
-      } else {
-        setShowAdditionalFields(true);
-      }
-    }
-  };
 
   return (
     <Card className="w-full max-w-md h-max mx-auto m-4 p-2">
       <CardHeader>
         <CardTitle className="w-full text-center">
-          {!showAdditionalFields ? (
-            'Verify your phone number'
-          ) : (
-            <>
-              <div className="border-2 text-center text-lg font-extralight p-2 bg-[#863a4d]/30 rounded-xl">
-                Oops! Looks like you're not subscribed yet.
-              </div>
-              <div className="text-[#772639] mt-6">Sign up now!</div>
-            </>
-          )}
+          <div className="border-2 text-center text-lg font-extralight p-2 bg-[#863a4d]/30 rounded-xl">
+            Oops! Looks like you're not subscribed yet.
+          </div>
+          <div className="text-[#772639] mt-6">Sign up now!</div>
         </CardTitle>
       </CardHeader>
       <CardContent>
-
-        <form
-          onSubmit={
-            showAdditionalFields ? formik.handleSubmit : checkPhoneNumber
-          }
-        >
+        <form onSubmit={formik.handleSubmit}>
           <div className="space-y-4">
-            {!showAdditionalFields && (
-              <div className="space-y-2">
-                <Label htmlFor="phone-number">
-                  Enter your phone number to get started
-                </Label>
-                <div className="flex">
-                  <Select
-                    onValueChange={value =>
-                      formik.setFieldValue('countryCode', value)
-                    }
-                    value={formik.values.countryCode}
-                  >
-                    <SelectTrigger
-                      className={cn(
-                        'w-[130px] rounded-r-none',
-                        !formik.values.countryCode && 'text-muted-foreground'
-                      )}
-                    >
-                      <SelectValue placeholder="Code" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countryCodes.map((code, idx) => (
-                        <SelectItem key={`${idx}`} value={`${code}`}>
-                          {`+${code}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    id="phone-number"
-                    type="number"
-                    className="rounded-l-none"
-                    placeholder="Phone Number Here..."
-                    value={formik.values.phoneNumber}
-                    onChange={e => {
-                      setShowAdditionalFields(false);
-                      return formik.handleChange(e);
-                    }}
-                    onBlur={formik.handleBlur}
-                    name="phoneNumber"
-                  />
-                </div>
-                {formik.touched.countryCode && formik.errors.countryCode && (
-                  <p className="text-sm text-red-500">
-                    {formik.errors.countryCode}
-                  </p>
-                )}
-                {formik.touched.phoneNumber && formik.errors.phoneNumber && (
-                  <p className="text-sm text-red-500">
-                    {formik.errors.phoneNumber}
-                  </p>
-                )}
-              </div>
-            )}
+            <div className=" text-red-400 -mt-4"></div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Your Full Name Here..."
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                name="name"
+                required
+              />
+              {formik.touched.name && formik.errors.name && (
+                <p className="text-sm text-red-500">{formik.errors.name}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Email Address"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                name="email"
+                required
+              />
+              {formik.touched.name && formik.errors.name && (
+                <p className="text-sm text-red-500">{formik.errors.name}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Address</Label>
+              <Textarea
+                id="address"
+                placeholder="Your Address Here..."
+                value={formik.values.address}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                name="address"
+                required
+              />
+              {formik.touched.address && formik.errors.address && (
+                <p className="text-sm text-red-500">{formik.errors.address}</p>
+              )}
+            </div>
 
-            {showAdditionalFields && (
-              <>
-                <div className=" text-red-400 -mt-4"></div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Your Full Name Here..."
-                    value={formik.values.name}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    name="name"
-                    required
-                  />
-                  {formik.touched.name && formik.errors.name && (
-                    <p className="text-sm text-red-500">{formik.errors.name}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    type="text"
-                    placeholder="Your Address Here..."
-                    value={formik.values.address}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    name="address"
-                    required
-                  />
-                  {formik.touched.address && formik.errors.address && (
-                    <p className="text-sm text-red-500">
-                      {formik.errors.address}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pincode">Pin Code</Label>
-                  <Input
-                    id="pincode"
-                    type="text"
-                    placeholder="Your Pin Code Here..."
-                    value={formik.values.pincode}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    name="pincode"
-                    required
-                  />
-                  {formik.touched.pincode && formik.errors.pincode && (
-                    <p className="text-sm text-red-500">
-                      {formik.errors.pincode}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pincode">Emirates ID</Label>
-                  <Input
-                    id="emiratesId"
-                    type="text"
-                    placeholder="Your Emirates ID Here..."
-                    value={formik.values.emiratesId}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    name="emiratesId"
-                    required
-                  />
-                  {formik.touched.emiratesId && formik.errors.emiratesId && (
-                    <p className="text-sm text-red-500">
-                      {formik.errors.emiratesId}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="pincode">Emirates ID</Label>
+              <Input
+                id="emiratesId"
+                type="text"
+                placeholder="Your Emirates ID Here..."
+                value={formik.values.emiratesId}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                name="emiratesId"
+                required
+              />
+              {formik.touched.emiratesId && formik.errors.emiratesId && (
+                <p className="text-sm text-red-500">
+                  {formik.errors.emiratesId}
+                </p>
+              )}
+            </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading
                 ? 'Checking...'
-                : showAdditionalFields
-                  ? 'Submit'
                   : 'Scratch Coupon'}
             </Button>
           </div>
