@@ -10,6 +10,7 @@ import dotenv from 'dotenv';
 import { createRouteHandler } from 'uploadthing/express';
 import { uploadRouter } from './uploadThing.js';
 import { csvUploadController } from './back-end/controllers/csvFunctions.js';
+import { updateSubscriber } from './back-end/controllers/subscriberFunctions.js';
 import multer from 'multer';
 dotenv.config();
 
@@ -95,10 +96,24 @@ async function startServer() {
           router: uploadRouter,
         })
       );
-      app.use('/api/hook', (req, res) => {
-        console.log(req.body);
+      app.post('/api/hook', async (req, res) => {
+        try {
+          console.log(req.body);
+          const { type, customer } = req.body;
 
-        res.send('Done');
+          if (type === 'coupon_claimed' && customer && customer.phone) {
+            const mobileNumber = customer.phone;
+
+            await updateSubscriber(mobileNumber, res);
+
+            res.status(200);
+          } else {
+            res.status(400);
+          }
+        } catch (error) {
+          console.error('Error updating subscriber:', error);
+          res.status(500);
+        }
       });
       app.use(
         '/api',
