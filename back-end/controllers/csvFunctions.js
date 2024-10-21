@@ -87,6 +87,8 @@ export const addSubscriberController = async (
       newSubscriber = new Subscriber({
         mobile: subscriberInput.mobile,
         countryCode: subscriberInput.countryCode,
+        countryCodeMobileNumber:
+          subscriberInput.countryCode + subscriberInput.mobile,
       });
     } else {
       newSubscriber = new Subscriber({
@@ -95,7 +97,9 @@ export const addSubscriberController = async (
         emirateID: subscriberInput.emirateID,
         mobile: subscriberInput.mobile,
         countryCode: subscriberInput.countryCode,
-        address: subscriberInput.address
+        countryCodeMobileNumber:
+          subscriberInput.countryCode + subscriberInput.mobile,
+        address: subscriberInput.address,
       });
     }
 

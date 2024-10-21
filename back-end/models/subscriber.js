@@ -7,11 +7,14 @@ const subscriberSchema = new mongoose.Schema({
   emirateID: { type: String, default: '' },
   countryCode: { type: String, required: true },
   mobile: { type: String, required: true },
+  countryCodeMobileNumber: { type: String, required: true },
   isContacted: { type: Boolean, default: false },
   isPaid: { type: Boolean, default: false },
   lastScratchTime: { type: Date, default: null },
   wonDetails: {
     type: {
+      isWon: { type: Boolean, default: false },
+      campaignCode: { type: String, default: null },
       collectionDate: { type: Date, default: null },
       collectionLocation: { type: String, default: '' },
       comments: { type: String, default: '' },

@@ -8,6 +8,7 @@ import { updateLastScratchTimeController } from './controllers/lastScratchHandle
 import { addSubscriberController } from './controllers/csvFunctions.js';
 import { getSubscriberDetailsController } from './controllers/loginFunctions.js';
 import { updateSubscriberController } from './controllers/subscriberFunctions.js';
+import { Subscriber } from './models/subscriber.js';
 
 // GraphQL
 export const typeDefs = gql`
@@ -21,6 +22,14 @@ export const typeDefs = gql`
     timeLeftTillNextScratch: Int
   }
 
+  type SubscriberWinInfo {
+    isWon: Boolean
+    campaignCode: String
+    collectionDate: Date
+    collectionLocation: String
+    comments: String
+  }
+
   type Query {
     getCountryCodes: [Int]
     getCouponSettingsAlbayan: JSON
@@ -28,6 +37,10 @@ export const typeDefs = gql`
       PhoneNumber: String!
       CountryCode: String!
     ): SubscriberInfo
+    didSubscriberWin(
+      PhoneNumber: String!
+      CountryCode: String!
+    ): SubscriberWinInfo
   }
 
   type AdminLoginInfo {
@@ -108,6 +121,43 @@ export const resolvers = {
       } catch (error) {
         console.log('Error Fetching Subscriber Details : ', error);
         return {};
+      }
+    },
+    didSubscriberWin: async (_, { PhoneNumber, CountryCode }) => {
+      try {
+        const subscriber = await Subscriber.findOne({
+          mobile: PhoneNumber,
+          countryCode: CountryCode,
+        });
+
+        if (!subscriber) {
+          return {
+            isWon: false,
+            campaignCode: null,
+            collectionDate: null,
+            collectionLocation: '',
+            comments: '',
+          };
+        }
+
+        const { wonDetails } = subscriber;
+
+        return {
+          isWon: wonDetails ? wonDetails.isWon : false,
+          campaignCode: wonDetails ? wonDetails.campaignCode : null,
+          collectionDate: wonDetails ? wonDetails.collectionDate : null,
+          collectionLocation: wonDetails ? wonDetails.collectionLocation : '',
+          comments: wonDetails ? wonDetails.comments : '',
+        };
+      } catch (error) {
+        console.error('Error fetching subscriber win info:', error);
+        return {
+          isWon: false,
+          campaignCode: null,
+          collectionDate: null,
+          collectionLocation: '',
+          comments: '',
+        };
       }
     },
   },
