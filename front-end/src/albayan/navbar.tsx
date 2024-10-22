@@ -13,7 +13,7 @@ export default function NavBar() {
         <img src={logo} className="w-full h-full object-contain" />
       </div>
       <img src={albayanLogo} className="w-28 ml-4 lg:ml-0" onClick={() => navigate("/albayan")}></img>
-      <div className="fixed right-0">
+      <div className="absolute right-0">
         {window.location.pathname.endsWith('/adminLogin') && (
           <Link to="/albayan">
             <Button
@@ -43,6 +43,7 @@ export default function NavBar() {
               localStorage.clear();
               window.location.reload();
             }}
+            className="mr-2"
           >
             Logout
           </Button>
