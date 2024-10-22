@@ -10,6 +10,7 @@ import { getSubscriberDetailsController } from './controllers/loginFunctions.js'
 import { updateSubscriberController } from './controllers/subscriberFunctions.js';
 import { Subscriber } from './models/subscriber.js';
 import { updateCollectionDetailsController } from './controllers/subscriberFunctions.js';
+import { prepareSubscriberToken } from './jwt.js';
 
 // GraphQL
 export const typeDefs = gql`
@@ -34,6 +35,7 @@ export const typeDefs = gql`
     collectionDate: Date
     collectionLocation: String
     comments: String
+    jwtToken: String
   }
 
   type Query {
@@ -85,6 +87,7 @@ export const typeDefs = gql`
   type IsUpdatedInfo {
     isSuccessful: Boolean
     message: String
+    jwtToken: String
   }
 
   type Mutation {
@@ -161,17 +164,19 @@ export const resolvers = {
             collectionDate: null,
             collectionLocation: '',
             comments: '',
+            jwtToken: null,
           };
         }
 
         const { wonDetails } = subscriber;
-
+        const jwtToken = prepareSubscriberToken(subscriber);
         return {
           isWon: wonDetails ? wonDetails.isWon : false,
           campaignCode: wonDetails ? wonDetails.campaignCode : null,
           collectionDate: wonDetails ? wonDetails.collectionDate : null,
           collectionLocation: wonDetails ? wonDetails.collectionLocation : '',
           comments: wonDetails ? wonDetails.comments : '',
+          jwtToken: jwtToken,
         };
       } catch (error) {
         console.error('Error fetching subscriber win info:', error);
@@ -181,6 +186,7 @@ export const resolvers = {
           collectionDate: null,
           collectionLocation: '',
           comments: '',
+          jwtToken: null,
         };
       }
     },
@@ -287,6 +293,7 @@ export const resolvers = {
 
         return {
           isSuccessful: false,
+          jwtToken: null,
           message: 'Something went wrong!',
         };
       }

@@ -99,15 +99,17 @@ export const updateCollectionDetailsController = async (
     }
 
     await subscriber.save();
-
+    const jwtToken = prepareSubscriberToken(subscriber);
     return {
       isSuccessful: true,
+      jwtToken: jwtToken,
       message: 'Collection details updated successfully',
     };
   } catch (error) {
     console.error('Error updating subscriber collection details:', error);
     return {
       isSuccessful: false,
+      jwtToken: null,
       message: 'Failed to update collection details',
     };
   }

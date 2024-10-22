@@ -47,8 +47,7 @@ const authMiddleware = (req, res, next) => {
       isValid: false,
     };
   }
-  setTimeout(next, 2000);
-  // next();
+  next();
 };
 
 app.use(authMiddleware);

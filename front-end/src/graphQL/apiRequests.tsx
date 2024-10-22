@@ -53,3 +53,20 @@ export const UPDATE_LAST_SCRATCH_TIME = gql`mutation UpdateLastScratchTime($phon
     jwtToken
   }
 }`
+
+export const UPDATE_COLLECTION_DETAILS = gql`mutation UpdateCollectionDetails($phoneNumber: String!, $countryCode: String!, $collectionDate: Date!, $collectionLocation: String!, $comments: String!) {
+  updateCollectionDetails(PhoneNumber: $phoneNumber, CountryCode: $countryCode, collectionDate: $collectionDate, collectionLocation: $collectionLocation, comments: $comments) {
+    isSuccessful
+    message
+  }
+}`
+
+export const DID_SUBSCRIBER_WIN = gql`query DidSubscriberWin($phoneNumber: String!, $countryCode: String!) {
+  didSubscriberWin(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+    isWon
+    comments
+    collectionLocation
+    collectionDate
+    jwtToken
+  }
+}`

@@ -58,7 +58,6 @@ const locationSchema = yup.object({
   website: yup.string().optional().url('Must be a valid URL'),
   openingHours: yup.string().optional(),
   address: yup.string().optional(),
-  zipCode: yup.number().optional().positive().integer(),
   city: yup.string().optional(),
   country: yup.string().optional(),
   state: yup.string().optional(),
@@ -92,12 +91,12 @@ const adminPanelStateSchema = yup.object({
 type AdminPanelState = yup.InferType<typeof adminPanelStateSchema>;
 
 type Prizes = yup.InferType<typeof prizeSchema>;
-type Location = yup.InferType<typeof locationSchema>;
+export type LocationInterface = yup.InferType<typeof locationSchema>;
 
 export default function AdminPanel() {
   const { toast } = useToast()
   const [storeCouponSettings,
-    { data, loading, error }
+    { loading }
   ] =
     useMutation(STORE_COUPONSETTINGS);
 
@@ -110,7 +109,7 @@ export default function AdminPanel() {
   } = useQuery(GET_COUPONSETTINGS);
 
 
-  const [currentLocation, setCurrentLocation] = useState<Location>({ companyName: '' })
+  const [currentLocation, setCurrentLocation] = useState<LocationInterface>({ companyName: '' })
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
   const [state, setState] = useState<AdminPanelState>({
@@ -181,7 +180,7 @@ export default function AdminPanel() {
 
   };
 
-  const openEditLocationSheet = (location: Location) => {
+  const openEditLocationSheet = (location: LocationInterface) => {
     setCurrentLocation(location);
     setIsAddingLocation(false);
     setIsLocationSheetOpen(true);
@@ -224,9 +223,9 @@ export default function AdminPanel() {
       });
   };
 
-  const updateCurrentLocation = <K extends keyof Location>(
+  const updateCurrentLocation = <K extends keyof LocationInterface>(
     field: K,
-    value: Location[K] extends number ? number : string
+    value: LocationInterface[K] extends number ? number : string
   ) => {
     setCurrentLocation({ ...currentLocation, [field]: value });
   };
@@ -298,7 +297,7 @@ export default function AdminPanel() {
     }
   };
 
-  type ErrorType = keyof AdminPanelState | keyof Location | keyof Prizes;
+  type ErrorType = keyof AdminPanelState | keyof LocationInterface | keyof Prizes | `[${number}].image` | `[${number}].bias`;
 
   const ErrorMessage = ({
     field,
@@ -457,6 +456,7 @@ export default function AdminPanel() {
                             prizes: prev.prizes.filter((_, i) => i !== index),
                           }))}
                         />
+
                         <ErrorMessage field={`[${index}].image`} error={prizePanelErrors} />
                       </div>
                       <div className="h-full">
@@ -799,17 +799,7 @@ export default function AdminPanel() {
                   />
                   <ErrorMessage field="address" error={locationPanelErrors} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zip">Zip/Postal Code</Label>
-                  <Input
-                    id="zip"
-                    value={currentLocation.zipCode || ''}
-                    onChange={e =>
-                      updateCurrentLocation('zipCode', e.target.value)
-                    }
-                  />
-                  <ErrorMessage field="zipCode" error={locationPanelErrors} />
-                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
                   <Input

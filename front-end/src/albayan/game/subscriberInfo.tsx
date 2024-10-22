@@ -11,7 +11,6 @@ import { useFormik } from 'formik';
 
 import * as Yup from 'yup';
 import { SubscriberDetails } from './phoneForm';
-import { decodeJWT } from '@/jwtUtils';
 
 
 
@@ -30,7 +29,7 @@ const validationSchema = Yup.object({
 });
 interface SubscriberInfoProps {
   subscriber: SubscriberDetails;
-  successCallback: (data: SubscriberUpdate) => void;
+  successCallback: () => void;
 }
 export type SubscriberUpdate = {
   isSuccessful: boolean
@@ -52,7 +51,7 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
-      const response = await new Promise((resolve, reject) => {
+      await new Promise((resolve, reject) => {
         updateSubscriber({
           variables: {
             countryCode: subscriber.countryCode,
@@ -66,7 +65,7 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
             toast({ description: 'Successfully updated subscriber info' })
             window.localStorage.setItem("subscriberToken", data.updateSubscriber.jwtToken);
             data = data.updateSubscriber
-            successCallback(data)
+            successCallback()
             resolve(data)
           },
           onError(error) {
@@ -82,7 +81,7 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
     },
   });
 
-  const [updateSubscriber, { data, loading, error }] = useMutation(UPDATE_SUBSCRIBER);
+  const [updateSubscriber, { loading }] = useMutation(UPDATE_SUBSCRIBER);
 
 
   return (

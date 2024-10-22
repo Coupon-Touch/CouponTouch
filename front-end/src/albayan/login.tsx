@@ -13,7 +13,7 @@ import Loader from './loader';
 export default function Login() {
   const navigate = useNavigate();
   const [login,
-    { data, loading, error }
+    { loading }
   ] = useMutation(ADMIN_LOGIN);
 
   useEffect(() => {

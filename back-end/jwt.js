@@ -34,6 +34,7 @@ export const prepareAdminToken = user => {
 
 export const prepareSubscriberToken = subscriber => {
   let isSubscriber = true;
+  let collectionDataCollected = true;
   if (
     subscriber.name === '' ||
     subscriber.name === null ||
@@ -46,6 +47,18 @@ export const prepareSubscriberToken = subscriber => {
   ) {
     isSubscriber = false;
   }
+  if (subscriber.wonDetails) {
+    if (
+      subscriber.wonDetails.collectionDate === '' ||
+      subscriber.wonDetails.collectionDate === null ||
+      subscriber.wonDetails.collectionLocation === '' ||
+      subscriber.wonDetails.collectionLocation === null ||
+      subscriber.wonDetails.comments === '' ||
+      subscriber.wonDetails.comments === null
+    ) {
+      collectionDataCollected = false;
+    }
+  }
   return jwt.sign(
     {
       userType: UserRole.SUBSCRIBER,
@@ -57,6 +70,8 @@ export const prepareSubscriberToken = subscriber => {
         ? subscriber.lastScratchTime.getTime()
         : null,
       isSubscriber: isSubscriber,
+      isWon: subscriber.wonDetails ? subscriber.wonDetails.isWon : false,
+      collectionDataCollected: collectionDataCollected,
     },
     process.env.JWT_SECRET,
     { expiresIn: '1d' }

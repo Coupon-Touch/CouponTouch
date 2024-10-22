@@ -12,10 +12,9 @@ import {
 import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useLazyQuery, useQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client';
 import { useFormik } from 'formik';
 
-import { FormEvent, useEffect, useState } from 'react';
 import * as Yup from 'yup';
 
 const countryCodes = [
@@ -89,7 +88,7 @@ export default function PhoneForm({ successCallback }: {
       }
     },
   });
-  const [getSubscriber, { loading, data, error }] = useLazyQuery(GET_SUBSCRIBER)
+  const [getSubscriber, { loading }] = useLazyQuery(GET_SUBSCRIBER)
 
   return (
     <>

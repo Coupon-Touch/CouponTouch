@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import SubscriberInfo, { SubscriberUpdate } from './subscriberInfo';
+import SubscriberInfo from './subscriberInfo';
 import AfterGame from './afterGame';
 import { decodeJWT } from '@/jwtUtils';
 import CountDown from './countDown';
@@ -9,107 +9,149 @@ import { useLazyQuery } from '@apollo/client';
 import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
 import { useToast } from '@/hooks/use-toast';
 
-
-
-
 export default function Coupon() {
-  const [askPhone, setAskPhone] = useState(true)
-  const [data, setData] = useState<SubscriberDetails | null>(null)
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [openPhoneInfo, setOpenPhoneInfo] = useState(false);
+  const [openSubscriberInfo, setOpenSubscriberInfo] = useState(false);
+  const [openCountDown, setOpenCountDown] = useState(false);
+  const [openCouponTools, setOpenCouponTools] = useState(false);
+  const [openAfterGame, setOpenAfterGame] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [data, setData] = useState<SubscriberDetails | null>(null);
 
-  const [countDown, setCountDown] = useState(0)
-  const [trigger, setTrigger] = useState(false);
+  const [countDown, setCountDown] = useState(0);
 
-  const [getSubscriber] = useLazyQuery(GET_SUBSCRIBER)
-  const updateCountDown = () => {
+  const [getSubscriber] = useLazyQuery(GET_SUBSCRIBER);
+
+  const getToken = () => {
     const token = window.localStorage.getItem('subscriberToken');
     if (token) {
       const decoded = decodeJWT(token);
-
-      if (decoded) {
-        if (decoded.subsriberMobile) {
-          setAskPhone(false)
-        }
-        if (decoded.isSubscriber) {
-          setIsSubscribed(true);
-        }
-        const lastScratchTime = decoded.lastScratchTime;
-        if (lastScratchTime === null || lastScratchTime === 0) {
-          setCountDown(0)
-        } else {
-
-          console.log(lastScratchTime + 24 * 60 * 60 * 1000)
-          setCountDown(lastScratchTime + 24 * 60 * 60 * 1000)
-        }
-      }
+      return decoded;
     }
-  }
-  const { toast } = useToast();
-  useEffect(() => {
-    const token = window.localStorage.getItem('subscriberToken');
-    if (token) {
-      const decoded = decodeJWT(token);
-      if (decoded) {
-        if (decoded.subsriberMobile) {
-          setAskPhone(false)
-        }
-        if (decoded.isSubscriber) {
-          setIsSubscribed(true);
-        } else if (decoded.subsriberMobile) {
-          getSubscriber({
-            variables: { phoneNumber: `${decoded.subsriberMobile}`, countryCode: `${decoded.subscriberCountryCode}` },
-            onCompleted: (data) => {
-              setData(data.getSubscriberDetails)
-            },
-            onError: () => {
-              toast({
-                variant: 'destructive',
-                description: 'An error occurred. Please try again later.',
-              })
-            }
-          })
-        } else {
-          updateCountDown()
-        }
-
-      }
-    }
-  }, []);
-
-  const phoneSubmit = (data: SubscriberDetails) => {
-    if (data) {
-      setData(data)
-    }
-    setAskPhone(false)
-    const token = decodeJWT(data.jwtToken);
-    if (token && token.isSubscriber) {
-      setIsSubscribed(true)
-    } else {
-      setIsSubscribed(false)
-    }
-    updateCountDown()
+    return null;
   };
 
-  const subscriberInfoSubmit = (data: SubscriberUpdate) => {
-    if (data.jwtToken) {
-      const token = decodeJWT(data.jwtToken);
-      if (token && token.isSubscriber) {
-        setIsSubscribed(true)
-      } else {
-        setIsSubscribed(false)
-      }
+  const getNextScratchTime = (time: number | null) => {
+    if (time === 0 || time === null) return new Date().getTime();
+    const lastScratch = new Date(time);
+    lastScratch.setDate(lastScratch.getDate() + 1);
+    return lastScratch.getTime();
+  };
+
+  const { toast } = useToast();
+  const fetchData = async (phone: string, countryCode: string) => {
+    return new Promise((resolve) => {
+      getSubscriber({
+        variables: { phoneNumber: `${phone}`, countryCode: `${countryCode}` },
+        onCompleted: data => {
+          data = data.getSubscriberDetails;
+          setData(data);
+          localStorage.setItem(
+            'subscriberToken',
+            data.jwtToken
+          );
+          resolve(data);
+        },
+        onError: () => {
+          resolve(0);
+          toast({
+            variant: 'destructive',
+            description: 'An error occurred. Please try again later.',
+          });
+        },
+      });
+    });
+
+  };
+  const updateState = (data?: SubscriberDetails | null) => {
+    if (data) {
+      setData(data);
     }
-    updateCountDown()
-  }
+    const token = getToken();
+    if (!token) {
+      setOpenPhoneInfo(true);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      setShowThankYou(false);
+      return;
+    }
+
+    if (token.subsriberMobile && !token.isSubscriber) {
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(true);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      setShowThankYou(false);
+      return;
+    }
+    if (token.isWon && !token.collectionDataCollected) {
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(true);
+      setShowThankYou(false);
+
+      return;
+    }
+    if (token.isWon && token.collectionDataCollected) {
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      setShowThankYou(true);
+      return;
+    }
+
+    const nextScratchTime = getNextScratchTime(token.lastScratchTime);
+    if (nextScratchTime > new Date().getTime()) {
+      setCountDown(nextScratchTime);
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(true);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      setShowThankYou(false);
+    } else {
+      setCountDown(0);
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(false);
+      setOpenCouponTools(true);
+      setOpenAfterGame(false);
+      setShowThankYou(false);
+    }
+  };
+  useEffect(() => {
+    (async () => {
+      const token = getToken();
+      if (token) {
+        await fetchData(token.subsriberMobile, token.subscriberCountryCode);
+      }
+      updateState();
+    })()
+
+  }, []);
 
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
-        {askPhone && <PhoneForm successCallback={phoneSubmit} />}
-        {countDown !== 0 && <CountDown targetDate={countDown} onComplete={() => setTrigger((prev) => !prev)} />}
-        {data && !askPhone && !isSubscribed && <SubscriberInfo subscriber={data} successCallback={subscriberInfoSubmit} />}
-        {data && countDown === 0 && !askPhone && isSubscribed && <CouponTools phone={data?.mobile} countryCode={data?.countryCode} />}
-        <AfterGame />
+        {openPhoneInfo && <PhoneForm successCallback={updateState} />}
+        {openCountDown && (
+          <CountDown targetDate={countDown} onComplete={updateState} />
+        )}
+        {data && openSubscriberInfo && (
+          <SubscriberInfo subscriber={data} successCallback={updateState} />
+        )}
+        {data && openCouponTools && (
+          <CouponTools successCallback={updateState} />
+        )}
+        {openAfterGame && <AfterGame />}
+        {showThankYou && <div className="text-center">Thank You</div>}
       </div>
     </>
   );
