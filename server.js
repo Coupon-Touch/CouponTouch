@@ -10,7 +10,8 @@ import dotenv from 'dotenv';
 import { createRouteHandler } from 'uploadthing/express';
 import { uploadRouter } from './uploadThing.js';
 import { csvUploadController } from './back-end/controllers/csvFunctions.js';
-
+import { updateSubscriber } from './back-end/controllers/subscriberFunctions.js';
+import multer from 'multer';
 dotenv.config();
 
 // Database Connection
@@ -21,14 +22,14 @@ import { typeDefs, resolvers } from './back-end/graphql.js';
 
 // JWT Validators
 import { validateToken } from './back-end/jwt.js';
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 app.use(express.static(join(__dirname, './front-end/dist')));
 
 const authMiddleware = (req, res, next) => {
@@ -64,39 +65,55 @@ async function startServer() {
     await server.start();
 
     if (dbConnected) {
+      app.use('/api/uploadCSV', upload.single('file'), async (req, res) => {
+        console.log(req.file);
+        if (req.file) {
+          const { decodedToken, isValid } = req.context;
+          if (!isValid || decodedToken.userType !== UserRole.ADMINUSER) {
+            return res.status(401).json({
+              isSuccessful: false,
+              message: 'Unauthorized to perform this operation.',
+            });
+          }
+
+          try {
+            return csvUploadController(req.file);
+          } catch (error) {
+            console.error('CSV Upload Failed:', error);
+            return res.status(500).json({
+              isSuccessful: false,
+              message: 'Some error occurred',
+            });
+          }
+        } else {
+          res.status(400).send('No file uploaded.');
+        }
+      });
       app.use(
         '/api/uploadthing',
         createRouteHandler({
           router: uploadRouter,
         })
       );
-      app.get('/api/events', (req, res) => {
-        // Set headers to indicate an SSE connection
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
+      app.post('/api/hook', async (req, res) => {
+        try {
+          console.log(req.body);
+          const { type, customer } = req.body;
 
-        // Send an initial message to the client
-        res.write(`data: ${JSON.stringify({ message: 'Connected' })}\n\n`);
+          if (type === 'coupon_claimed' && customer && customer.phone) {
+            const mobileNumber = customer.phone;
 
-        // Function to send periodic data to the client
-        const sendEvent = data => {
-          res.write(`data: ${JSON.stringify(data)}\n\n`);
-        };
+            await updateSubscriber(mobileNumber, res);
 
-        // Example: Send data every 5 seconds
-        const intervalId = setInterval(() => {
-          const currentTime = new Date().toISOString();
-          sendEvent({ message: 'Current time is', time: currentTime });
-        }, 5000);
-
-        // Cleanup when the client disconnects
-        req.on('close', () => {
-          clearInterval(intervalId);
-          res.end();
-        });
+            res.status(200);
+          } else {
+            res.status(400);
+          }
+        } catch (error) {
+          console.error('Error updating subscriber:', error);
+          res.status(500);
+        }
       });
-
       app.use(
         '/api',
         expressMiddleware(server, {
@@ -109,26 +126,6 @@ async function startServer() {
           },
         })
       );
-
-      app.get('/uploadCSV', async (req, res) => {
-        const { decodedToken, isValid } = req.context;
-        if (!isValid || decodedToken.userType !== UserRole.ADMINUSER) {
-          return res.status(401).json({
-            isSuccessful: false,
-            message: 'Unauthorized to perform this operation.',
-          });
-        }
-
-        try {
-          return csvUploadController(req);
-        } catch (error) {
-          console.error('CSV Upload Failed:', error);
-          return res.status(500).json({
-            isSuccessful: false,
-            message: 'Some error occurred',
-          });
-        }
-      });
 
       app.get('*', (req, res) => {
         res.sendFile(join(__dirname, './front-end/dist/index.html'));

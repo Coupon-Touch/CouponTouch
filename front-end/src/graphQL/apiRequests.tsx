@@ -24,3 +24,49 @@ export const GET_COUPONSETTINGS = gql`
     getCouponSettingsAlbayan
   }
 `;
+
+export const GET_SUBSCRIBER = gql`query GetSubscriberDetails($phoneNumber: String!, $countryCode: String!) {
+  getSubscriberDetails(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+    jwtToken
+    mobile
+    countryCode
+    isPaid
+    lastScratchTime
+    address
+    email
+    emirateID
+    name
+  }
+}`
+
+export const UPDATE_SUBSCRIBER = gql`mutation UpdateSubscriber($countryCode: String!, $mobile: String!, $emirateId: String, $email: String, $name: String, $address: String, $comment: String) {
+  updateSubscriber(countryCode: $countryCode, mobile: $mobile, emirateID: $emirateId, email: $email, name: $name, address: $address, comment: $comment) {
+    isSuccessful
+    message
+    jwtToken
+  }
+}`
+export const UPDATE_LAST_SCRATCH_TIME = gql`mutation UpdateLastScratchTime($phoneNumber: String!, $countryCode: String!) {
+  updateLastScratchTime(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+    isSuccessful
+    message
+    jwtToken
+  }
+}`
+
+export const UPDATE_COLLECTION_DETAILS = gql`mutation UpdateCollectionDetails($phoneNumber: String!, $countryCode: String!, $collectionDate: Date!, $collectionLocation: String!, $comments: String!) {
+  updateCollectionDetails(PhoneNumber: $phoneNumber, CountryCode: $countryCode, collectionDate: $collectionDate, collectionLocation: $collectionLocation, comments: $comments) {
+    isSuccessful
+    message
+  }
+}`
+
+export const DID_SUBSCRIBER_WIN = gql`query DidSubscriberWin($phoneNumber: String!, $countryCode: String!) {
+  didSubscriberWin(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+    isWon
+    comments
+    collectionLocation
+    collectionDate
+    jwtToken
+  }
+}`

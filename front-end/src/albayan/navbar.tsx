@@ -1,30 +1,18 @@
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '@/assets/albanian/logo.png';
 import { isJWTTokenValid } from '@/jwtUtils';
 import albayanLogo from '@/assets/albanian/albayanLogo.svg';
 
 export default function NavBar() {
+  const navigate = useNavigate();
   return (
     <nav className="flex flex-row relative w-full h-24 bg-white/80 shadow-sm shadow-[#833b4b] justify-start lg:justify-center items-center">
       <div className="hidden lg:absolute left-0 lg:block h-28 md:w-52 md:h-24 m-0 p-0">
         {/* Replace with your logo */}
         <img src={logo} className="w-full h-full object-contain" />
       </div>
-      {localStorage.getItem('isNewUser') ? (
-        <button
-          className="bg-black p-1 rounded-md text-white text-sm"
-          onClick={() => {
-            localStorage.removeItem('isNewUser');
-            window.location.reload();
-          }}
-        >
-          Reset
-        </button>
-      ) : (
-        <></>
-      )}
-      <img src={albayanLogo} className="w-28 ml-4 lg:ml-0"></img>
+      <img src={albayanLogo} className="w-28 ml-4 lg:ml-0" onClick={() => navigate("/albayan")}></img>
       <div className="fixed right-0">
         {window.location.pathname.endsWith('/adminLogin') && (
           <Link to="/albayan">

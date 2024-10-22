@@ -1,6 +1,8 @@
-import { prepareAdminToken } from '../jwt.js';
+import { prepareAdminToken, prepareSubscriberToken } from '../jwt.js';
 import { AdminUser } from '../models/adminUser.js';
+import { Subscriber } from '../models/subscriber.js';
 import bcrypt from 'bcryptjs';
+import { addSubscriberController } from './csvFunctions.js';
 
 export async function adminLoginController(args, context) {
   try {
@@ -32,3 +34,60 @@ export async function adminLoginController(args, context) {
     };
   }
 }
+
+export const getSubscriberDetailsController = async (
+  phoneNumber,
+  countryCode
+) => {
+  try {
+    let subscriber = await Subscriber.findOne({
+      mobile: phoneNumber,
+      countryCode: countryCode,
+    });
+
+    if (!subscriber) {
+      await addSubscriberController(
+        {
+          mobile: phoneNumber,
+          countryCode: countryCode,
+        },
+        true
+      );
+
+      subscriber = await Subscriber.findOne({
+        mobile: phoneNumber,
+        countryCode: countryCode,
+      });
+    }
+
+    const jwtToken = prepareSubscriberToken(subscriber);
+
+    return {
+      jwtToken: jwtToken,
+      mobile: subscriber.mobile,
+      countryCode: subscriber.countryCode,
+      isPaid: subscriber.isPaid,
+      lastScratchTime: subscriber.lastScratchTime
+        ? subscriber.lastScratchTime.getTime()
+        : null,
+      address: subscriber.address,
+      email: subscriber.email,
+      emirateID: subscriber.emirateID,
+      name: subscriber.name,
+    };
+  } catch (error) {
+    console.log('Error in getSubscriberDetailsController:', error);
+    return {
+      isSubscriber: false,
+      jwtToken: null,
+      mobile: null,
+      countryCode: null,
+      isPaid: false,
+      lastScratchTime: 0,
+      address: null,
+      email: null,
+      emirateID: null,
+      name: null,
+    };
+  }
+};

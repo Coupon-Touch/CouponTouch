@@ -4,14 +4,51 @@ import { initialDumpController } from './controllers/initialDump.js';
 import { CountryCodes } from './utilities/countryCodes.js';
 import { storeCouponSettingsController } from './controllers/couponSettings.js';
 import { getLatestCouponSettingsAlbayanController } from './controllers/couponSettings.js';
+import { updateLastScratchTimeController } from './controllers/lastScratchHandler.js';
+import { addSubscriberController } from './controllers/csvFunctions.js';
+import { getSubscriberDetailsController } from './controllers/loginFunctions.js';
+import { updateSubscriberController } from './controllers/subscriberFunctions.js';
+import { Subscriber } from './models/subscriber.js';
+import { updateCollectionDetailsController } from './controllers/subscriberFunctions.js';
+import { prepareSubscriberToken } from './jwt.js';
 
 // GraphQL
 export const typeDefs = gql`
   scalar JSON
+  scalar Date
+
+  type SubscriberInfo {
+    jwtToken: String
+    mobile: String
+    countryCode: String
+    isPaid: Boolean
+    lastScratchTime: Float
+    address: String
+    email: String
+    emirateID: String
+    name: String
+  }
+
+  type SubscriberWinInfo {
+    isWon: Boolean
+    campaignCode: String
+    collectionDate: Date
+    collectionLocation: String
+    comments: String
+    jwtToken: String
+  }
 
   type Query {
     getCountryCodes: [Int]
     getCouponSettingsAlbayan: JSON
+    getSubscriberDetails(
+      PhoneNumber: String!
+      CountryCode: String!
+    ): SubscriberInfo
+    didSubscriberWin(
+      PhoneNumber: String!
+      CountryCode: String!
+    ): SubscriberWinInfo
   }
 
   type AdminLoginInfo {
@@ -30,10 +67,61 @@ export const typeDefs = gql`
     message: String
   }
 
+  type UpdateScratchTimeInfo {
+    isSuccessful: Boolean!
+    message: String
+    jwtToken: String
+  }
+
+  type AddSubscriberInfo {
+    isSuccessful: Boolean!
+    message: String
+  }
+
+  type UpdateSubscriberInfo {
+    isSuccessful: Boolean!
+    jwtToken: String
+    message: String
+  }
+
+  type IsUpdatedInfo {
+    isSuccessful: Boolean
+    message: String
+    jwtToken: String
+  }
+
   type Mutation {
     adminLogin(username: String, password: String): AdminLoginInfo
     dumpInitialDatabase: DumpDatabaseInfo
     storeCouponSettings(input: JSON!): isCouponStoredInfo
+    updateLastScratchTime(
+      PhoneNumber: String!
+      CountryCode: String!
+    ): UpdateScratchTimeInfo
+    addSubscriber(
+      name: String!
+      email: String!
+      emirateID: String!
+      countryCode: String!
+      mobile: String!
+      address: String!
+    ): AddSubscriberInfo
+    updateSubscriber(
+      name: String
+      email: String
+      emirateID: String
+      countryCode: String!
+      mobile: String!
+      address: String
+      comment: String
+    ): UpdateSubscriberInfo
+    updateCollectionDetails(
+      PhoneNumber: String!
+      CountryCode: String!
+      collectionDate: Date!
+      collectionLocation: String!
+      comments: String!
+    ): IsUpdatedInfo
   }
 `;
 
@@ -48,6 +136,58 @@ export const resolvers = {
       } catch (error) {
         console.log('Error Fetching coupon settings : ', error);
         return {};
+      }
+    },
+    getSubscriberDetails: async (_, { PhoneNumber, CountryCode }, context) => {
+      try {
+        const response = await getSubscriberDetailsController(
+          PhoneNumber,
+          CountryCode
+        );
+        return response;
+      } catch (error) {
+        console.log('Error Fetching Subscriber Details : ', error);
+        return {};
+      }
+    },
+    didSubscriberWin: async (_, { PhoneNumber, CountryCode }) => {
+      try {
+        const subscriber = await Subscriber.findOne({
+          mobile: PhoneNumber,
+          countryCode: CountryCode,
+        });
+
+        if (!subscriber) {
+          return {
+            isWon: false,
+            campaignCode: null,
+            collectionDate: null,
+            collectionLocation: '',
+            comments: '',
+            jwtToken: null,
+          };
+        }
+
+        const { wonDetails } = subscriber;
+        const jwtToken = prepareSubscriberToken(subscriber);
+        return {
+          isWon: wonDetails ? wonDetails.isWon : false,
+          campaignCode: wonDetails ? wonDetails.campaignCode : null,
+          collectionDate: wonDetails ? wonDetails.collectionDate : null,
+          collectionLocation: wonDetails ? wonDetails.collectionLocation : '',
+          comments: wonDetails ? wonDetails.comments : '',
+          jwtToken: jwtToken,
+        };
+      } catch (error) {
+        console.error('Error fetching subscriber win info:', error);
+        return {
+          isWon: false,
+          campaignCode: null,
+          collectionDate: null,
+          collectionLocation: '',
+          comments: '',
+          jwtToken: null,
+        };
       }
     },
   },
@@ -80,6 +220,81 @@ export const resolvers = {
         return {
           isSuccessful: false,
           message: 'Some error occurred',
+        };
+      }
+    },
+    updateLastScratchTime: async (_, { PhoneNumber, CountryCode }) => {
+      try {
+        return await updateLastScratchTimeController(PhoneNumber, CountryCode);
+      } catch (error) {
+        console.error('Error in updateLastScratchTime resolver:', error);
+
+        return {
+          isSuccessful: false,
+          message: 'An error occurred while updating last scratch time',
+        };
+      }
+    },
+    addSubscriber: async (
+      _,
+      { name, email, emirateID, countryCode, mobile, address }
+    ) => {
+      try {
+        const subscriberInput = {
+          name,
+          email,
+          emirateID,
+          countryCode,
+          mobile,
+          address,
+        };
+
+        return await addSubscriberController(subscriberInput);
+      } catch (error) {
+        console.error('Error in addSubscriber resolver:', error);
+
+        return {
+          isSuccessful: false,
+          message: 'An error occurred while adding the subscriber',
+        };
+      }
+    },
+    updateSubscriber: async (_, args) => {
+      try {
+        const { mobile, countryCode, ...updateFields } = args;
+        return await updateSubscriberController(
+          mobile,
+          countryCode,
+          updateFields
+        );
+      } catch (error) {
+        console.error('Error in updateSubscriber resolver:', error);
+        return {
+          isSuccessful: false,
+          message: 'An error occurred while updating the subscriber',
+        };
+      }
+    },
+    updateCollectionDetails: async (
+      _,
+      { PhoneNumber, CountryCode, collectionDate, collectionLocation, comments }
+    ) => {
+      try {
+        const result = await updateCollectionDetailsController(
+          PhoneNumber,
+          CountryCode,
+          collectionDate,
+          collectionLocation,
+          comments
+        );
+        return result;
+      } catch (error) {
+        console.error('Error in updateCollectionDetails resolver:', error);
+
+        return {
+          isSuccessful: false,
+          jwtToken: null,
+          message: 'Something went wrong!',
         };
       }
     },

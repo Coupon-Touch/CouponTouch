@@ -1,62 +1,157 @@
 import { useEffect, useState } from 'react';
 import SubscriberInfo from './subscriberInfo';
-import { cn } from '@/lib/utils';
+import AfterGame from './afterGame';
+import { decodeJWT } from '@/jwtUtils';
+import CountDown from './countDown';
+import PhoneForm, { SubscriberDetails } from './phoneForm';
+import CouponTools from './couponTools';
+import { useLazyQuery } from '@apollo/client';
+import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Coupon() {
-  const [isNewUser, setIsNewUser] = useState(false); // tells if the user has session or not
-  const [isSubscribed, setIsSubscribed] = useState(false); // tells if the user is subscribed
-  useEffect(() => {
-    // TODO: store these in JWT token dont get it from local storage
+  const [openPhoneInfo, setOpenPhoneInfo] = useState(false);
+  const [openSubscriberInfo, setOpenSubscriberInfo] = useState(false);
+  const [openCountDown, setOpenCountDown] = useState(false);
+  const [openCouponTools, setOpenCouponTools] = useState(false);
+  const [openAfterGame, setOpenAfterGame] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [data, setData] = useState<SubscriberDetails | null>(null);
 
-    const eventSource = new EventSource('/api/events');
+  const [countDown, setCountDown] = useState(0);
 
-    eventSource.onmessage = function (event) {
-      const data = JSON.parse(event.data);
-      console.log(data)
-    };
+  const [getSubscriber] = useLazyQuery(GET_SUBSCRIBER);
 
-    eventSource.onerror = function (error) {
-      console.error('Error:', error);
-    };
-
-    const isNewUser = Boolean(window.localStorage.getItem('isNewUser'));
-    setIsNewUser(!isNewUser);
-    setIsSubscribed(Boolean(window.localStorage.getItem('isSubscribed')));
-
-    return () => {
-      eventSource.close();
+  const getToken = () => {
+    const token = window.localStorage.getItem('subscriberToken');
+    if (token) {
+      const decoded = decodeJWT(token);
+      return decoded;
     }
-  });
-  const handleMobileSubmit = () => {
-    setIsNewUser(false);
+    return null;
+  };
 
-    //TODO: post the values to the server and get true or false if the user is subscribed
-    const isSubscribed = true;
-    window.localStorage.setItem('isNewUser', 'true'); // TODO: store in JWT Token
+  const getNextScratchTime = (time: number | null) => {
+    if (time === 0 || time === null) return new Date().getTime();
+    const lastScratch = new Date(time);
+    lastScratch.setDate(lastScratch.getDate() + 1);
+    return lastScratch.getTime();
+  };
 
-    if (isSubscribed) {
-      // TODO: store in JWT Token
-      window.localStorage.setItem('isSubscribed', 'true');
-      setIsSubscribed(true);
+  const { toast } = useToast();
+  const fetchData = async (phone: string, countryCode: string) => {
+    return new Promise((resolve) => {
+      getSubscriber({
+        variables: { phoneNumber: `${phone}`, countryCode: `${countryCode}` },
+        onCompleted: data => {
+          data = data.getSubscriberDetails;
+          setData(data);
+          localStorage.setItem(
+            'subscriberToken',
+            data.jwtToken
+          );
+          resolve(data);
+        },
+        onError: () => {
+          resolve(0);
+          toast({
+            variant: 'destructive',
+            description: 'An error occurred. Please try again later.',
+          });
+        },
+      });
+    });
+
+  };
+  const updateState = (data?: SubscriberDetails | null) => {
+    if (data) {
+      setData(data);
+    }
+    const token = getToken();
+    if (!token) {
+      setOpenPhoneInfo(true);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      setShowThankYou(false);
+      return;
+    }
+
+    if (token.subsriberMobile && !token.isSubscriber) {
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(true);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      setShowThankYou(false);
+      return;
+    }
+    if (token.isWon && !token.collectionDataCollected) {
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(true);
+      setShowThankYou(false);
+
+      return;
+    }
+    if (token.isWon && token.collectionDataCollected) {
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      setShowThankYou(true);
+      return;
+    }
+
+    const nextScratchTime = getNextScratchTime(token.lastScratchTime);
+    if (nextScratchTime > new Date().getTime()) {
+      setCountDown(nextScratchTime);
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(true);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      setShowThankYou(false);
     } else {
-      setIsSubscribed(false);
+      setCountDown(0);
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenCountDown(false);
+      setOpenCouponTools(true);
+      setOpenAfterGame(false);
+      setShowThankYou(false);
     }
   };
+  useEffect(() => {
+    (async () => {
+      const token = getToken();
+      if (token) {
+        await fetchData(token.subsriberMobile, token.subscriberCountryCode);
+      }
+      updateState();
+    })()
+
+  }, []);
+
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
-        {/* <script src="https://hosting4images.com/popup/popup_0e095e054ee94774d6a496099eb1cf6a.js"></script> */}
-        {isNewUser && <SubscriberInfo successCallback={handleMobileSubmit} />}
-        <div
-          className={cn('w-full', !isNewUser && isSubscribed ? '' : 'hidden')}
-        >
-          <iframe
-            id="coupontools"
-            src="https://digicpn.com/p/rptbsd&web=true"
-            seamless={true}
-            className="border-0 w-full h-screen m-0 p-0"
-          ></iframe>
-        </div>
+        {openPhoneInfo && <PhoneForm successCallback={updateState} />}
+        {openCountDown && (
+          <CountDown targetDate={countDown} onComplete={updateState} />
+        )}
+        {data && openSubscriberInfo && (
+          <SubscriberInfo subscriber={data} successCallback={updateState} />
+        )}
+        {data && openCouponTools && (
+          <CouponTools successCallback={updateState} />
+        )}
+        {openAfterGame && <AfterGame />}
+        {showThankYou && <div className="text-center">Thank You</div>}
       </div>
     </>
   );
