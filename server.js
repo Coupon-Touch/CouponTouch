@@ -95,7 +95,7 @@ async function startServer() {
           router: uploadRouter,
         })
       );
-      app.post('/api/hook', async (req, res) => {
+      app.use('/api/hook', async (req, res) => {
         try {
           console.log(req.body);
           const { type, customer } = req.body;
@@ -107,12 +107,13 @@ async function startServer() {
 
             res.status(200);
           } else {
-            res.status(400);
+            res.status(200);
           }
         } catch (error) {
           console.error('Error updating subscriber:', error);
           res.status(500);
         }
+        res.send({ Status: 'Success' });
       });
       app.use(
         '/api',
