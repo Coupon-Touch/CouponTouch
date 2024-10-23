@@ -19,7 +19,11 @@ const Paths = [
 export default function Albayan() {
   const navigate = useNavigate();
   useEffect(() => {
-    if (!isJWTTokenValid() && !window.location.pathname.endsWith('/albayan') && !window.location.pathname.endsWith('/albayan/')) {
+    if (
+      !isJWTTokenValid() &&
+      !window.location.pathname.endsWith('/albayan') &&
+      !window.location.pathname.endsWith('/albayan/')
+    ) {
       navigate('adminLogin');
     }
     const body = document.body;
@@ -52,8 +56,11 @@ export default function Albayan() {
         </div>
       </div>
       <footer className="mt-8 mb-6 w-full text-center text-gray-500 text-sm">
-        © {new Date().getFullYear()} CouponTouch Loyalty Solutions. All rights
-        reserved. Terms and conditions apply.
+        © {new Date().getFullYear()}{' '}
+        <a href="https://coupontouch.net/" className='underline' target="__blank">
+          coupontouch.net
+        </a>
+        {' '}- All rights reserved. Terms and conditions apply.
       </footer>
     </div>
   );

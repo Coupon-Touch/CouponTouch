@@ -47,9 +47,8 @@ countryCodes.sort((a, b) => a - b);
 const validationSchema = Yup.object({
   countryCode: Yup.string().required('Please select a country code.'),
   phoneNumber: Yup.string()
-    .matches(/^[1-9]\d*$/, "Phone number must not start with '0'.") // Custom regex
-    .min(7, 'Phone number must be at least 7 characters long.')
-    .max(12, 'Phone number must be at most 12 characters long.')
+    .matches(/^[1-9]\d*$/, "Phone number must not start with '0'.")
+    .length(9, 'Phone number must be exactly 9 digits.')
     .required('Phone number is required.'),
 });
 export default function PhoneForm({ successCallback }: {
@@ -152,7 +151,7 @@ export default function PhoneForm({ successCallback }: {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Checking...' : 'Scratch Coupon'}
+                {loading ? 'Checking...' : 'Get Coupon'}
               </Button>
             </div>
           </form>

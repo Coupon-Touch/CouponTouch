@@ -87,8 +87,15 @@ export default function Home() {
       </div>
       <ContactForm />
       <footer className="mt-8 mb-8 text-center text-gray-500 text-sm">
-        © {new Date().getFullYear()} CouponTouch Loyalty Solutions. All rights
-        reserved. Terms and conditions apply.
+        © {new Date().getFullYear()}{' '}
+        <a
+          href="https://coupontouch.net/"
+          className="underline"
+          target="__blank"
+        >
+          coupontouch.net
+        </a>{' '}
+        - All rights reserved. Terms and conditions apply.
       </footer>
     </div>
   );

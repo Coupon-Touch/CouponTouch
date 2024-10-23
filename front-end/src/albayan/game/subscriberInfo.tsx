@@ -12,34 +12,38 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { SubscriberDetails } from './phoneForm';
 
-
-
 const validationSchema = Yup.object({
   name: Yup.string()
     .min(3, 'Name cannot be less than 3 character')
     .required('Name is required'),
 
   emiratesId: Yup.string()
-    .matches(/^\d{15}$/, 'Emirates ID must be exactly 15 digits long')
+    .matches(
+      /^\d{15}$/,
+      'Emirates ID must be exactly 15 digits long and cannot contain spaces.'
+    )
     .required('Emirates ID is required'),
 
   address: Yup.string().required('Address is required'),
 
-  email: Yup.string().email('Invalid email format').required('Email is required')
+  email: Yup.string()
+    .email('Invalid email format')
+    .required('Email is required'),
 });
 interface SubscriberInfoProps {
   subscriber: SubscriberDetails;
   successCallback: () => void;
 }
 export type SubscriberUpdate = {
-  isSuccessful: boolean
-  message: string
-  jwtToken: string
-
-}
-export default function SubscriberInfo({ subscriber, successCallback }: SubscriberInfoProps) {
-
-  const { toast } = useToast()
+  isSuccessful: boolean;
+  message: string;
+  jwtToken: string;
+};
+export default function SubscriberInfo({
+  subscriber,
+  successCallback,
+}: SubscriberInfoProps) {
+  const { toast } = useToast();
   const formik = useFormik({
     initialValues: {
       countryCode: subscriber.countryCode,
@@ -50,7 +54,7 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
       email: subscriber.email,
     },
     validationSchema: validationSchema,
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       await new Promise((resolve, reject) => {
         updateSubscriber({
           variables: {
@@ -62,27 +66,28 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
             address: values.address,
           },
           onCompleted(data) {
-            toast({ description: 'Successfully updated subscriber info' })
-            window.localStorage.setItem("subscriberToken", data.updateSubscriber.jwtToken);
-            data = data.updateSubscriber
-            successCallback()
-            resolve(data)
+            toast({ description: 'Successfully updated subscriber info' });
+            window.localStorage.setItem(
+              'subscriberToken',
+              data.updateSubscriber.jwtToken
+            );
+            data = data.updateSubscriber;
+            successCallback();
+            resolve(data);
           },
           onError(error) {
             toast({
               variant: 'destructive',
-              description: 'An error occurred. Please try again later.'
-            })
-            reject(error)
-          }
+              description: 'An error occurred. Please try again later.',
+            });
+            reject(error);
+          },
         });
-      })
-
+      });
     },
   });
 
   const [updateSubscriber, { loading }] = useMutation(UPDATE_SUBSCRIBER);
-
 
   return (
     <Card className="w-full max-w-md h-max mx-auto m-4 p-2">
@@ -103,7 +108,7 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
               <Input
                 id="name"
                 type="text"
-                placeholder="Your Full Name Here..."
+                placeholder="Your Full Name here..."
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -119,22 +124,22 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
               <Input
                 id="email"
                 type="email"
-                placeholder="Email Address"
+                placeholder="Email Address here..."
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 name="email"
                 required
               />
-              {formik.touched.name && formik.errors.name && (
-                <p className="text-sm text-red-500">{formik.errors.name}</p>
+              {formik.touched.email && formik.errors.email && (
+                <p className="text-sm text-red-500">{formik.errors.email}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
               <Textarea
                 id="address"
-                placeholder="Your Address Here..."
+                placeholder="Your Address here..."
                 value={formik.values.address}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -151,7 +156,7 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
               <Input
                 id="emiratesId"
                 type="text"
-                placeholder="Your Emirates ID Here..."
+                placeholder="Your Emirates ID without spaces here..."
                 value={formik.values.emiratesId}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -166,9 +171,7 @@ export default function SubscriberInfo({ subscriber, successCallback }: Subscrib
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading
-                ? 'Checking...'
-                  : 'Scratch Coupon'}
+              {loading ? 'Checking...' : 'Get Coupon'}
             </Button>
           </div>
         </form>

@@ -2,17 +2,28 @@ import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '@/assets/albanian/logo.png';
 import { isJWTTokenValid } from '@/jwtUtils';
-import albayanLogo from '@/assets/albanian/albayanLogo.svg';
+import albayanLogo from '@/assets/albanian/albayanLogo.png';
 
 export default function NavBar() {
   const navigate = useNavigate();
   return (
-    <nav className="flex flex-row relative w-full h-24 bg-white/80 shadow-sm shadow-[#833b4b] justify-start lg:justify-center items-center">
-      <div className="hidden lg:absolute left-0 lg:block h-28 md:w-52 md:h-24 m-0 p-0">
-        {/* Replace with your logo */}
-        <img src={logo} className="w-full h-full object-contain" />
-      </div>
-      <img src={albayanLogo} className="w-28 ml-4 lg:ml-0" onClick={() => navigate("/albayan")}></img>
+    <nav className="flex flex-row relative w-full h-24 bg-white/80 shadow-sm shadow-[#833b4b] justify-between items-center">
+      <img
+        src={albayanLogo}
+        className="w-28 h-[4.5rem] ml-6"
+        onClick={() => navigate('/albayan')}
+      ></img>
+      {window.location.pathname.endsWith('/adminLogin') ? (
+        <div className="hidden lg:flex flex-row justify-center -ml-32 w-full m-0 p-0">
+          {/* Replace with your logo */}
+          <img src={logo} className="h-28 md:w-52 md:h-24 object-contain" />
+        </div>
+      ) : (
+        <div className="lg:block h-28 md:w-52 md:h-24 m-0 p-0">
+          {/* Replace with your logo */}
+          <img src={logo} className="w-full h-full object-contain" />
+        </div>
+      )}
       <div className="absolute right-0">
         {window.location.pathname.endsWith('/adminLogin') && (
           <Link to="/albayan">

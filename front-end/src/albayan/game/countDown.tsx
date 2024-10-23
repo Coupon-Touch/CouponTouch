@@ -77,7 +77,7 @@ export default function CountDown({
       </CardContent>
       <CardFooter className="text-center">
         <p className="text-muted-foreground w-full">
-          Incorrect mobile number?{' '}
+          Change mobile number?{' '}
           <span
             className="text-blue-500 hover:underline cursor-pointer text-center w-full"
             onClick={() => {
