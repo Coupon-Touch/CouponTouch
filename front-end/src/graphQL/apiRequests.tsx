@@ -58,6 +58,7 @@ export const UPDATE_COLLECTION_DETAILS = gql`mutation UpdateCollectionDetails($p
   updateCollectionDetails(PhoneNumber: $phoneNumber, CountryCode: $countryCode, collectionDate: $collectionDate, collectionLocation: $collectionLocation, comments: $comments) {
     isSuccessful
     message
+    jwtToken
   }
 }`
 

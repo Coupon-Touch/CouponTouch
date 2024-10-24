@@ -150,8 +150,15 @@ export default function Coupon() {
         {data && openCouponTools && (
           <CouponTools successCallback={updateState} />
         )}
-        {openAfterGame && <AfterGame />}
-        {showThankYou && <div className="text-center">Thank You</div>}
+        {openAfterGame && <AfterGame successCallback={updateState} />}
+        {showThankYou &&
+          <div className="text-center flex justify-center items-center flex-col">
+            <div>
+              Thank You.
+            </div>
+            <div>Page under construction</div>
+            <div>Comming soon....</div>
+          </div>}
       </div>
     </>
   );

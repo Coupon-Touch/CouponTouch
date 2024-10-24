@@ -33,7 +33,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { decodeJWT } from '@/jwtUtils';
 
-export default function AfterGame() {
+export default function AfterGame({ successCallback }: { successCallback: () => void }) {
   const [date, setDate] = useState<Date>();
   const [comments, setComments] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -80,6 +80,7 @@ export default function AfterGame() {
       onCompleted(data) {
         data = data.updateCollectionDetails;
         window.localStorage.setItem('subscriberToken', data.jwtToken);
+        successCallback()
       },
     });
     // Handle form submission here
