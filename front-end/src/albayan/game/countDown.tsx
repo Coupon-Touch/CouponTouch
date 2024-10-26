@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 type CountdownProps = {
   targetDate?: number;
   onComplete?: () => void;
+  collectionDataCollected: boolean;
 };
 
 const getNewTimeLeft = (target: number) => {
@@ -27,6 +28,7 @@ const getNewTimeLeft = (target: number) => {
 export default function CountDown({
   targetDate = new Date().getTime(),
   onComplete,
+  collectionDataCollected,
 }: CountdownProps) {
   const [timeLeft, setTimeLeft] = useState(getNewTimeLeft(targetDate));
   useEffect(() => {
@@ -48,13 +50,21 @@ export default function CountDown({
 
     return () => clearInterval(interval);
   }, [targetDate]); // Ensure targetDate is watched for changes
-
   return (
     <Card className="w-full lg:max-w-md mx-auto">
       <CardContent className="p-6">
         <h2 className="text-2xl font-bold text-center mb-4">
-          You've reached your coupon limit for the day. <br></br>{' '}
-          <span className="font-extralight text-lg">See you again in</span>
+          {collectionDataCollected ? (
+            <div className=" font-semibold text-lg p-4 ">
+              <p className=''>🎉 Congratulations, you've won!</p>
+              <p className="mt-2">Come back tomorrow to scratch again!</p>
+            </div>
+          ) : (
+            <>
+              You've reached your coupon limit for the day. <br></br>
+              <span className="font-extralight text-lg">See you again in</span>
+            </>
+          )}
         </h2>
         <div className="grid grid-cols-4 gap-4 text-center">
           <div className="bg-primary/10 rounded-lg p-3">

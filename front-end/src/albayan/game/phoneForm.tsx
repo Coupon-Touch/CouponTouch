@@ -81,7 +81,7 @@ export default function PhoneForm({ successCallback }: {
       })
       if (data) {
         if (data.jwtToken) {
-          window.localStorage.setItem("subscriberToken", data.jwtToken); // TODO: store in JWT Token
+          window.localStorage.setItem("token", data.jwtToken); // TODO: store in JWT Token
         }
         successCallback(data);
       }

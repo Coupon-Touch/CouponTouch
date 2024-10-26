@@ -68,7 +68,7 @@ export default function SubscriberInfo({
           onCompleted(data) {
             toast({ description: 'Successfully updated subscriber info' });
             window.localStorage.setItem(
-              'subscriberToken',
+              'token',
               data.updateSubscriber.jwtToken
             );
             data = data.updateSubscriber;

@@ -35,6 +35,12 @@ import { decodeJWT } from '@/jwtUtils';
 
 export default function AfterGame({ successCallback }: { successCallback: () => void }) {
   const [date, setDate] = useState<Date>();
+  const [open, setOpen] = useState(false); // Managing the popover open state
+
+  const handleSelect = (selectedDate: Date) => {
+    setDate(selectedDate)
+    setOpen(false); // Close popover after selecting a date
+  };
   const [comments, setComments] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<LocationInterface>({
@@ -66,7 +72,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
   };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const token = window.localStorage.getItem('subscriberToken');
+    const token = window.localStorage.getItem('token');
     const decoded = token && decodeJWT(token);
     console.log(decoded);
     updateCollectionData({
@@ -79,7 +85,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
       },
       onCompleted(data) {
         data = data.updateCollectionDetails;
-        window.localStorage.setItem('subscriberToken', data.jwtToken);
+        window.localStorage.setItem('token', data.jwtToken);
         successCallback()
       },
     });
@@ -98,7 +104,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
         >
           <div className="space-y-2">
             <Label htmlFor="collection-date">Collection Date</Label>
-            <Popover>
+            <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   id="date"
@@ -113,11 +119,9 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={handleSelect} // Call handleSelect on date selection
                   initialFocus
-                  disabled={date =>
-                    date < dateRange.fromDate || date > dateRange.toDate
-                  }
+                  disabled={(date) => date < dateRange.fromDate || date > dateRange.toDate}
                 />
               </PopoverContent>
             </Popover>
@@ -148,7 +152,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
                 </DialogTrigger>
               }
 
-              <DialogContent className="max-w-3xl">
+              <DialogContent className="max-w-3xl" aria-describedby="Collection location">
                 <DialogHeader>
                   <DialogTitle>Select a Collection Location</DialogTitle>
                 </DialogHeader>

@@ -10,7 +10,7 @@ export default function NavBar() {
     <nav className="flex flex-row relative w-full h-24 bg-white/80 shadow-sm shadow-[#833b4b] justify-between items-center">
       <img
         src={albayanLogo}
-        className="w-28 h-[4.5rem] ml-6"
+        className="w-28 h-[4.5rem]  ml-6 object-contain"
         onClick={() => navigate('/albayan')}
       ></img>
       {window.location.pathname.endsWith('/adminLogin') ? (
