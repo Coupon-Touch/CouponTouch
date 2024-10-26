@@ -131,17 +131,19 @@ async function startServer() {
       app.get('*', (req, res) => {
         res.sendFile(join(__dirname, './front-end/dist/index.html'));
       });
-
-      const PORT = process.env.PORT || 8888;
-      app.listen(PORT, () => {
-        console.log('Server Up and Running on Port:', PORT);
-      });
     } else {
+      app.get('*', (req, res) => {
+        res.send('Could Not Connect to database');
+      });
       console.error('Database connection failed.');
     }
   } catch (error) {
     console.error('Error starting the server:', error);
   }
+  const PORT = process.env.PORT || 8888;
+  app.listen(PORT, () => {
+    console.log('Server Up and Running on Port:', PORT);
+  });
 }
 
 startServer();
