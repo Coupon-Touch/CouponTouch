@@ -23,7 +23,7 @@ export default function Coupon() {
   const [getSubscriber] = useLazyQuery(GET_SUBSCRIBER);
 
   const getToken = () => {
-    const token = window.localStorage.getItem('subscriberToken');
+    const token = window.localStorage.getItem('token');
     if (token) {
       const decoded = decodeJWT(token);
       return decoded;
@@ -47,7 +47,7 @@ export default function Coupon() {
           data = data.getSubscriberDetails;
           setData(data);
           localStorage.setItem(
-            'subscriberToken',
+            'token',
             data.jwtToken
           );
           resolve(data);

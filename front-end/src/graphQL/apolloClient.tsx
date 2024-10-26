@@ -1,13 +1,28 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+
+const httpLink = new HttpLink({ uri: '/api' });
+
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem('token');
+  console.log(token)
+  return {
+    headers: {
+      ...headers,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'authorization': token ? `Bearer ${token}` : '',
+    }
+  };
+});
 
 const client = new ApolloClient({
-  uri: '/api',
-  cache: new InMemoryCache(),
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : ''
-  }
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache({
+    addTypename: false,
+    resultCaching: false,
+    possibleTypes: {}
+  })
 });
 
 export default client;

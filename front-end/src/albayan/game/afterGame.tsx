@@ -66,7 +66,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
   };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const token = window.localStorage.getItem('subscriberToken');
+    const token = window.localStorage.getItem('token');
     const decoded = token && decodeJWT(token);
     console.log(decoded);
     updateCollectionData({
@@ -79,7 +79,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
       },
       onCompleted(data) {
         data = data.updateCollectionDetails;
-        window.localStorage.setItem('subscriberToken', data.jwtToken);
+        window.localStorage.setItem('token', data.jwtToken);
         successCallback()
       },
     });

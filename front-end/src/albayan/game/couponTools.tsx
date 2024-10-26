@@ -11,7 +11,7 @@ export default function CouponTools({ successCallback }: { successCallback: () =
   const { toast } = useToast();
 
   useEffect(() => {
-    const token = window.localStorage.getItem('subscriberToken');
+    const token = window.localStorage.getItem('token');
     let phone: string, countryCode: string
     if (token) {
       const decoded = decodeJWT(token);
@@ -27,7 +27,7 @@ export default function CouponTools({ successCallback }: { successCallback: () =
       onCompleted(data) {
         data = data.updateLastScratchTime
         console.log(data)
-        window.localStorage.setItem("subscriberToken", data.jwtToken);
+        window.localStorage.setItem("token", data.jwtToken);
       },
       onError(error) {
         console.error(error)
@@ -48,7 +48,7 @@ export default function CouponTools({ successCallback }: { successCallback: () =
           onCompleted(data) {
             data = data.didSubscriberWin
             if (data.isWon) {
-              window.localStorage.setItem("subscriberToken", data.jwtToken);
+              window.localStorage.setItem("token", data.jwtToken);
               successCallback()
             }
           },
