@@ -96,8 +96,8 @@ async function startServer() {
         })
       );
       app.use('/api/hook', async (req, res) => {
+        console.log(req);
         try {
-          console.log(req.body);
           const { type, customer } = req.body;
 
           if (type === 'coupon_claimed' && customer && customer.phone) {

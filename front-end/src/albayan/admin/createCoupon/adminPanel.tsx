@@ -30,6 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import skeleton from './skeleton';
 import Loader from '@/albayan/loader';
+import PrizeDistributor from '../prizeDestributor/prizeDistributor';
 
 const generator = (function* incrementingGenerator(
   start: number = 0
@@ -360,6 +361,10 @@ export default function AdminPanel() {
             <TabsTrigger value="validation" className='w-full sm:w-auto relative'>
               {tabHasError('validation') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
               Validation
+            </TabsTrigger>
+            <TabsTrigger value="prizeDistributor" className='w-full sm:w-auto relative'>
+              {tabHasError('validation') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
+              Prize Distribution
             </TabsTrigger>
           </TabsList>
 
@@ -692,6 +697,9 @@ export default function AdminPanel() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+          <TabsContent value="prizeDistributor">
+            <PrizeDistributor />
           </TabsContent>
         </Tabs>
 

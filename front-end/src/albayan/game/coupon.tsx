@@ -8,6 +8,7 @@ import CouponTools from './couponTools';
 import { useLazyQuery } from '@apollo/client';
 import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
 import { useToast } from '@/hooks/use-toast';
+import ThankYou from './thankYou';
 
 export default function Coupon() {
   const [openPhoneInfo, setOpenPhoneInfo] = useState(false);
@@ -17,6 +18,7 @@ export default function Coupon() {
   const [openAfterGame, setOpenAfterGame] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
   const [data, setData] = useState<SubscriberDetails | null>(null);
+  const [collectionDataCollected, setCollectionDataCollected] = useState(false);
 
   const [countDown, setCountDown] = useState(0);
 
@@ -34,7 +36,8 @@ export default function Coupon() {
   const getNextScratchTime = (time: number | null) => {
     if (time === 0 || time === null) return new Date().getTime();
     const lastScratch = new Date(time);
-    lastScratch.setDate(lastScratch.getDate() + 1);
+    lastScratch.setDate(lastScratch.getDate());
+    lastScratch.setHours(24, 0, 0, 0);
     return lastScratch.getTime();
   };
 
@@ -64,6 +67,7 @@ export default function Coupon() {
 
   };
   const updateState = (data?: SubscriberDetails | null) => {
+    const alreadyShownThankyou = localStorage.getItem('alreadyShownThankyou');
     if (data) {
       setData(data);
     }
@@ -77,7 +81,7 @@ export default function Coupon() {
       setShowThankYou(false);
       return;
     }
-
+    setCollectionDataCollected(token.collectionDataCollected);
     if (token.subsriberMobile && !token.isSubscriber) {
       setOpenPhoneInfo(false);
       setOpenSubscriberInfo(true);
@@ -97,13 +101,14 @@ export default function Coupon() {
 
       return;
     }
-    if (token.isWon && token.collectionDataCollected) {
+    if (token.isWon && token.collectionDataCollected && alreadyShownThankyou !== 'true') {
       setOpenPhoneInfo(false);
       setOpenSubscriberInfo(false);
       setOpenCountDown(false);
       setOpenCouponTools(false);
       setOpenAfterGame(false);
       setShowThankYou(true);
+
       return;
     }
 
@@ -142,7 +147,7 @@ export default function Coupon() {
       <div className="w-full h-full flex justify-center mt-5">
         {openPhoneInfo && <PhoneForm successCallback={updateState} />}
         {openCountDown && (
-          <CountDown targetDate={countDown} onComplete={updateState} />
+          <CountDown targetDate={countDown} onComplete={updateState} collectionDataCollected={collectionDataCollected} />
         )}
         {data && openSubscriberInfo && (
           <SubscriberInfo subscriber={data} successCallback={updateState} />
@@ -152,13 +157,7 @@ export default function Coupon() {
         )}
         {openAfterGame && <AfterGame successCallback={updateState} />}
         {showThankYou &&
-          <div className="text-center flex justify-center items-center flex-col">
-            <div>
-              Thank You.
-            </div>
-            <div>Page under construction</div>
-            <div>Comming soon....</div>
-          </div>}
+          <ThankYou />}
       </div>
     </>
   );
