@@ -58,6 +58,8 @@ export const prepareSubscriberToken = subscriber => {
     ) {
       collectionDataCollected = false;
     }
+  }else{
+    collectionDataCollected = false
   }
   return jwt.sign(
     {

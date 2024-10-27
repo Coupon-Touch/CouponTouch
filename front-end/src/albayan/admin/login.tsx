@@ -8,7 +8,7 @@ import { useMutation } from '@apollo/client';
 import { ADMIN_LOGIN } from '@/graphQL/apiRequests';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import Loader from './loader';
+import Loader from '@/albayan/loader';
 
 export default function Login() {
   const navigate = useNavigate();

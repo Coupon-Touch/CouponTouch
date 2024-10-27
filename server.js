@@ -22,6 +22,7 @@ import { typeDefs, resolvers } from './back-end/graphql.js';
 
 // JWT Validators
 import { validateToken } from './back-end/jwt.js';
+import PaymentAPI from './payment.js';
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const __filename = fileURLToPath(import.meta.url);
@@ -65,56 +66,8 @@ async function startServer() {
     await server.start();
 
     if (dbConnected) {
-      app.use('/api/uploadCSV', upload.single('file'), async (req, res) => {
-        console.log(req.file);
-        if (req.file) {
-          const { decodedToken, isValid } = req.context;
-          if (!isValid || decodedToken.userType !== UserRole.ADMINUSER) {
-            return res.status(401).json({
-              isSuccessful: false,
-              message: 'Unauthorized to perform this operation.',
-            });
-          }
-
-          try {
-            return csvUploadController(req.file);
-          } catch (error) {
-            console.error('CSV Upload Failed:', error);
-            return res.status(500).json({
-              isSuccessful: false,
-              message: 'Some error occurred',
-            });
-          }
-        } else {
-          res.status(400).send('No file uploaded.');
-        }
-      });
-      app.use(
-        '/api/uploadthing',
-        createRouteHandler({
-          router: uploadRouter,
-        })
-      );
-      app.use('/api/hook', async (req, res) => {
-        console.log(req);
-        try {
-          const { type, customer } = req.body;
-
-          if (type === 'coupon_claimed' && customer && customer.phone) {
-            const mobileNumber = customer.phone;
-
-            await updateSubscriber(mobileNumber, res);
-
-            res.status(200);
-          } else {
-            res.status(200);
-          }
-        } catch (error) {
-          console.error('Error updating subscriber:', error);
-          res.status(500);
-        }
-        res.send({ Status: 'Success' });
-      });
+      REST({ app });
+      PaymentAPI({app})
       app.use(
         '/api',
         expressMiddleware(server, {
@@ -127,10 +80,7 @@ async function startServer() {
           },
         })
       );
-
-      app.get('*', (req, res) => {
-        res.sendFile(join(__dirname, './front-end/dist/index.html'));
-      });
+      serveReact({ app });
     } else {
       app.get('*', (req, res) => {
         res.send('Could Not Connect to database');
@@ -145,5 +95,65 @@ async function startServer() {
     console.log('Server Up and Running on Port:', PORT);
   });
 }
+
+const serveReact = ({ app }) => {
+  app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, './front-end/dist/index.html'));
+  });
+};
+
+const REST = ({ app }) => {
+  app.use('/api/uploadCSV', upload.single('file'), async (req, res) => {
+    console.log(req.file);
+    if (req.file) {
+      const { decodedToken, isValid } = req.context;
+      if (!isValid || decodedToken.userType !== UserRole.ADMINUSER) {
+        return res.status(401).json({
+          isSuccessful: false,
+          message: 'Unauthorized to perform this operation.',
+        });
+      }
+
+      try {
+        return csvUploadController(req.file);
+      } catch (error) {
+        console.error('CSV Upload Failed:', error);
+        return res.status(500).json({
+          isSuccessful: false,
+          message: 'Some error occurred',
+        });
+      }
+    } else {
+      res.status(400).send('No file uploaded.');
+    }
+  });
+  app.use(
+    '/api/uploadthing',
+    createRouteHandler({
+      router: uploadRouter,
+    })
+  );
+  app.use('/api/hook', async (req, res) => {
+    console.log(req);
+    try {
+      const { type, customer } = req.body;
+
+      if (type === 'coupon_claimed' && customer && customer.phone) {
+        const mobileNumber = customer.phone;
+
+        await updateSubscriber(mobileNumber, res);
+
+        res.status(200);
+      } else {
+        res.status(200);
+      }
+    } catch (error) {
+      console.error('Error updating subscriber:', error);
+      res.status(500);
+    }
+    res.send({ Status: 'Success' });
+  });
+};
+
 
 startServer();

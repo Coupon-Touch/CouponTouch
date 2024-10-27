@@ -1,5 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
-import Login from './login';
+import Login from './admin/login';
 import NavBar from './navbar';
 import BulkUpload from './bulkUpload';
 import { useEffect } from 'react';
