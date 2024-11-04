@@ -1,10 +1,10 @@
 import { prepareSubscriberToken } from '../jwt.js';
 import { Subscriber } from '../models/subscriber.js';
+import { Winner } from '../models/winDetails.js';
 const campaignCodeCurrent = 'cam_1197502';
 
 export const updateSubscriberController = async (
-  mobile,
-  countryCode,
+  decodedToken,
   updateFields
 ) => {
   try {
@@ -14,8 +14,11 @@ export const updateSubscriberController = async (
       }
     });
 
-    const updatedSubscriber = await Subscriber.findOneAndUpdate(
-      { mobile, countryCode },
+    const { subscriberId } = decodedToken;
+    const subscriber = await Subscriber.findById(subscriberId);
+
+    const updatedSubscriber = await Subscriber.findByIdAndUpdate(
+      subscriberId,
       { $set: updateFields },
       { new: true }
     );
@@ -27,7 +30,8 @@ export const updateSubscriberController = async (
         message: 'Subscriber not found',
       };
     }
-    const jwtToken = prepareSubscriberToken(updatedSubscriber);
+
+    const jwtToken = prepareSubscriberToken(null, null, updatedSubscriber);
     return {
       isSuccessful: true,
       jwtToken: jwtToken,
@@ -53,13 +57,13 @@ export const updateSubscriber = async (mobile, res) => {
       return res.status(404);
     }
 
-    subscriber.wonDetails = {
-      isWon: true,
+    const newWinner = new Winner({
+      subscriber: subscriber._id,
       campaignCode: campaignCodeCurrent,
-    };
+      winTime: Date.now(),
+    });
 
-    await subscriber.save();
-
+    await newWinner.save();
     res.status(200);
   } catch (error) {
     console.error('Error updating subscriber data:', error);
@@ -68,45 +72,38 @@ export const updateSubscriber = async (mobile, res) => {
 };
 
 export const updateCollectionDetailsController = async (
-  PhoneNumber,
-  CountryCode,
+  decodedToken,
   collectionDate,
   collectionLocation,
   comments
 ) => {
   try {
-    let subscriber = await Subscriber.findOne({
-      countryCode: CountryCode,
-      mobile: PhoneNumber,
-    });
+    const { subscriberId } = decodedToken;
 
-    if (!subscriber) {
-      return { isSuccessful: false, message: 'Subscriber not found' };
+    let winner = await Winner.findOne({ subscriber: subscriberId });
+
+    if (!winner) {
+      return { isSuccessful: false, message: 'Winner not found' };
     }
 
-    if (subscriber.wonDetails) {
-      subscriber.wonDetails.collectionDate = collectionDate;
-      subscriber.wonDetails.collectionLocation = collectionLocation;
-      subscriber.wonDetails.comments = comments;
-    } else {
-      subscriber.wonDetails = {
-        isWon: true,
-        campaignCode: campaignCodeCurrent,
-        collectionDate,
-        collectionLocation,
-        comments,
-      };
-    }
+    winner.collectionDate = collectionDate;
+    winner.collectionLocation = collectionLocation;
+    winner.comments = comments;
 
-    await subscriber.save();
-    const jwtToken = prepareSubscriberToken(subscriber);
+    await winner.save();
+    const jwtToken = prepareSubscriberToken(
+      null,
+      null,
+      winner.subscriber,
+      winner
+    );
     return {
       isSuccessful: true,
       jwtToken: jwtToken,
       message: 'Collection details updated successfully',
     };
   } catch (error) {
-    console.error('Error updating subscriber collection details:', error);
+    console.error('Error updating winner collection details:', error);
     return {
       isSuccessful: false,
       jwtToken: null,

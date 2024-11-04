@@ -32,50 +32,50 @@ export const prepareAdminToken = user => {
   );
 };
 
-export const prepareSubscriberToken = subscriber => {
-  let isSubscriber = true;
-  let collectionDataCollected = true;
-  if (
-    subscriber.name === '' ||
-    subscriber.name === null ||
-    subscriber.email === '' ||
-    subscriber.email === null ||
-    subscriber.address === '' ||
-    subscriber.address === null ||
-    subscriber.emirateID === '' ||
-    subscriber.emirateID === ''
-  ) {
-    isSubscriber = false;
-  }
-  if (subscriber.wonDetails) {
-    if (
-      subscriber.wonDetails.collectionDate === '' ||
-      subscriber.wonDetails.collectionDate === null ||
-      subscriber.wonDetails.collectionLocation === '' ||
-      subscriber.wonDetails.collectionLocation === null ||
-      subscriber.wonDetails.comments === '' ||
-      subscriber.wonDetails.comments === null
-    ) {
-      collectionDataCollected = false;
+export const prepareSubscriberToken = (
+  existingToken,
+  updatedFields,
+  subscriberDetails = null,
+  winnerDetails = null
+) => {
+  if (existingToken) {
+    const { exp, ...tokenWithoutExp } = existingToken;
+    return jwt.sign(
+      { ...tokenWithoutExp, ...updatedFields },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+  } else {
+    const areDetailsFilled = !(
+      !subscriberDetails.name ||
+      !subscriberDetails.email ||
+      !subscriberDetails.address ||
+      !subscriberDetails.emirateID
+    );
+
+    let collectionDataCollected = false;
+    if (winnerDetails) {
+      collectionDataCollected = !(
+        !winnerDetails.collectionDate ||
+        !winnerDetails.collectionLocation ||
+        !winnerDetails.comments
+      );
     }
-  }else{
-    collectionDataCollected = false
+
+    return jwt.sign(
+      {
+        userType: UserRole.SUBSCRIBER,
+        subscriberId: subscriberDetails._id,
+        subsriberMobile: subscriberDetails.mobile,
+        subscriberCountryCode: subscriberDetails.countryCode,
+        lastScratchTime: null,
+        areDetailsFilled: areDetailsFilled,
+        isWon: false,
+        isPaidSubscriber: subscriberDetails.isPaid,
+        collectionDataCollected: collectionDataCollected,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
   }
-  return jwt.sign(
-    {
-      userType: UserRole.SUBSCRIBER,
-      subscriberId: subscriber._id,
-      subscriberName: subscriber.name,
-      subsriberMobile: subscriber.mobile,
-      subscriberCountryCode: subscriber.countryCode,
-      lastScratchTime: subscriber.lastScratchTime
-        ? subscriber.lastScratchTime.getTime()
-        : null,
-      isSubscriber: isSubscriber,
-      isWon: subscriber.wonDetails ? subscriber.wonDetails.isWon : false,
-      collectionDataCollected: collectionDataCollected,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: '1d' }
-  );
 };

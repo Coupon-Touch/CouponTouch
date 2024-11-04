@@ -8,9 +8,9 @@ import { updateLastScratchTimeController } from './controllers/lastScratchHandle
 import { addSubscriberController } from './controllers/csvFunctions.js';
 import { getSubscriberDetailsController } from './controllers/loginFunctions.js';
 import { updateSubscriberController } from './controllers/subscriberFunctions.js';
-import { Subscriber } from './models/subscriber.js';
 import { updateCollectionDetailsController } from './controllers/subscriberFunctions.js';
-import { prepareSubscriberToken } from './jwt.js';
+import { didSubscriberWinController } from './controllers/winFunctions.js';
+import { UserRole } from './utilities/userRoles.js';
 
 // GraphQL
 export const typeDefs = gql`
@@ -94,10 +94,7 @@ export const typeDefs = gql`
     adminLogin(username: String, password: String): AdminLoginInfo
     dumpInitialDatabase: DumpDatabaseInfo
     storeCouponSettings(input: JSON!): isCouponStoredInfo
-    updateLastScratchTime(
-      PhoneNumber: String!
-      CountryCode: String!
-    ): UpdateScratchTimeInfo
+    updateLastScratchTime: UpdateScratchTimeInfo
     addSubscriber(
       name: String!
       email: String!
@@ -110,14 +107,10 @@ export const typeDefs = gql`
       name: String
       email: String
       emirateID: String
-      countryCode: String!
-      mobile: String!
       address: String
       comment: String
     ): UpdateSubscriberInfo
     updateCollectionDetails(
-      PhoneNumber: String!
-      CountryCode: String!
       collectionDate: Date!
       collectionLocation: String!
       comments: String!
@@ -132,7 +125,12 @@ export const resolvers = {
     },
     getCouponSettingsAlbayan: async (_, args, context) => {
       try {
-        return await getLatestCouponSettingsAlbayanController();
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          return await getLatestCouponSettingsAlbayanController();
+        } else {
+          return {};
+        }
       } catch (error) {
         console.log('Error Fetching coupon settings : ', error);
         return {};
@@ -150,14 +148,12 @@ export const resolvers = {
         return {};
       }
     },
-    didSubscriberWin: async (_, { PhoneNumber, CountryCode }) => {
+    didSubscriberWin: async (_, __, context) => {
       try {
-        const subscriber = await Subscriber.findOne({
-          mobile: PhoneNumber,
-          countryCode: CountryCode,
-        });
-
-        if (!subscriber) {
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.SUBSCRIBER) {
+          didSubscriberWinController(decoded);
+        } else {
           return {
             isWon: false,
             campaignCode: null,
@@ -167,17 +163,6 @@ export const resolvers = {
             jwtToken: null,
           };
         }
-
-        const { wonDetails } = subscriber;
-        const jwtToken = prepareSubscriberToken(subscriber);
-        return {
-          isWon: wonDetails ? wonDetails.isWon : false,
-          campaignCode: wonDetails ? wonDetails.campaignCode : null,
-          collectionDate: wonDetails ? wonDetails.collectionDate : null,
-          collectionLocation: wonDetails ? wonDetails.collectionLocation : '',
-          comments: wonDetails ? wonDetails.comments : '',
-          jwtToken: jwtToken,
-        };
       } catch (error) {
         console.error('Error fetching subscriber win info:', error);
         return {
@@ -194,7 +179,12 @@ export const resolvers = {
   Mutation: {
     dumpInitialDatabase: async (_, args, context) => {
       try {
-        return await initialDumpController(context);
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          return await initialDumpController(context);
+        } else {
+          return { isSuccessful: false, message: 'Permission denied.' };
+        }
       } catch (error) {
         console.log('Initial dump failed : ', error);
         return { isSuccessful: false, message: 'Some error occurred' };
@@ -214,7 +204,15 @@ export const resolvers = {
     },
     storeCouponSettings: async (_, { input }, context) => {
       try {
-        return await storeCouponSettingsController(input, context);
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          return await storeCouponSettingsController(input, context);
+        } else {
+          return {
+            isSuccessful: false,
+            message: 'Permission denied.',
+          };
+        }
       } catch (error) {
         console.log('Store Coupon Settings Failed : ', error);
         return {
@@ -223,9 +221,17 @@ export const resolvers = {
         };
       }
     },
-    updateLastScratchTime: async (_, { PhoneNumber, CountryCode }) => {
+    updateLastScratchTime: async (_, __, context) => {
       try {
-        return await updateLastScratchTimeController(PhoneNumber, CountryCode);
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.SUBSCRIBER) {
+          return await updateLastScratchTimeController(decodedToken);
+        } else {
+          return {
+            isSuccessful: false,
+            message: 'An error occurred while updating last scratch time',
+          };
+        }
       } catch (error) {
         console.error('Error in updateLastScratchTime resolver:', error);
 
@@ -237,19 +243,29 @@ export const resolvers = {
     },
     addSubscriber: async (
       _,
-      { name, email, emirateID, countryCode, mobile, address }
+      { name, email, emirateID, countryCode, mobile, address },
+      context
     ) => {
       try {
-        const subscriberInput = {
-          name,
-          email,
-          emirateID,
-          countryCode,
-          mobile,
-          address,
-        };
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          const subscriberInput = {
+            name,
+            email,
+            emirateID,
+            countryCode,
+            mobile,
+            address,
+          };
 
-        return await addSubscriberController(subscriberInput);
+          return await addSubscriberController(subscriberInput);
+        } else {
+          return {
+            isSuccessful: false,
+            message:
+              'An error occurred while adding the subscriber or you do not have permission to perform this action.',
+          };
+        }
       } catch (error) {
         console.error('Error in addSubscriber resolver:', error);
 
@@ -259,14 +275,13 @@ export const resolvers = {
         };
       }
     },
-    updateSubscriber: async (_, args) => {
+    updateSubscriber: async (_, args, context) => {
       try {
-        const { mobile, countryCode, ...updateFields } = args;
-        return await updateSubscriberController(
-          mobile,
-          countryCode,
-          updateFields
-        );
+        const { decodedToken, isValid } = context;
+        const { ...updateFields } = args;
+        if (isValid && decodedToken.userType === UserRole.SUBSCRIBER) {
+          return await updateSubscriberController(decodedToken, updateFields);
+        }
       } catch (error) {
         console.error('Error in updateSubscriber resolver:', error);
         return {
@@ -277,17 +292,33 @@ export const resolvers = {
     },
     updateCollectionDetails: async (
       _,
-      { PhoneNumber, CountryCode, collectionDate, collectionLocation, comments }
+      {
+        PhoneNumber,
+        CountryCode,
+        collectionDate,
+        collectionLocation,
+        comments,
+      },
+      context
     ) => {
       try {
-        const result = await updateCollectionDetailsController(
-          PhoneNumber,
-          CountryCode,
-          collectionDate,
-          collectionLocation,
-          comments
-        );
-        return result;
+        const { decodedToken, isValid } = context;
+
+        if (isValid && decodedToken.userType === UserRole.SUBSCRIBER) {
+          const result = await updateCollectionDetailsController(
+            decodedToken,
+            collectionDate,
+            collectionLocation,
+            comments
+          );
+          return result;
+        } else {
+          return {
+            isSuccessful: false,
+            jwtToken: null,
+            message: 'Permission denied!',
+          };
+        }
       } catch (error) {
         console.error('Error in updateCollectionDetails resolver:', error);
 
