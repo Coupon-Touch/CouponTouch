@@ -60,7 +60,7 @@ export const getSubscriberDetailsController = async (
       });
     }
 
-    const jwtToken = prepareSubscriberToken(subscriber);
+    const jwtToken = prepareSubscriberToken(null, null, subscriber);
 
     return {
       jwtToken: jwtToken,

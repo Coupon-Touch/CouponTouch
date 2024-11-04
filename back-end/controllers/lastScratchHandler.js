@@ -1,15 +1,11 @@
 import { prepareSubscriberToken } from '../jwt.js';
 import { Subscriber } from '../models/subscriber.js';
 
-export const updateLastScratchTimeController = async (
-  phoneNumber,
-  countryCode
-) => {
+export const updateLastScratchTimeController = async decodedToken => {
   try {
-    const subscriber = await Subscriber.findOne({
-      mobile: phoneNumber,
-      countryCode: countryCode,
-    });
+    const { subscriberId } = decodedToken;
+
+    const subscriber = await Subscriber.findById(subscriberId);
 
     if (!subscriber) {
       return {
@@ -23,7 +19,9 @@ export const updateLastScratchTimeController = async (
     subscriber.lastScratchTime = currentTime;
 
     await subscriber.save();
-    const jwtToken = prepareSubscriberToken(subscriber);
+    const jwtToken = prepareSubscriberToken(decodedToken, {
+      lastScratchTime: subscriber.lastScratchTime.getTime(),
+    });
     return {
       isSuccessful: true,
       jwtToken: jwtToken,
