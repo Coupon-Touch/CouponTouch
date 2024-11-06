@@ -37,7 +37,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
   const [date, setDate] = useState<Date>();
   const [open, setOpen] = useState(false); // Managing the popover open state
 
-  const handleSelect = (selectedDate: Date) => {
+  const handleSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate)
     setOpen(false); // Close popover after selecting a date
   };

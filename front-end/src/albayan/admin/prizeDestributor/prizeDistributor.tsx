@@ -266,7 +266,7 @@ export default function PrizeDistributor() {
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
           Page {currentPage} of {totalPages}
         </div>
-        {/* <Select>
+        <Select onValueChange={(value) => setItemsPerPage(parseInt(value) || 10)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="10" />
           </SelectTrigger>
@@ -275,7 +275,7 @@ export default function PrizeDistributor() {
             <SelectItem value="dark">50</SelectItem>
             <SelectItem value="system">100</SelectItem>
           </SelectContent>
-        </Select> */}
+        </Select>
         <Button
           variant="outline"
           size="sm"

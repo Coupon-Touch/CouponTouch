@@ -8,7 +8,7 @@ import CouponTools from './couponTools';
 import { useLazyQuery } from '@apollo/client';
 import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
 import { useToast } from '@/hooks/use-toast';
-import PaymentPage from '../payment/paymentPage';
+// import PaymentPage from '../payment/paymentPage';
 
 export default function Coupon() {
   const [openPhoneInfo, setOpenPhoneInfo] = useState(false);
@@ -18,7 +18,7 @@ export default function Coupon() {
   const [openAfterGame, setOpenAfterGame] = useState(false);
   const [data, setData] = useState<SubscriberDetails | null>(null);
   const [collectionDataCollected, setCollectionDataCollected] = useState(false);
-  const [openPaymentPage, setOpenPaymentPage] = useState(true);
+  // const [openPaymentPage, setOpenPaymentPage] = useState(true);
 
   const [countDown, setCountDown] = useState(0);
 
@@ -74,7 +74,7 @@ export default function Coupon() {
     if (!token) {
       setOpenPhoneInfo(true);
       setOpenSubscriberInfo(false);
-      setOpenPaymentPage(false);
+      // setOpenPaymentPage(false);
       setOpenCountDown(false);
       setOpenCouponTools(false);
       setOpenAfterGame(false);
@@ -84,7 +84,7 @@ export default function Coupon() {
     if (token.subsriberMobile && !token.isSubscriber) {
       setOpenPhoneInfo(false);
       setOpenSubscriberInfo(true);
-      setOpenPaymentPage(false);
+      // setOpenPaymentPage(false);
       setOpenCountDown(false);
       setOpenCouponTools(false);
       setOpenAfterGame(false);
@@ -93,7 +93,7 @@ export default function Coupon() {
     if (token.isWon && !token.collectionDataCollected) {
       setOpenPhoneInfo(false);
       setOpenSubscriberInfo(false);
-      setOpenPaymentPage(false);
+      // setOpenPaymentPage(false);
       setOpenCountDown(false);
       setOpenCouponTools(false);
       setOpenAfterGame(true);
@@ -106,7 +106,7 @@ export default function Coupon() {
       setCountDown(nextScratchTime);
       setOpenPhoneInfo(false);
       setOpenSubscriberInfo(false);
-      setOpenPaymentPage(false);
+      // setOpenPaymentPage(false);
       setOpenCountDown(true);
       setOpenCouponTools(false);
       setOpenAfterGame(false);
@@ -114,7 +114,7 @@ export default function Coupon() {
       setCountDown(0);
       setOpenPhoneInfo(false);
       setOpenSubscriberInfo(false);
-      setOpenPaymentPage(false);
+      // setOpenPaymentPage(false);
       setOpenCountDown(false);
       setOpenCouponTools(true);
       setOpenAfterGame(false);
@@ -134,18 +134,18 @@ export default function Coupon() {
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
-        {/* {openPhoneInfo && <PhoneForm successCallback={updateState} />}
+        {openPhoneInfo && <PhoneForm successCallback={updateState} />}
         {openCountDown && (
           <CountDown targetDate={countDown} onComplete={updateState} collectionDataCollected={collectionDataCollected} />
-        )} */}
-        {<PaymentPage />}
-        {/* {data && openSubscriberInfo && (
+        )}
+        {/* {<PaymentPage />} */}
+        {data && openSubscriberInfo && (
           <SubscriberInfo subscriber={data} successCallback={updateState} />
         )}
         {data && openCouponTools && (
           <CouponTools successCallback={updateState} />
         )}
-        {openAfterGame && <AfterGame successCallback={updateState} />} */}
+        {openAfterGame && <AfterGame successCallback={updateState} />}
 
       </div>
     </>
