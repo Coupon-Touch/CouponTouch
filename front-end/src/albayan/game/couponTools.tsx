@@ -40,10 +40,6 @@ export default function CouponTools({ successCallback }: { successCallback: () =
     const startInterval = () => {
       return setInterval(() => {
         didSubscriberWin({
-          variables: {
-            phoneNumber: phone,
-            countryCode: countryCode
-          },
           fetchPolicy: 'no-cache',
           onCompleted(data) {
             data = data.didSubscriberWin

@@ -43,11 +43,11 @@ export default function SubscriberInfo({
   subscriber,
   successCallback,
 }: SubscriberInfoProps) {
+  const [updateSubscriber, { loading }] = useMutation(UPDATE_SUBSCRIBER);
+
   const { toast } = useToast();
   const formik = useFormik({
     initialValues: {
-      countryCode: subscriber.countryCode,
-      phoneNumber: subscriber.mobile,
       emiratesId: subscriber.emirateID,
       name: subscriber.name,
       address: subscriber.address,
@@ -58,8 +58,6 @@ export default function SubscriberInfo({
       await new Promise((resolve, reject) => {
         updateSubscriber({
           variables: {
-            countryCode: subscriber.countryCode,
-            mobile: subscriber.mobile,
             emirateId: values.emiratesId,
             email: values.email,
             name: values.name,
@@ -87,7 +85,6 @@ export default function SubscriberInfo({
     },
   });
 
-  const [updateSubscriber, { loading }] = useMutation(UPDATE_SUBSCRIBER);
 
   return (
     <Card className="w-full max-w-md h-max mx-auto m-4 p-2">

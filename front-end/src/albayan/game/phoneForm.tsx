@@ -31,7 +31,6 @@ const countryCodes = [
   976, 977, 992, 993, 994, 995, 996, 998, 1758, 1868,
 ];
 export type SubscriberDetails = {
-  isSubscriber: boolean
   jwtToken: string
   mobile: string
   countryCode: string

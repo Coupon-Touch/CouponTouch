@@ -134,7 +134,6 @@ const REST = ({ app }) => {
     })
   );
   app.use('/api/hook', async (req, res) => {
-    console.log(req);
     try {
       const { type, customer } = req.body;
 

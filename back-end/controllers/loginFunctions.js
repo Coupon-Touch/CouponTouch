@@ -78,7 +78,6 @@ export const getSubscriberDetailsController = async (
   } catch (error) {
     console.log('Error in getSubscriberDetailsController:', error);
     return {
-      isSubscriber: false,
       jwtToken: null,
       mobile: null,
       countryCode: null,

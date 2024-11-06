@@ -45,10 +45,7 @@ export const typeDefs = gql`
       PhoneNumber: String!
       CountryCode: String!
     ): SubscriberInfo
-    didSubscriberWin(
-      PhoneNumber: String!
-      CountryCode: String!
-    ): SubscriberWinInfo
+    didSubscriberWin: SubscriberWinInfo
   }
 
   type AdminLoginInfo {
@@ -152,7 +149,7 @@ export const resolvers = {
       try {
         const { decodedToken, isValid } = context;
         if (isValid && decodedToken.userType === UserRole.SUBSCRIBER) {
-          didSubscriberWinController(decoded);
+          return didSubscriberWinController(decodedToken);
         } else {
           return {
             isWon: false,

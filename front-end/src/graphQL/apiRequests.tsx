@@ -39,11 +39,11 @@ export const GET_SUBSCRIBER = gql`query GetSubscriberDetails($phoneNumber: Strin
   }
 }`
 
-export const UPDATE_SUBSCRIBER = gql`mutation UpdateSubscriber($countryCode: String!, $mobile: String!, $emirateId: String, $email: String, $name: String, $address: String, $comment: String) {
-  updateSubscriber(countryCode: $countryCode, mobile: $mobile, emirateID: $emirateId, email: $email, name: $name, address: $address, comment: $comment) {
+export const UPDATE_SUBSCRIBER = gql`mutation UpdateSubscriber($name: String, $email: String, $emirateId: String, $address: String, $comment: String) {
+  updateSubscriber(name: $name, email: $email, emirateID: $emirateId, address: $address, comment: $comment) {
     isSuccessful
-    message
     jwtToken
+    message
   }
 }`
 export const UPDATE_LAST_SCRATCH_TIME = gql`mutation UpdateLastScratchTime($phoneNumber: String!, $countryCode: String!) {
@@ -62,12 +62,13 @@ export const UPDATE_COLLECTION_DETAILS = gql`mutation UpdateCollectionDetails($p
   }
 }`
 
-export const DID_SUBSCRIBER_WIN = gql`query DidSubscriberWin($phoneNumber: String!, $countryCode: String!) {
-  didSubscriberWin(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+export const DID_SUBSCRIBER_WIN = gql`query DidSubscriberWin {
+  didSubscriberWin {
     isWon
+    jwtToken
     comments
     collectionLocation
     collectionDate
-    jwtToken
+    campaignCode
   }
 }`
