@@ -1,5 +1,6 @@
 import { prepareSubscriberToken } from '../jwt.js';
 import { Subscriber } from '../models/subscriber.js';
+import { Winner } from '../models/winDetails.js';
 
 export const updateLastScratchTimeController = async decodedToken => {
   try {
@@ -19,9 +20,11 @@ export const updateLastScratchTimeController = async decodedToken => {
     subscriber.lastScratchTime = currentTime;
 
     await subscriber.save();
-    const jwtToken = prepareSubscriberToken(decodedToken, {
-      lastScratchTime: subscriber.lastScratchTime.getTime(),
-    });
+    const winnerDetails = await Winner.findOne({
+      subscriber: subscriber._id,
+    }).sort({ winTime: -1 });
+    const jwtToken = prepareSubscriberToken(subscriber, winnerDetails);
+
     return {
       isSuccessful: true,
       jwtToken: jwtToken,

@@ -40,6 +40,7 @@ class Payment {
     this.#expires = Date.now() + data.expires_in * 1000 - 500;
     return this.#authToken;
   }
+
   async createOrder(amount, currencyCode = 'AED') {
     if (!amount) {
       console.error('Amount is required');
@@ -136,3 +137,72 @@ const PaymentAPI = ({ app }) => {
 };
 
 export default PaymentAPI;
+
+// TODO store status of winners
+// TODO do this payment
+
+/**
+ * SUCCESS
+{
+  outletId: '2b6dc55a-1ffd-4da9-b5ef-5744d3edb5de',
+  eventId: '7b31edea-8504-4c36-9e5d-fa108e84bd30',
+  eventName: 'AUTHORISED',
+  order: {
+    _id: 'urn:order:ee8bce45-4bd0-48b7-9e77-683322ccf65c',
+    _links: {
+      cancel: [Object],
+      self: [Object],
+      'tenant-brand': [Object],
+      'merchant-brand': [Object]
+    },
+    type: 'SINGLE',
+    merchantDefinedData: {},
+    action: 'SALE',
+    amount: { currencyCode: 'AED', value: 12500 },
+    language: 'en',
+    merchantAttributes: {},
+    reference: 'ee8bce45-4bd0-48b7-9e77-683322ccf65c',
+    outletId: '2b6dc55a-1ffd-4da9-b5ef-5744d3edb5de',
+    createDateTime: '2024-11-06T15:28:58.134557695Z',
+    paymentMethods: { card: [Array] },
+    referrer: 'urn:Ecom:ee8bce45-4bd0-48b7-9e77-683322ccf65c',
+    isSplitPayment: false,
+    formattedOrderSummary: {},
+    formattedAmount: 'د.إ.‏ 125',
+    formattedOriginalAmount: '',
+    _embedded: { payment: [Array] }
+  }
+}
+
+
+FAILURE
+{
+  outletId: '2b6dc55a-1ffd-4da9-b5ef-5744d3edb5de',
+  eventId: '35be85f1-d0ce-44aa-b26f-1be94f286bcb',
+  eventName: 'GATEWAY_RISK_PRE_AUTH_REJECTED',
+  order: {
+    _id: 'urn:order:2d898c7f-9832-401b-9a04-7d6955591039',
+    _links: {
+      self: [Object],
+      'tenant-brand': [Object],
+      'merchant-brand': [Object]
+    },
+    type: 'SINGLE',
+    merchantDefinedData: {},
+    action: 'SALE',
+    amount: { currencyCode: 'AED', value: 12500 },
+    language: 'en',
+    merchantAttributes: {},
+    reference: '2d898c7f-9832-401b-9a04-7d6955591039',
+    outletId: '2b6dc55a-1ffd-4da9-b5ef-5744d3edb5de',
+    createDateTime: '2024-11-06T15:31:29.411049149Z',
+    paymentMethods: { card: [Array] },
+    referrer: 'urn:Ecom:2d898c7f-9832-401b-9a04-7d6955591039',
+    isSplitPayment: false,
+    formattedOrderSummary: {},
+    formattedAmount: 'د.إ.‏ 125',
+    formattedOriginalAmount: '',
+    _embedded: { payment: [Array] }
+  }
+}
+ */

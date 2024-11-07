@@ -1,6 +1,7 @@
 import { prepareAdminToken, prepareSubscriberToken } from '../jwt.js';
 import { AdminUser } from '../models/adminUser.js';
 import { Subscriber } from '../models/subscriber.js';
+import { Winner } from '../models/winDetails.js';
 import bcrypt from 'bcryptjs';
 import { addSubscriberController } from './csvFunctions.js';
 
@@ -59,8 +60,10 @@ export const getSubscriberDetailsController = async (
         countryCode: countryCode,
       });
     }
-
-    const jwtToken = prepareSubscriberToken(null, null, subscriber);
+    const winnerDetails = await Winner.findOne({
+      subscriber: subscriber._id,
+    }).sort({ winTime: -1 });
+    const jwtToken = prepareSubscriberToken(subscriber, winnerDetails);
 
     return {
       jwtToken: jwtToken,

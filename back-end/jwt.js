@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { UserRole } from './utilities/userRoles.js';
+import { isToday } from './utilities/dateValidators.js';
 
 export const validateToken = token => {
   try {
@@ -32,50 +33,36 @@ export const prepareAdminToken = user => {
   );
 };
 
-export const prepareSubscriberToken = (
-  existingToken,
-  updatedFields,
-  subscriberDetails = null,
-  winnerDetails = null
-) => {
-  if (existingToken) {
-    const { exp, ...tokenWithoutExp } = existingToken;
-    return jwt.sign(
-      { ...tokenWithoutExp, ...updatedFields },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-  } else {
-    const areDetailsFilled = !(
-      !subscriberDetails.name ||
-      !subscriberDetails.email ||
-      !subscriberDetails.address ||
-      !subscriberDetails.emirateID
-    );
+export const prepareSubscriberToken = (subscriberDetails, winnerDetails) => {
+  const areDetailsFilled = !(
+    !subscriberDetails.name ||
+    !subscriberDetails.email ||
+    !subscriberDetails.address ||
+    !subscriberDetails.emirateID
+  );
 
-    let collectionDataCollected = false;
-    if (winnerDetails) {
-      collectionDataCollected = !(
-        !winnerDetails.collectionDate ||
-        !winnerDetails.collectionLocation ||
-        !winnerDetails.comments
-      );
-    }
-
-    return jwt.sign(
-      {
-        userType: UserRole.SUBSCRIBER,
-        subscriberId: subscriberDetails._id,
-        subsriberMobile: subscriberDetails.mobile,
-        subscriberCountryCode: subscriberDetails.countryCode,
-        lastScratchTime: null,
-        areDetailsFilled: areDetailsFilled,
-        isWon: false,
-        isPaidSubscriber: subscriberDetails.isPaid,
-        collectionDataCollected: collectionDataCollected,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+  let collectionDataCollected = false;
+  if (winnerDetails) {
+    collectionDataCollected = !(
+      !winnerDetails.collectionDate ||
+      !winnerDetails.collectionLocation ||
+      !winnerDetails.comments
     );
   }
+
+  return jwt.sign(
+    {
+      userType: UserRole.SUBSCRIBER,
+      subscriberId: subscriberDetails._id,
+      subsriberMobile: subscriberDetails.mobile,
+      subscriberCountryCode: subscriberDetails.countryCode,
+      lastScratchTime: subscriberDetails.lastScratchTime,
+      areDetailsFilled: areDetailsFilled,
+      isWon: isToday(winnerDetails),
+      isPaidSubscriber: subscriberDetails.isPaid,
+      collectionDataCollected: collectionDataCollected,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '1d' }
+  );
 };

@@ -31,7 +31,10 @@ export const updateSubscriberController = async (
       };
     }
 
-    const jwtToken = prepareSubscriberToken(null, null, updatedSubscriber);
+    const winnerDetails = await Winner.findOne({
+      subscriber: subscriber._id,
+    }).sort({ winTime: -1 });
+    const jwtToken = prepareSubscriberToken(updatedSubscriber, winnerDetails);
     return {
       isSuccessful: true,
       jwtToken: jwtToken,
@@ -80,7 +83,9 @@ export const updateCollectionDetailsController = async (
   try {
     const { subscriberId } = decodedToken;
 
-    let winner = await Winner.findOne({ subscriber: subscriberId });
+    let winner = await Winner.findOne({ subscriber: subscriberId })
+      .populate('subscriber')
+      .sort({ winTime: -1 });
 
     if (!winner) {
       return { isSuccessful: false, message: 'Winner not found' };
@@ -91,12 +96,7 @@ export const updateCollectionDetailsController = async (
     winner.comments = comments;
 
     await winner.save();
-    const jwtToken = prepareSubscriberToken(
-      null,
-      null,
-      winner.subscriber,
-      winner
-    );
+    const jwtToken = prepareSubscriberToken(winner.subscriber, winner);
     return {
       isSuccessful: true,
       jwtToken: jwtToken,
