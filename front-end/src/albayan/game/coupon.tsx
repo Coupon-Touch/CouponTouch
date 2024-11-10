@@ -43,16 +43,13 @@ export default function Coupon() {
 
   const { toast } = useToast();
   const fetchData = async (phone: string, countryCode: string) => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       getSubscriber({
         variables: { phoneNumber: `${phone}`, countryCode: `${countryCode}` },
         onCompleted: data => {
           data = data.getSubscriberDetails;
           setData(data);
-          localStorage.setItem(
-            'token',
-            data.jwtToken
-          );
+          localStorage.setItem('token', data.jwtToken);
           resolve(data);
         },
         onError: () => {
@@ -64,7 +61,6 @@ export default function Coupon() {
         },
       });
     });
-
   };
   const updateState = (data?: SubscriberDetails | null) => {
     if (data) {
@@ -127,26 +123,24 @@ export default function Coupon() {
         await fetchData(token.subsriberMobile, token.subscriberCountryCode);
       }
       updateState();
-    })()
-
+    })();
   }, []);
 
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
-        {openPhoneInfo && <PhoneForm successCallback={updateState} />}
-        {openCountDown && (
+        {/* {openPhoneInfo && <PhoneForm successCallback={updateState} />} */}
+        {/* {openCountDown && (
           <CountDown targetDate={countDown} onComplete={updateState} collectionDataCollected={collectionDataCollected} />
-        )}
-        {/* {<PaymentPage />} */}
-        {data && openSubscriberInfo && (
+        )} */}
+        {<PaymentPage />}
+        {/* {data && openSubscriberInfo && (
           <SubscriberInfo subscriber={data} successCallback={updateState} />
         )}
         {data && openCouponTools && (
           <CouponTools successCallback={updateState} />
         )}
-        {openAfterGame && <AfterGame successCallback={updateState} />}
-
+        {openAfterGame && <AfterGame successCallback={updateState} />} */}
       </div>
     </>
   );

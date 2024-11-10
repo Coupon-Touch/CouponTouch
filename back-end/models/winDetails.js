@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { StatusEnum } from '../utilities/assignedStatus.js';
 
 const winnerSchema = new mongoose.Schema({
   winTime: { type: Date, default: Date.now },
@@ -10,6 +11,11 @@ const winnerSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subscriber',
     required: true,
+  },
+  status: {
+    type: String,
+    enum: Object.values(StatusEnum),
+    default: StatusEnum.UNASSIGNED,
   },
 });
 
