@@ -9,7 +9,12 @@ import { addSubscriberController } from './controllers/csvFunctions.js';
 import { getSubscriberDetailsController } from './controllers/loginFunctions.js';
 import { updateSubscriberController } from './controllers/subscriberFunctions.js';
 import { updateCollectionDetailsController } from './controllers/subscriberFunctions.js';
-import { didSubscriberWinController } from './controllers/winFunctions.js';
+import {
+  didSubscriberWinController,
+  getAllWinnersController,
+  updateStatusofWinByWinnerIDController,
+} from './controllers/winFunctions.js';
+import { getAllWinsBySubscriberIDController } from './controllers/winFunctions.js';
 import { UserRole } from './utilities/userRoles.js';
 
 // GraphQL
@@ -38,6 +43,29 @@ export const typeDefs = gql`
     jwtToken: String
   }
 
+  type SubscriberWinnerFetchInfo {
+    _id: String
+    mobile: String
+    countryCode: String
+    isPaid: Boolean
+    lastScratchTime: Float
+    address: String
+    email: String
+    emirateID: String
+    name: String
+  }
+
+  type WinnerInfo {
+    _id: String
+    winTime: Date
+    campaignCode: String
+    collectionDate: Date
+    collectionLocation: String
+    comments: String
+    subscriber: SubscriberWinnerFetchInfo
+    status: String
+  }
+
   type Query {
     getCountryCodes: [Int]
     getCouponSettingsAlbayan: JSON
@@ -46,6 +74,8 @@ export const typeDefs = gql`
       CountryCode: String!
     ): SubscriberInfo
     didSubscriberWin: SubscriberWinInfo
+    getAllWinnerDetails: [WinnerInfo]
+    getAllWinsBySubscriberID(subscriberID: String!): [WinnerInfo]
   }
 
   type AdminLoginInfo {
@@ -87,6 +117,11 @@ export const typeDefs = gql`
     jwtToken: String
   }
 
+  type IsUpdatedWinnerInfo {
+    isSuccessful: Boolean
+    message: String
+  }
+
   type Mutation {
     adminLogin(username: String, password: String): AdminLoginInfo
     dumpInitialDatabase: DumpDatabaseInfo
@@ -112,6 +147,10 @@ export const typeDefs = gql`
       collectionLocation: String!
       comments: String!
     ): IsUpdatedInfo
+    updateStatusofWinByWinnerID(
+      winnerID: String!
+      newStatus: String!
+    ): IsUpdatedWinnerInfo
   }
 `;
 
@@ -143,6 +182,33 @@ export const resolvers = {
       } catch (error) {
         console.log('Error Fetching Subscriber Details : ', error);
         return {};
+      }
+    },
+    getAllWinnerDetails: async (_, __, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          return await getAllWinnersController();
+        } else {
+          return [];
+        }
+      } catch (error) {
+        console.log('Error Fetching Winner Details : ', error);
+        return [];
+      }
+    },
+    getAllWinsBySubscriberID: async (_, args, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        const { subscriberID } = args;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          return await getAllWinsBySubscriberIDController(subscriberID);
+        } else {
+          return [];
+        }
+      } catch (error) {
+        console.log('Error Fetching Winner Details : ', error);
+        return [];
       }
     },
     didSubscriberWin: async (_, __, context) => {
@@ -196,6 +262,21 @@ export const resolvers = {
           isSuccessful: false,
           message: 'Some error occurred',
           jwtToken: null,
+        };
+      }
+    },
+    updateStatusofWinByWinnerID: async (_, { winnerID, newStatus }) => {
+      try {
+        const result = await updateStatusofWinByWinnerIDController(
+          winnerID,
+          newStatus
+        );
+        return result;
+      } catch (error) {
+        console.error('Error in mutation:', error);
+        return {
+          isSuccessful: false,
+          message: 'An error occurred while processing the mutation.',
         };
       }
     },
