@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { UserRole } from './back-end/utilities/userRoles.js';
+import { PaymentModel } from './back-end/models/paymentSchema.js';
+import { Subscriber } from './back-end/models/subscriber.js';
 
 class Payment {
   #URLS = {
@@ -11,6 +11,7 @@ class Payment {
   #token;
   #authToken;
   #expires;
+
   constructor() {
     this.#token = process.env.NETWORK_INTERNATIONAL_TOKEN;
     this.#authToken = undefined;
@@ -21,44 +22,53 @@ class Payment {
     if (this.#authToken && this.#expires > Date.now()) {
       return this.#authToken;
     }
-    const response = await fetch(this.#URLS.auth, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/vnd.ni-identity.v1+json',
-        Authorization: `Basic ${this.#token}`,
-      },
-      body: JSON.stringify({
-        expires_in: 300,
-        token_type: 'bearer',
-      }),
-    });
-    if (response.status < 200 && response.status >= 300) {
-      throw new Error('Failed to get auth token');
+
+    try {
+      const response = await fetch(this.#URLS.auth, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/vnd.ni-identity.v1+json',
+          Authorization: `Basic ${this.#token}`,
+        },
+        body: JSON.stringify({
+          expires_in: 300,
+          token_type: 'bearer',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get auth token, status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      this.#authToken = data.access_token;
+      this.#expires = Date.now() + data.expires_in * 1000 - 500;
+      return this.#authToken;
+    } catch (error) {
+      console.error('Error fetching auth token:', error);
+      throw new Error('Authentication failed');
     }
-    const data = await response.json();
-    this.#authToken = data.access_token;
-    this.#expires = Date.now() + data.expires_in * 1000 - 500;
-    return this.#authToken;
   }
 
   async createOrder(amount, currencyCode = 'AED') {
     if (!amount) {
-      console.error('Amount is required');
+      throw new Error('Amount is required');
     }
+
     const authToken = await this.#getAuthToken();
     const response = {
       paymentLink: null,
       amount: amount,
       currencyCode: currencyCode,
       createdDate: null,
-      refference: '',
+      reference: '',
       orderCreate: {},
       orderStatus: {},
       isOrderComplete: false,
     };
 
-    await new Promise(resolve => {
-      fetch(this.#URLS.createOrder, {
+    try {
+      const res = await fetch(this.#URLS.createOrder, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/vnd.ni-payment.v2+json',
@@ -66,143 +76,114 @@ class Payment {
           Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          action: 'SALE',
+          action: 'PURCHASE',
           amount: { currencyCode: currencyCode, value: amount },
         }),
-      })
-        .then(async res => {
-          if (res.status < 200 && res.status >= 300) {
-            throw new Error('Failed to create order');
-          }
-          const data = await res.json();
+      });
 
-          response.paymentLink = data._links['payment'].href;
-          response.amount = data.amount.value;
-          response.currencyCode = data.amount.currencyCode;
-          response.createdDate = data.createDateTime;
-          response.refference = data.reference;
-          response.orderCreate = data;
-          resolve();
-        })
-        .catch(error => {
-          throw new Error('Failed to create order', error);
-        });
-    });
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Order creation failed:', errorData);
+        throw new Error('Failed to create order');
+      }
+
+      const data = await res.json();
+      response.paymentLink = data._links['payment'].href;
+      response.amount = data.amount.value;
+      response.currencyCode = data.amount.currencyCode;
+      response.createdDate = data.createDateTime;
+      response.reference = data.reference;
+      response.orderCreate = data;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw new Error('Failed to create order');
+    }
 
     return response;
   }
 }
 
 const payment = new Payment();
+
 const PaymentAPI = ({ app }) => {
-  app.post('/api/payment/create', (req, res) => {
+  app.post('/api/payment/create', async (req, res) => {
     if (!req.context || req.context.isValid === false) {
-      res.status(401).send('Unauthorized');
-      return;
+      return res.status(401).send('Unauthorized');
     }
+
     if (!req.body.amount || req.body.amount <= 0) {
-      res.status(400).send('Amount is required');
-      return;
+      return res.status(400).send('Amount is required');
     }
+
+    const { decodedToken } = req.context;
+
+    if (!decodedToken || !(decodedToken.userType === UserRole.SUBSCRIBER)) {
+      return res
+        .status(401)
+        .send('Unauthorized, You must be a Subscriber to perform this action.');
+    }
+
     const amount = req.body.amount;
-    //TODO check if he is not subscriber
-    const response = {
-      paymentLink: null,
-    };
-    payment
-      .createOrder(amount)
-      .then(data => {
-        response.paymentLink = data.paymentLink;
-        res.send(response);
-      })
-      .catch(error => {
-        console.error(error);
-        res.send(response);
+    const response = { paymentLink: null };
+
+    try {
+      const paymentData = await payment.createOrder(amount);
+      const newPayment = new PaymentModel({
+        referenceId: paymentData.reference,
+        subscriber: decodedToken.subscriberId,
+        amount: {
+          value: amount,
+          currencyCode: paymentData.currencyCode,
+        },
+        status: 'PENDING',
       });
+      await newPayment.save();
+
+      response.paymentLink = paymentData.paymentLink;
+      console.log(paymentData);
+
+      return res.send(response);
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      return res.status(500).send({ error: error.message });
+    }
   });
 
   app.use('/api/payment/hook', async (req, res) => {
-    console.log(req.body);
-    const directory = path.join(__dirname, 'requests');
-    if (!fs.existsSync(directory)) {
-      fs.mkdirSync(directory);
+    try {
+      console.log(req.body);
+
+      const { eventName, order } = req.body;
+      const status = eventName === 'PURCHASED' ? 'SUCCESS' : 'FAILED';
+
+      const payment = await PaymentModel.findOneAndUpdate(
+        { referenceId: order.reference },
+        { status: status },
+        { new: true }
+      );
+
+      if (payment) {
+        if (status === 'SUCCESS') {
+          await Subscriber.findByIdAndUpdate(payment.subscriber, {
+            isPaid: true,
+          });
+          console.log(`Subscriber ${payment.subscriber} marked as paid.`);
+        }
+
+        console.log(`Payment ${status}:`, payment.referenceId);
+
+        res.status(200).send('Success');
+      } else {
+        console.log('Payment reference not found:', order.reference);
+        res.status(404).send('Payment not found');
+      }
+    } catch (error) {
+      console.error('Error in payment webhook:', error);
+      res.status(500).send({ error: 'Error processing payment webhook' });
     }
-
-    const fileName = `${uuidv4()}.json`;
-    const filePath = path.join(directory, fileName);
-
-    fs.writeFileSync(filePath, JSON.stringify(req.body, null, 2));
-    res.send('Succcess');
   });
 };
 
 export default PaymentAPI;
 
 // TODO store status of winners
-// TODO do this payment
-
-/**
- * SUCCESS
-{
-  outletId: '2b6dc55a-1ffd-4da9-b5ef-5744d3edb5de',
-  eventId: '7b31edea-8504-4c36-9e5d-fa108e84bd30',
-  eventName: 'AUTHORISED',
-  order: {
-    _id: 'urn:order:ee8bce45-4bd0-48b7-9e77-683322ccf65c',
-    _links: {
-      cancel: [Object],
-      self: [Object],
-      'tenant-brand': [Object],
-      'merchant-brand': [Object]
-    },
-    type: 'SINGLE',
-    merchantDefinedData: {},
-    action: 'SALE',
-    amount: { currencyCode: 'AED', value: 12500 },
-    language: 'en',
-    merchantAttributes: {},
-    reference: 'ee8bce45-4bd0-48b7-9e77-683322ccf65c',
-    outletId: '2b6dc55a-1ffd-4da9-b5ef-5744d3edb5de',
-    createDateTime: '2024-11-06T15:28:58.134557695Z',
-    paymentMethods: { card: [Array] },
-    referrer: 'urn:Ecom:ee8bce45-4bd0-48b7-9e77-683322ccf65c',
-    isSplitPayment: false,
-    formattedOrderSummary: {},
-    formattedAmount: 'د.إ.‏ 125',
-    formattedOriginalAmount: '',
-    _embedded: { payment: [Array] }
-  }
-}
-
-
-FAILURE
-{
-  outletId: '2b6dc55a-1ffd-4da9-b5ef-5744d3edb5de',
-  eventId: '35be85f1-d0ce-44aa-b26f-1be94f286bcb',
-  eventName: 'GATEWAY_RISK_PRE_AUTH_REJECTED',
-  order: {
-    _id: 'urn:order:2d898c7f-9832-401b-9a04-7d6955591039',
-    _links: {
-      self: [Object],
-      'tenant-brand': [Object],
-      'merchant-brand': [Object]
-    },
-    type: 'SINGLE',
-    merchantDefinedData: {},
-    action: 'SALE',
-    amount: { currencyCode: 'AED', value: 12500 },
-    language: 'en',
-    merchantAttributes: {},
-    reference: '2d898c7f-9832-401b-9a04-7d6955591039',
-    outletId: '2b6dc55a-1ffd-4da9-b5ef-5744d3edb5de',
-    createDateTime: '2024-11-06T15:31:29.411049149Z',
-    paymentMethods: { card: [Array] },
-    referrer: 'urn:Ecom:2d898c7f-9832-401b-9a04-7d6955591039',
-    isSplitPayment: false,
-    formattedOrderSummary: {},
-    formattedAmount: 'د.إ.‏ 125',
-    formattedOriginalAmount: '',
-    _embedded: { payment: [Array] }
-  }
-}
- */
