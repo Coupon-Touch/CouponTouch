@@ -129,18 +129,18 @@ export default function Coupon() {
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
-        {/* {openPhoneInfo && <PhoneForm successCallback={updateState} />} */}
-        {/* {openCountDown && (
+        {openPhoneInfo && <PhoneForm successCallback={updateState} />}
+        {openCountDown && (
           <CountDown targetDate={countDown} onComplete={updateState} collectionDataCollected={collectionDataCollected} />
-        )} */}
-        {<PaymentPage />}
-        {/* {data && openSubscriberInfo && (
+        )}
+        {/* {<PaymentPage />} */}
+        {data && openSubscriberInfo && (
           <SubscriberInfo subscriber={data} successCallback={updateState} />
         )}
         {data && openCouponTools && (
           <CouponTools successCallback={updateState} />
         )}
-        {openAfterGame && <AfterGame successCallback={updateState} />} */}
+        {openAfterGame && <AfterGame successCallback={updateState} />}
       </div>
     </>
   );
