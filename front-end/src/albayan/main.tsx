@@ -4,8 +4,6 @@ import NavBar from './navbar';
 import BulkUpload from './bulkUpload';
 import { useEffect } from 'react';
 import background from '@/assets/albanian/bg.png';
-import { useNavigate } from 'react-router-dom';
-import { isJWTTokenValid } from '@/jwtUtils';
 import AdminPanel from './admin/createCoupon/adminPanel';
 import NotFound from './404';
 import Coupon from './game/coupon';
@@ -17,7 +15,6 @@ const Paths = [
 ];
 
 export default function Albayan() {
-  const navigate = useNavigate();
   useEffect(() => {
 
     const body = document.body;

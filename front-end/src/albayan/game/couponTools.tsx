@@ -1,8 +1,6 @@
 import { DID_SUBSCRIBER_WIN, UPDATE_LAST_SCRATCH_TIME } from "@/graphQL/apiRequests";
 import { useToast } from "@/hooks/use-toast";
-import { decodeJWT } from "@/jwtUtils";
 import { useLazyQuery, useMutation } from "@apollo/client";
-import { set } from "date-fns";
 import { useEffect, useState } from "react";
 import Loader from "../loader";
 

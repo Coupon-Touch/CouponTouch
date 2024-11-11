@@ -102,12 +102,6 @@ export default function PaymentPage({ successCallback }: { successCallback: () =
     { duration: "3 months", price: "125" },
   ]
 
-  const paymentMethods = [
-    { name: "Mastercard", src: <MasterCardIcon /> },
-    { name: "JCBIcon", src: <JCBIcon /> },
-    { name: "Visa", src: <VisaIcon /> },
-    { name: "DinersClubIcon", src: <DinersClubIcon /> },
-  ]
   const handlePayment = () => {
     console.log(`Payment for ${selectedPlan}`)
     setLoading(true)
