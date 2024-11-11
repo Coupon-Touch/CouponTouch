@@ -31,6 +31,7 @@ import { ToastAction } from '@/components/ui/toast';
 import skeleton from './skeleton';
 import Loader from '@/albayan/loader';
 import PrizeDistributor from '../prizeDestributor/prizeDistributor';
+import { useNavigate } from 'react-router-dom';
 
 const generator = (function* incrementingGenerator(
   start: number = 0
@@ -126,6 +127,13 @@ export default function AdminPanel() {
     congrats: '',
     validationTitle: '',
   });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (window.localStorage.getItem("adminToken") === null) {
+      navigate("../admin/login")
+    }
+  })
 
   useEffect(() => {
     if (dataFetched && Object.keys(dataFetched.getCouponSettingsAlbayan).length > 0) {

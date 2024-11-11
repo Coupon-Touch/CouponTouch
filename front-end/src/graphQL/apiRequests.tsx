@@ -24,9 +24,14 @@ export const GET_COUPONSETTINGS = gql`
     getCouponSettingsAlbayan
   }
 `;
+export const GET_LOCATION = gql`
+  query Query {
+  getLocation
+} 
+`;
 
-export const GET_SUBSCRIBER = gql`query GetSubscriberDetails($phoneNumber: String!, $countryCode: String!) {
-  getSubscriberDetails(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+export const GET_SUBSCRIBER = gql`query GetSubscriberDetails {
+  getSubscriberDetails{
     jwtToken
     mobile
     countryCode
@@ -39,6 +44,32 @@ export const GET_SUBSCRIBER = gql`query GetSubscriberDetails($phoneNumber: Strin
   }
 }`
 
+export const LOGIN = gql`query Login($phoneNumber: String!, $countryCode: String!) {
+  login(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
+    address
+    countryCode
+    email
+    emirateID
+    isPaid
+    jwtToken
+    lastScratchTime
+    mobile
+    name
+  }
+}`
+
+export const DID_SUBSCRIBER_PAY = gql`query GetSubscriberDetails {
+    getSubscriberDetails {
+      isPaid
+    jwtToken
+    }
+}`
+
+export const IS_PAYMENT_SUCCESSFULL = gql`query DidSubscriberWin {
+  didSubscriberWin {
+    jwtToken
+  }
+}`
 export const UPDATE_SUBSCRIBER = gql`mutation UpdateSubscriber($name: String, $email: String, $emirateId: String, $address: String, $comment: String) {
   updateSubscriber(name: $name, email: $email, emirateID: $emirateId, address: $address, comment: $comment) {
     isSuccessful
@@ -46,19 +77,18 @@ export const UPDATE_SUBSCRIBER = gql`mutation UpdateSubscriber($name: String, $e
     message
   }
 }`
-export const UPDATE_LAST_SCRATCH_TIME = gql`mutation UpdateLastScratchTime($phoneNumber: String!, $countryCode: String!) {
-  updateLastScratchTime(PhoneNumber: $phoneNumber, CountryCode: $countryCode) {
-    isSuccessful
-    message
+export const UPDATE_LAST_SCRATCH_TIME = gql`mutation UpdateLastScratchTime {
+  updateLastScratchTime {
     jwtToken
+    isSuccessful
   }
 }`
 
-export const UPDATE_COLLECTION_DETAILS = gql`mutation UpdateCollectionDetails($phoneNumber: String!, $countryCode: String!, $collectionDate: Date!, $collectionLocation: String!, $comments: String!) {
-  updateCollectionDetails(PhoneNumber: $phoneNumber, CountryCode: $countryCode, collectionDate: $collectionDate, collectionLocation: $collectionLocation, comments: $comments) {
-    isSuccessful
-    message
+export const UPDATE_COLLECTION_DETAILS = gql`mutation UpdateCollectionDetails($collectionDate: Date!, $collectionLocation: String!, $comments: String!) {
+  updateCollectionDetails(collectionDate: $collectionDate, collectionLocation: $collectionLocation, comments: $comments) {
     jwtToken
+    message
+    isSuccessful
   }
 }`
 

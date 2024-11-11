@@ -151,7 +151,9 @@ const PaymentAPI = ({ app }) => {
 
   app.use('/api/payment/hook', async (req, res) => {
     try {
-      console.log(req.body);
+      if (req.headers.secret !== process.env.PAYMENT_WEBHOOK_SECRET) {
+        return res.status(401).send('Unauthorized');
+      }
 
       const { eventName, order } = req.body;
       const status = eventName === 'PURCHASED' ? 'SUCCESS' : 'FAILED';

@@ -20,7 +20,16 @@ export const storeCouponSettingsController = async (input, context) => {
 export const getLatestCouponSettingsAlbayanController = async () => {
   try {
     const latestEntry = await CouponSettings.findOne().sort({ createdAt: -1 });
-    return latestEntry.albayan || {};
+    return latestEntry?.albayan || {};
+  } catch (error) {
+    console.error('Error fetching latest coupon settings:', error);
+    return {};
+  }
+};
+export const getLocationAlbayanController = async () => {
+  try {
+    const latestEntry = await CouponSettings.findOne().sort({ createdAt: -1 });
+    return latestEntry?.albayan?.locations || {};
   } catch (error) {
     console.error('Error fetching latest coupon settings:', error);
     return {};

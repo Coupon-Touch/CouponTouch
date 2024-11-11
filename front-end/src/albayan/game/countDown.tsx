@@ -2,13 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { decodeJWT } from '@/jwtUtils';
 
 type CountdownProps = {
   targetDate?: number;
   onComplete?: () => void;
-  collectionDataCollected: boolean;
 };
 
+const isWinner = () => {
+  const token = window.localStorage.getItem('token');
+  if (!token) {
+    return false
+  }
+  const decodedToken = decodeJWT(token);
+  return decodedToken.isWon;
+}
 const getNewTimeLeft = (target: number) => {
   const now = new Date().getTime();
   const difference = target - now;
@@ -28,7 +36,6 @@ const getNewTimeLeft = (target: number) => {
 export default function CountDown({
   targetDate = new Date().getTime(),
   onComplete,
-  collectionDataCollected,
 }: CountdownProps) {
   const [timeLeft, setTimeLeft] = useState(getNewTimeLeft(targetDate));
   useEffect(() => {
@@ -50,11 +57,13 @@ export default function CountDown({
 
     return () => clearInterval(interval);
   }, [targetDate]); // Ensure targetDate is watched for changes
+
+
   return (
     <Card className="w-full lg:max-w-md mx-auto">
       <CardContent className="p-6">
         <h2 className="text-2xl font-bold text-center mb-4">
-          {collectionDataCollected ? (
+          {isWinner() ? (
             <div className=" font-semibold text-lg p-4 ">
               <p className=''>🎉 Congratulations, you've won!</p>
               <p className="mt-2">Come back tomorrow to scratch again!</p>

@@ -91,7 +91,7 @@ const DinersClubIcon = () => (
 
 
 
-export default function PaymentPage() {
+export default function PaymentPage({ successCallback }: { successCallback: () => void }) {
   const [selectedPlan, setSelectedPlan] = useState("")
   const [paymentLink, setPaymentLink] = useState("");
   const [loading, setLoading] = useState(false);
@@ -126,7 +126,7 @@ export default function PaymentPage() {
   return (
     <>
       {loading && <Loader />}
-      {paymentLink !== '' ? <PaymentIFrame link={paymentLink} /> :
+      {paymentLink !== '' ? <PaymentIFrame link={paymentLink} successCallback={successCallback} /> :
         <Card className="w-full max-w-md mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center text-primary">

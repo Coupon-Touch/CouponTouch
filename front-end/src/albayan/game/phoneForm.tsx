@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
+import { LOGIN } from '@/graphQL/apiRequests';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useLazyQuery } from '@apollo/client';
@@ -67,7 +67,7 @@ export default function PhoneForm({ successCallback }: {
         getSubscriber({
           variables: { phoneNumber: `${phone}`, countryCode: `${countryCode}` },
           onCompleted: (data) => {
-            resolve(data.getSubscriberDetails)
+            resolve(data.login)
           },
           onError: () => {
             toast({
@@ -86,7 +86,7 @@ export default function PhoneForm({ successCallback }: {
       }
     },
   });
-  const [getSubscriber, { loading }] = useLazyQuery(GET_SUBSCRIBER)
+  const [getSubscriber, { loading }] = useLazyQuery(LOGIN)
 
   return (
     <>

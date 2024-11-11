@@ -3,7 +3,10 @@ import { adminLoginController } from './controllers/loginFunctions.js';
 import { initialDumpController } from './controllers/initialDump.js';
 import { CountryCodes } from './utilities/countryCodes.js';
 import { storeCouponSettingsController } from './controllers/couponSettings.js';
-import { getLatestCouponSettingsAlbayanController } from './controllers/couponSettings.js';
+import {
+  getLatestCouponSettingsAlbayanController,
+  getLocationAlbayanController,
+} from './controllers/couponSettings.js';
 import { updateLastScratchTimeController } from './controllers/lastScratchHandler.js';
 import { addSubscriberController } from './controllers/csvFunctions.js';
 import { getSubscriberDetailsController } from './controllers/loginFunctions.js';
@@ -69,13 +72,12 @@ export const typeDefs = gql`
   type Query {
     getCountryCodes: [Int]
     getCouponSettingsAlbayan: JSON
-    getSubscriberDetails(
-      PhoneNumber: String!
-      CountryCode: String!
-    ): SubscriberInfo
+    getSubscriberDetails: SubscriberInfo
+    login(PhoneNumber: String!, CountryCode: String!): SubscriberInfo
     didSubscriberWin: SubscriberWinInfo
     getAllWinnerDetails: [WinnerInfo]
     getAllWinsBySubscriberID(subscriberID: String!): [WinnerInfo]
+    getLocation: JSON
   }
 
   type AdminLoginInfo {
@@ -172,7 +174,35 @@ export const resolvers = {
         return {};
       }
     },
-    getSubscriberDetails: async (_, { PhoneNumber, CountryCode }, context) => {
+    getLocation: async (_, args, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.SUBSCRIBER) {
+          return await getLocationAlbayanController();
+        } else {
+          return {};
+        }
+      } catch (error) {
+        console.log('Error Fetching coupon settings : ', error);
+        return {};
+      }
+    },
+    getSubscriberDetails: async (_, args, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        if (isValid) {
+          const { subsriberMobile, subscriberCountryCode } = decodedToken;
+          return await getSubscriberDetailsController(
+            subsriberMobile,
+            subscriberCountryCode
+          );
+        }
+      } catch (error) {
+        console.log('Error Fetching Subscriber Details : ', error);
+        return {};
+      }
+    },
+    login: async (_, { PhoneNumber, CountryCode }, context) => {
       try {
         const response = await getSubscriberDetailsController(
           PhoneNumber,

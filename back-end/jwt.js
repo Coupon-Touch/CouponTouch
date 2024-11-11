@@ -44,9 +44,7 @@ export const prepareSubscriberToken = (subscriberDetails, winnerDetails) => {
   let collectionDataCollected = false;
   if (winnerDetails) {
     collectionDataCollected = !(
-      !winnerDetails.collectionDate ||
-      !winnerDetails.collectionLocation ||
-      !winnerDetails.comments
+      !winnerDetails.collectionDate || !winnerDetails.collectionLocation
     );
   }
 

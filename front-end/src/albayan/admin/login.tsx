@@ -17,8 +17,8 @@ export default function Login() {
   ] = useMutation(ADMIN_LOGIN);
 
   useEffect(() => {
-    if (localStorage.getItem('token')) {
-      navigate('../couponSettings');
+    if (localStorage.getItem('adminToken')) {
+      navigate('../admin/couponSettings');
     }
   }, []);
 
@@ -43,8 +43,8 @@ export default function Login() {
         const { adminLogin } = response.data;
 
         if (adminLogin && adminLogin.isSuccessful) {
-          navigate('../couponSettings');
-          localStorage.setItem('token', adminLogin.jwtToken);
+          navigate('../admin/couponSettings');
+          localStorage.setItem('adminToken', adminLogin.jwtToken);
           console.log(adminLogin.message);
         } else {
 

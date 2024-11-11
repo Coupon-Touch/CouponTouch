@@ -20,7 +20,7 @@ import { CalendarIcon } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { useMutation, useQuery } from '@apollo/client';
 import {
-  GET_COUPONSETTINGS,
+  GET_LOCATION,
   UPDATE_COLLECTION_DETAILS,
 } from '@/graphQL/apiRequests';
 import { LocationInterface } from '../admin/createCoupon/adminPanel';
@@ -32,12 +32,13 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { decodeJWT } from '@/jwtUtils';
+import { cn } from '@/lib/utils';
 
 export default function AfterGame({ successCallback }: { successCallback: () => void }) {
   const [date, setDate] = useState<Date>();
   const [open, setOpen] = useState(false); // Managing the popover open state
 
-  const handleSelect = (selectedDate: Date) => {
+  const handleSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate)
     setOpen(false); // Close popover after selecting a date
   };
@@ -58,12 +59,12 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
     longitude: '0',
   });
 
-  const [updateCollectionData, { loading: collectionLoading }] =
+  const [updateCollectionData, { loading: collectionLoading, error: collectionError }] =
     useMutation(UPDATE_COLLECTION_DETAILS);
   const {
     data: couponSettings,
     loading: couponLoading,
-  } = useQuery(GET_COUPONSETTINGS);
+  } = useQuery(GET_LOCATION);
 
   const dateRange = { fromDate: new Date(), toDate: addDays(new Date(), 5) };
   const handleLocationSelect = (location: LocationInterface) => {
@@ -77,10 +78,8 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
     console.log(decoded);
     updateCollectionData({
       variables: {
-        phoneNumber: decoded.subsriberMobile,
-        countryCode: decoded.subscriberCountryCode,
         collectionDate: date,
-        collectionLocation: "zoho",
+        collectionLocation: JSON.stringify(selectedLocation),
         comments: comments,
       },
       onCompleted(data) {
@@ -91,7 +90,8 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
     });
     // Handle form submission here
   };
-
+  const isDateHasError = collectionError && date === undefined
+  const isLocationHasError = collectionError && selectedLocation.contactName === ''
   return (
     <Card className='w-96 '>
       <CardHeader>
@@ -102,14 +102,14 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
           onSubmit={handleSubmit}
           className="space-y-6 max-w-md mx-auto p-6"
         >
-          <div className="space-y-2">
-            <Label htmlFor="collection-date">Collection Date</Label>
+          <div className={cn("space-y-2", isDateHasError && "text-red-500")}>
+            <Label htmlFor="collection-date">Collection Date {isDateHasError && "(required)"}</Label>
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   id="date"
                   variant={'outline'}
-                  className={`w-full justify-start text-left font-normal ${!date && 'text-muted-foreground'}`}
+                  className={cn(`w-full justify-start text-left font-normal`, isDateHasError && 'border-red-500')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, 'PPP') : <span>Pick a date</span>}
@@ -129,7 +129,9 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
 
           <div className="space-y-2">
             {couponLoading ? <Skeleton className='w-36 h-5 mb-2' /> :
-              <Label htmlFor="collection-location">Collection Location</Label>
+              <div className={cn("space-y-2", isLocationHasError && "text-red-500")}>
+                <Label htmlFor="collection-location">Collection Location {isLocationHasError && "(required)"}</Label>
+              </div>
             }
             <Dialog open={isDialogOpen} onOpenChange={(open) => setIsDialogOpen(open)}>
               {couponLoading ?
@@ -138,7 +140,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className={cn("w-full justify-start text-left font-normal", isLocationHasError && 'border-red-500')}
                   >
                     {selectedLocation.companyName ? (
                       <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
@@ -158,7 +160,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
                 </DialogHeader>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
                   {couponSettings &&
-                    couponSettings.getCouponSettingsAlbayan.locations.map(
+                    couponSettings.getLocation.map(
                       (location: LocationInterface, index: number) => (
                         <Card
                           key={index}

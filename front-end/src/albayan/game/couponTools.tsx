@@ -2,7 +2,9 @@ import { DID_SUBSCRIBER_WIN, UPDATE_LAST_SCRATCH_TIME } from "@/graphQL/apiReque
 import { useToast } from "@/hooks/use-toast";
 import { decodeJWT } from "@/jwtUtils";
 import { useLazyQuery, useMutation } from "@apollo/client";
-import { useEffect } from "react";
+import { set } from "date-fns";
+import { useEffect, useState } from "react";
+import Loader from "../loader";
 
 
 export default function CouponTools({ successCallback }: { successCallback: () => void }) {
@@ -12,18 +14,10 @@ export default function CouponTools({ successCallback }: { successCallback: () =
 
   useEffect(() => {
     const token = window.localStorage.getItem('token');
-    let phone: string, countryCode: string
-    if (token) {
-      const decoded = decodeJWT(token);
-      phone = decoded.subsriberMobile
-      countryCode = decoded.subscriberCountryCode
-
+    if (!token) {
+      return
     }
     const timeout = setTimeout(() => updateLastScratchTime({
-      variables: {
-        countryCode: countryCode,
-        phoneNumber: phone,
-      },
       onCompleted(data) {
         data = data.updateLastScratchTime
         console.log(data)
@@ -44,6 +38,7 @@ export default function CouponTools({ successCallback }: { successCallback: () =
           onCompleted(data) {
             data = data.didSubscriberWin
             if (data.isWon) {
+
               window.localStorage.setItem("token", data.jwtToken);
               successCallback()
             }
@@ -80,14 +75,22 @@ export default function CouponTools({ successCallback }: { successCallback: () =
       clearInterval(interval)
     }
   }, []);
+
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <div className={'w-full h-[900px]'}>
+      {isLoading && (
+        <Loader />
+      )}
       <iframe
         id="coupontools"
         src="https://digicpn.com/p/rptbsd&web=true"
+        onLoad={() => setIsLoading(false)}
         seamless={true}
         className="border-0 w-full h-full m-0 p-0"
         allow="geolocation"
+        style={{ visibility: isLoading ? 'hidden' : 'visible' }}
       ></iframe>
     </div>
   );

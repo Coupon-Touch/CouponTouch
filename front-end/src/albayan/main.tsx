@@ -11,21 +11,15 @@ import NotFound from './404';
 import Coupon from './game/coupon';
 
 const Paths = [
-  { path: '/adminLogin', element: <Login /> },
-  { path: '/bulkupload', element: <BulkUpload /> },
-  { path: '/couponSettings', element: <AdminPanel /> },
+  { path: '/admin/login', element: <Login /> },
+  { path: '/admin/bulkupload', element: <BulkUpload /> },
+  { path: '/admin/couponSettings', element: <AdminPanel /> },
 ];
 
 export default function Albayan() {
   const navigate = useNavigate();
   useEffect(() => {
-    if (
-      !isJWTTokenValid() &&
-      !window.location.pathname.endsWith('/albayan') &&
-      !window.location.pathname.endsWith('/albayan/')
-    ) {
-      navigate('adminLogin');
-    }
+
     const body = document.body;
 
     const computedStyle = window.getComputedStyle(body);

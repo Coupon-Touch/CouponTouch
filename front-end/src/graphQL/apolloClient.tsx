@@ -4,7 +4,12 @@ import { setContext } from '@apollo/client/link/context';
 const httpLink = new HttpLink({ uri: '/api' });
 
 const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem('token');
+  let token;
+  if (window.location.pathname.indexOf("/admin/") !== -1) {
+    token = localStorage.getItem('adminToken');
+  } else {
+    token = localStorage.getItem('token');
+  }
   return {
     headers: {
       ...headers,
@@ -21,7 +26,18 @@ const client = new ApolloClient({
     addTypename: false,
     resultCaching: false,
     possibleTypes: {}
-  })
+  }),
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'no-cache',
+    },
+    query: {
+      fetchPolicy: 'no-cache',
+    },
+    mutate: {
+      fetchPolicy: 'no-cache',
+    },
+  },
 });
 
 export default client;

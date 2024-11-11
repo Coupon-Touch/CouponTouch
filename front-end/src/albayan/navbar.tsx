@@ -13,9 +13,8 @@ export default function NavBar() {
         className="w-28 h-[4.5rem]  ml-6 object-contain"
         onClick={() => navigate('/albayan')}
       ></img>
-      {window.location.pathname.endsWith('/adminLogin') ? (
+      {window.location.pathname.indexOf('/admin/') !== -1 || (isJWTTokenValid(window.localStorage.getItem("adminToken")) && window.location.pathname.indexOf('/admin/') !== -1) ? (
         <div className="hidden lg:flex flex-row justify-center -ml-32 w-full m-0 p-0">
-          {/* Replace with your logo */}
           <img src={logo} className="h-28 md:w-52 md:h-24 object-contain" />
         </div>
       ) : (
@@ -25,7 +24,8 @@ export default function NavBar() {
         </div>
       )}
       <div className="absolute right-0">
-        {window.location.pathname.endsWith('/adminLogin') && (
+        {window.location.pathname.indexOf('/admin/') !== -1 && (
+          <>
           <Link to="/albayan">
             <Button
               className="border-2 border-[#843b4c] hover:bg-[#833b4b] transition-all hover:text-white hover:scale-125 mr-4 md:mr-10"
@@ -46,21 +46,23 @@ export default function NavBar() {
               </svg>
             </Button>
           </Link>
+            {isJWTTokenValid(window.localStorage.getItem("adminToken")) ? (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.reload();
+                }}
+                className="mr-2"
+              >
+                Logout
+              </Button>
+            ) : (
+              <></>
+            )}
+          </>
         )}
-        {isJWTTokenValid() ? (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              localStorage.clear();
-              window.location.reload();
-            }}
-            className="mr-2"
-          >
-            Logout
-          </Button>
-        ) : (
-          <></>
-        )}
+
       </div>
     </nav>
   );

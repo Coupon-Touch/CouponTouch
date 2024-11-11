@@ -9,6 +9,7 @@ import { useLazyQuery } from '@apollo/client';
 import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
 import { useToast } from '@/hooks/use-toast';
 import PaymentPage from '../payment/paymentPage';
+import { DateTime } from 'luxon';
 
 export default function Coupon() {
   const [openPhoneInfo, setOpenPhoneInfo] = useState(false);
@@ -17,8 +18,7 @@ export default function Coupon() {
   const [openCouponTools, setOpenCouponTools] = useState(false);
   const [openAfterGame, setOpenAfterGame] = useState(false);
   const [data, setData] = useState<SubscriberDetails | null>(null);
-  const [collectionDataCollected, setCollectionDataCollected] = useState(false);
-  const [openPaymentPage, setOpenPaymentPage] = useState(true);
+  const [openPaymentPage, setOpenPaymentPage] = useState(false);
 
   const [countDown, setCountDown] = useState(0);
 
@@ -33,12 +33,10 @@ export default function Coupon() {
     return null;
   };
 
-  const getNextScratchTime = (time: number | null) => {
-    if (time === 0 || time === null) return new Date().getTime();
-    const lastScratch = new Date(time);
-    lastScratch.setDate(lastScratch.getDate());
-    lastScratch.setHours(24, 0, 0, 0);
-    return lastScratch.getTime();
+  const getTimeLeftToMidnightInDubai = (time: string | null) => {
+    if (time === null) return 0;
+    return DateTime.fromISO(time).setZone("Asia/Dubai").endOf('day').toMillis();
+
   };
 
   const { toast } = useToast();
@@ -76,7 +74,6 @@ export default function Coupon() {
       setOpenAfterGame(false);
       return;
     }
-    setCollectionDataCollected(token.collectionDataCollected);
     if (token.subsriberMobile && !token.areDetailsFilled) {
       setOpenPhoneInfo(false);
       setOpenSubscriberInfo(true);
@@ -86,18 +83,27 @@ export default function Coupon() {
       setOpenAfterGame(false);
       return;
     }
-    if (token.isWon && !token.collectionDataCollected) {
+    if (token.areDetailsFilled && !token.isPaidSubscriber) {
+      setOpenPhoneInfo(false);
+      setOpenSubscriberInfo(false);
+      setOpenPaymentPage(true);
+      setOpenCountDown(false);
+      setOpenCouponTools(false);
+      setOpenAfterGame(false);
+      return;
+    }
+    if (token.isPaidSubscriber && token.isWon && !token.collectionDataCollected) {
       setOpenPhoneInfo(false);
       setOpenSubscriberInfo(false);
       setOpenPaymentPage(false);
       setOpenCountDown(false);
       setOpenCouponTools(false);
       setOpenAfterGame(true);
-
       return;
     }
 
-    const nextScratchTime = getNextScratchTime(token.lastScratchTime);
+
+    const nextScratchTime = getTimeLeftToMidnightInDubai(token.lastScratchTime);
     if (nextScratchTime > new Date().getTime()) {
       setCountDown(nextScratchTime);
       setOpenPhoneInfo(false);
@@ -129,14 +135,15 @@ export default function Coupon() {
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
+
         {openPhoneInfo && <PhoneForm successCallback={updateState} />}
         {openCountDown && (
-          <CountDown targetDate={countDown} onComplete={updateState} collectionDataCollected={collectionDataCollected} />
+          <CountDown targetDate={countDown} onComplete={updateState} />
         )}
-        {/* {<PaymentPage />} */}
         {data && openSubscriberInfo && (
           <SubscriberInfo subscriber={data} successCallback={updateState} />
         )}
+        {openPaymentPage && <PaymentPage successCallback={updateState} />}
         {data && openCouponTools && (
           <CouponTools successCallback={updateState} />
         )}
