@@ -3,7 +3,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import Axios from '@/Axios'
 import PaymentIFrame from './iframe'
 import Loader from '../loader'
 
@@ -102,22 +101,31 @@ export default function PaymentPage({ successCallback }: { successCallback: () =
     { duration: "3 months", price: "125" },
   ]
 
-  const handlePayment = () => {
-    console.log(`Payment for ${selectedPlan}`)
+  const handlePayment = async () => {
     setLoading(true)
-    Axios.post<{ paymentLink: string }>('/payment/create', {
-      amount: parseInt(selectedPlan) * 100,
-    })
-      .then((response) => {
-        console.log(response.data);
-        setPaymentLink(response.data.paymentLink);
-      })
-      .catch((error: unknown) => {
-        console.error(error);
-      })
-      .finally(() => {
-        setLoading(false);
+    try {
+      const response = await fetch('/api/payment/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${window.localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          amount: parseInt(selectedPlan) * 100,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data: { paymentLink: string } = await response.json();
+      console.log(data);
+      setPaymentLink(data.paymentLink);
+    } catch (error: unknown) {
+        console.error(error);
+    } finally {
+        setLoading(false);
+    }
   }
   return (
     <>
