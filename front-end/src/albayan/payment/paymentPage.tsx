@@ -105,17 +105,19 @@ export default function PaymentPage({ successCallback }: { successCallback: () =
   const handlePayment = () => {
     console.log(`Payment for ${selectedPlan}`)
     setLoading(true)
-    Axios.post('/payment/create', {
+    Axios.post<{ paymentLink: string }>('/payment/create', {
       amount: parseInt(selectedPlan) * 100,
-
-    }).then(response => {
-      console.log(response.data)
-      setPaymentLink(response.data.paymentLink)
-    }).catch(error => {
-      console.error(error)
-    }).finally(() => {
-      setLoading(false)
     })
+      .then((response) => {
+        console.log(response.data);
+        setPaymentLink(response.data.paymentLink);
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }
   return (
     <>

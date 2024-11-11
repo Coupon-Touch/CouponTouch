@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
-const Axios = axios.create({
+const Axios: AxiosInstance = axios.create({
   baseURL: '/api/',
   headers: {
     'Content-Type': 'application/json',
@@ -10,16 +10,20 @@ const Axios = axios.create({
 // Add a request interceptor
 Axios.interceptors.request.use(
   config => {
-    // Retrieve the latest token from localStorage
     const token = window.localStorage.getItem('token');
-    if (token) {
+
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(config);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Request Config:', config);
+    }
+
     return config;
   },
   error => {
-    // Handle request error
+    console.error('Request Error:', error);
     return Promise.reject(error);
   }
 );
