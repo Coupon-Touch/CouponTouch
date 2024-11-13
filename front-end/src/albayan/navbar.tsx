@@ -26,7 +26,7 @@ export default function NavBar() {
       <div className="absolute right-0">
         {window.location.pathname.indexOf('/admin/') !== -1 && (
           <>
-          <Link to="/albayan">
+            <Link to="/albayan" className='hidden md:inline'>
             <Button
               className="border-2 border-[#843b4c] hover:bg-[#833b4b] transition-all hover:text-white hover:scale-125 mr-4 md:mr-10"
               variant="ghost"
