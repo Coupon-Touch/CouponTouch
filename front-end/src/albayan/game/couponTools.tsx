@@ -18,7 +18,6 @@ export default function CouponTools({ successCallback }: { successCallback: () =
     const timeout = setTimeout(() => updateLastScratchTime({
       onCompleted(data) {
         data = data.updateLastScratchTime
-        console.log(data)
         window.localStorage.setItem("token", data.jwtToken);
       },
       onError(error) {

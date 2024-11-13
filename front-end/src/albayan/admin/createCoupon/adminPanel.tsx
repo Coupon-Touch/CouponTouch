@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -31,25 +30,31 @@ import { ToastAction } from '@/components/ui/toast';
 import skeleton from './skeleton';
 import Loader from '@/albayan/loader';
 import PrizeDistributor from '../prizeDestributor/prizeDistributor';
-import { useNavigate } from 'react-router-dom';
+import UserCreation from '../user/userCreation';
+import UserEdit from '../user/userEdit';
 
-const generator = (function* incrementingGenerator(
+
+function* incrementingGenerator(
   start: number = 0
 ): Generator<number> {
   let counter = start;
   while (true) {
     yield counter++;
   }
-})();
+}
+const prizeGenerator = incrementingGenerator();
+const locationGenerator = incrementingGenerator(1);
 
 const prizeSchema = yup.object({
   id: yup.number(),
   image: yup.string().required(),
   bias: yup.number().required('Bias is required').min(0).max(100),
+  name: yup.string().required("Prize Name is required").min(3),
 });
 const prizesArraySchema = yup.array().of(prizeSchema).min(1, 'At least one prize is required');
 
-const locationSchema = yup.object({
+export const locationSchema = yup.object({
+  id: yup.number().required(),
   companyName: yup.string().required('Company Name is required'),
   contactName: yup.string().optional(),
   phone: yup
@@ -70,10 +75,7 @@ const locationSchema = yup.object({
 const adminPanelStateSchema = yup.object({
   prizes: yup.array().of(prizeSchema).required(),
   locations: yup.array().of(locationSchema).required(),
-  companyLogoUrl: yup
-    .string()
-    .required('Company Logo URL is required')
-    .url('Must be a valid URL'),
+
   scratchCardBackground: yup
     .string()
     .required('Scratch Card Background is required')
@@ -82,12 +84,6 @@ const adminPanelStateSchema = yup.object({
     .string()
     .required('Losing Prize URL is required')
     .url('Must be a valid URL'),
-  couponTitle: yup.string().required('Coupon Title is required'),
-  couponSubtitle: yup.string().required('Coupon Subtitle is required'),
-  description: yup.string().required('Description is required'),
-  terms: yup.string().required('Terms are required'),
-  congrats: yup.string().required('Congrats message is required'),
-  validationTitle: yup.string().required('Validation Title is required'),
 });
 
 type AdminPanelState = yup.InferType<typeof adminPanelStateSchema>;
@@ -111,33 +107,26 @@ export default function AdminPanel() {
   } = useQuery(GET_COUPONSETTINGS);
 
 
-  const [currentLocation, setCurrentLocation] = useState<LocationInterface>({ companyName: '' })
+  const [currentLocation, setCurrentLocation] = useState<LocationInterface>({ companyName: '', id: 0 })
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
   const [state, setState] = useState<AdminPanelState>({
-    prizes: [{ image: '', bias: 0, id: generator.next().value }],
+    prizes: [{ image: '', bias: 0, id: prizeGenerator.next().value, name: '' }],
     locations: [],
-    companyLogoUrl: '',
     scratchCardBackground: '',
     losingPrizeUrl: '',
-    couponTitle: '',
-    couponSubtitle: '',
-    description: '',
-    terms: '',
-    congrats: '',
-    validationTitle: '',
   });
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (window.localStorage.getItem("adminToken") === null) {
-      navigate("../admin/login")
-    }
-  })
 
   useEffect(() => {
     if (dataFetched && Object.keys(dataFetched.getCouponSettingsAlbayan).length > 0) {
-      setState(dataFetched.getCouponSettingsAlbayan);
+      setState(() => {
+        const data = dataFetched.getCouponSettingsAlbayan
+        data.locations.forEach((loc: LocationInterface) => {
+          loc.id = locationGenerator.next().value;
+        })
+        return data;
+      });
     }
 
     if (errorCoupon) {
@@ -166,15 +155,15 @@ export default function AdminPanel() {
       ...prev,
       prizes: [
         ...prev.prizes,
-        { image: '', bias: 0, id: generator.next().value },
+        { image: '', bias: 0, id: prizeGenerator.next().value, name: '' },
       ],
     }));
   };
 
-  const updatePrize = <T extends 'image' | 'bias'>(
+  const updatePrize = <T extends 'image' | 'bias' | 'name'>(
     id: number,
     field: T,
-    value: T extends 'image' ? string : number
+    value: T extends 'image' | 'name' ? string : number
   ) => {
     setState((prev) => {
       const updatedPrizes = [...prev.prizes];
@@ -185,6 +174,7 @@ export default function AdminPanel() {
 
   const openAddLocationSheet = () => {
     setIsAddingLocation(true);
+    setCurrentLocation({ companyName: '', id: 0 })
     setIsLocationSheetOpen(true);
 
   };
@@ -202,20 +192,25 @@ export default function AdminPanel() {
       .then(() => {
         setLocationPanelErrors({});
         if (isAddingLocation && currentLocation) {
-          setCurrentLocation({ companyName: '' });
-          setIsLocationSheetOpen(false);
-          setState((prev) => ({
-            ...prev,
-            locations: [...prev.locations, currentLocation],
-          }));
-        } else {
-
-          setCurrentLocation({ companyName: '' });
           setIsLocationSheetOpen(false);
           setState((prev) => {
-            const updatedLocations = prev.locations.map(loc =>
-              loc === currentLocation ? { ...currentLocation } : loc
+
+            const rv = {
+              ...prev,
+              locations: [...prev.locations, { ...currentLocation, id: locationGenerator.next().value }],
+            }
+            setCurrentLocation({ companyName: '', id: 0 });
+            return rv
+          });
+          setCurrentLocation({ companyName: '', id: 0 });
+        } else {
+
+          setIsLocationSheetOpen(false);
+          setState((prev) => {
+            const updatedLocations = prev.locations.map((loc) =>
+              loc.id === currentLocation.id ? { ...currentLocation } : loc
             );
+            setCurrentLocation({ companyName: '', id: 0 });
             return {
               ...prev,
               locations: updatedLocations,
@@ -254,7 +249,6 @@ export default function AdminPanel() {
       err.inner.forEach((error: { path: string; message: string }) => {
         errors[error.path] = error.message; // error.path is the field, error.message is the error message
       });
-      console.log(errors)
       setPrizePanelErrors(errors);
     }
 
@@ -271,7 +265,7 @@ export default function AdminPanel() {
     }
 
     if (!prizeValidation || !adminValidation) return;
-    if (state.companyLogoUrl === '' || state.scratchCardBackground === '') {
+    if (state.scratchCardBackground === '') {
       // TODO Show this bro
     }
 
@@ -296,7 +290,12 @@ export default function AdminPanel() {
           })
         } else {
           // TODO error message bro
-          // console.log(message);
+          toast({
+            title: 'Error',
+            description: 'Error saving coupon settings',
+            variant: "destructive",
+            duration: 5000,
+          })
         }
       } else {
         console.error('Unexpected response structure:', response);
@@ -330,12 +329,8 @@ export default function AdminPanel() {
         return hasFields(['companyLogoUrl', 'scratchCardBackground']);
       case 'prizes':
         return Object.keys(prizePanelErrors).length > 0;
-      case 'coupon-info':
-        return hasFields(['couponTitle', 'couponSubtitle', 'description', 'terms', 'congrats']);
       case 'locations':
         return Object.keys(locationPanelErrors).length > 0;
-      case 'validation':
-        return Object.keys(adminPanelErrors).length > 0;
       default:
         return false;
     }
@@ -352,66 +347,28 @@ export default function AdminPanel() {
           <TabsList className="flex flex-col sm:flex-row h-auto gap-2">
             <TabsTrigger value="logo-upload" className='w-full sm:w-auto relative'>
               {tabHasError('logo-upload') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
-              Logo & Image
+              Coupon Settings
             </TabsTrigger>
-            <TabsTrigger value="prizes" className='w-full sm:w-auto relative'>
-              {tabHasError('prizes') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
-              Prizes
-            </TabsTrigger>
-            <TabsTrigger value="coupon-info" className='w-full sm:w-auto relative'>
-              {tabHasError('coupon-info') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
-              Coupon Info
-            </TabsTrigger>
-            <TabsTrigger value="locations" className='w-full sm:w-auto relative'>
-              {tabHasError('locations') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
-              Locations
-            </TabsTrigger>
-            <TabsTrigger value="validation" className='w-full sm:w-auto relative'>
-              {tabHasError('validation') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
-              Validation
-            </TabsTrigger>
+
+
             <TabsTrigger value="prizeDistributor" className='w-full sm:w-auto relative'>
-              {tabHasError('validation') ? <span className='absolute bg-red-500 right-1 top-1 w-[6px] h-[6px]  rounded-full'></span> : null}
               Prize Distribution
+            </TabsTrigger>
+
+            <TabsTrigger value="create-user" className='w-full sm:w-auto relative'>
+              Create User
+            </TabsTrigger>
+            <TabsTrigger value="edit-user" className='w-full sm:w-auto relative'>
+              Edit User
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="logo-upload" className='relative'>
             <Card>
               <CardHeader>
-                <CardTitle>Logo & Scratch Image Upload</CardTitle>
+                <CardTitle>Scratch Card</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div >
-                  {loadingCoupon ? skeleton.label("w-36") :
-                    <Label htmlFor="logo-upload">Company Logo</Label>
-                  }
-                  {loadingCoupon ? skeleton.upload : <UploadButton
-                    endpoint="logoUpload"
-                    files={state.companyLogoUrl}
-                    onComplete={file => {
-                      if (file) {
-                        setState((prev) => ({
-                          ...prev,
-                          companyLogoUrl: file[0].url,
-                        }));
-                      }
-                      // file
-                    }}
-                    onDelete={() => {
-                      setState((prev) => ({
-                        ...prev,
-                        companyLogoUrl: "",
-                      }))
-                    }}
-                  />}
-
-                  <ErrorMessage
-                    field="companyLogoUrl"
-                    error={adminPanelErrors}
-                  />
-                  {/* <Input id="logo-upload" type="file" onChange={(e) => handleFileUpload(e)} /> */}
-                </div>
                 <div>
                   {loadingCoupon ? skeleton.label("w-52") :
                     <Label htmlFor="scratch-image-upload">
@@ -442,9 +399,6 @@ export default function AdminPanel() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="prizes">
             <Card>
               <CardHeader>
                 <CardTitle>Prize Section</CardTitle>
@@ -487,6 +441,19 @@ export default function AdminPanel() {
                           className="w-full sm:w-auto"
                         />
                       </div>
+                      <div className="h-full">
+                        <Label htmlFor={'name' + index}>Prize Name</Label>
+                        <Input
+                          id={'name' + index}
+                          type="text"
+                          placeholder="1st Prize"
+                          value={prize.name}
+                          onChange={e =>
+                            updatePrize(index, 'name', e.target.value)
+                          }
+                          className="w-full sm:w-auto"
+                        />
+                      </div>
                       <div className="flex h-full justify-end items-end">
                         <Button
                           disabled={!(state.prizes.length > 1)}
@@ -515,7 +482,7 @@ export default function AdminPanel() {
                     /100
                   </div>
                 }
-                {loadingCoupon ? skeleton.button : <Button onClick={addPrize}>
+                {loadingCoupon ? skeleton.button : <Button onClick={addPrize} variant={"secondary"}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Prize
                 </Button>}
 
@@ -550,88 +517,6 @@ export default function AdminPanel() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="coupon-info">
-            <Card>
-              <CardHeader>
-                <CardTitle>Coupon Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  {loadingCoupon ? skeleton.label("w-32") :
-                    <Label htmlFor="coupon-title">Coupon Title</Label>
-                  }
-                  {loadingCoupon ? skeleton.input : <Input
-                    id="coupon-title"
-                    placeholder="Enter coupon title"
-                    value={state.couponTitle}
-                    onChange={e =>
-                      setState((prev) => ({ ...prev, couponTitle: e.target.value }))
-                    }
-                  />}
-
-                  <ErrorMessage field="couponTitle" error={adminPanelErrors} />
-                </div>
-                <div>
-                  {loadingCoupon ? skeleton.label("w-36") : <Label htmlFor="coupon-subtitle">Coupon Subtitle</Label>}
-                  {loadingCoupon ? skeleton.input : <Input
-                    id="coupon-subtitle"
-                    placeholder="Enter coupon subtitle"
-                    value={state.couponSubtitle}
-                    onChange={e =>
-                      setState((prev) => ({ ...prev, couponSubtitle: e.target.value }))
-                    }
-                  />}
-                  <ErrorMessage
-                    field="couponSubtitle"
-                    error={adminPanelErrors}
-                  />
-                </div>
-                <div>
-                  {loadingCoupon ? skeleton.label("w-28") :
-                    <Label htmlFor="description">Description</Label>}
-                  {loadingCoupon ? skeleton.textArea : <Textarea
-                    id="description"
-                    placeholder="Enter description"
-                    value={state.description}
-                    onChange={e =>
-                      setState((prev) => ({ ...prev, description: e.target.value }))
-                    }
-                  />}
-                  <ErrorMessage field="description" error={adminPanelErrors} />
-                </div>
-                <div>
-                  {loadingCoupon ? skeleton.label("w-40") :
-                    <Label htmlFor="terms">Terms & Conditions</Label>}
-                  {loadingCoupon ? skeleton.textArea : <Textarea
-                    id="terms"
-                    placeholder="Enter terms and conditions"
-                    value={state.terms}
-                    onChange={e =>
-                      setState((prev) => ({ ...prev, terms: e.target.value }))
-                    }
-                  />}
-                  <ErrorMessage field="terms" error={adminPanelErrors} />
-                </div>
-                <div>
-                  {loadingCoupon ? skeleton.label("w-52") :
-                    <Label htmlFor="congrats">Congratulations Description</Label>}
-                  {loadingCoupon ? skeleton.textArea : <Textarea
-                    id="congrats"
-                    placeholder="Enter congratulations text"
-                    value={state.congrats}
-                    onChange={e =>
-                      setState((prev) => ({ ...prev, congrats: e.target.value }))
-                    }
-                  />}
-                  <ErrorMessage field="congrats" error={adminPanelErrors} />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="locations">
             <Card>
               <CardHeader>
                 <CardTitle>Locations</CardTitle>
@@ -674,41 +559,30 @@ export default function AdminPanel() {
                   </div>
                 ))}
                 {loadingCoupon ? skeleton.button :
-                  <Button onClick={openAddLocationSheet}>
+                  <Button onClick={openAddLocationSheet} variant={'secondary'}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Location
                   </Button>
                 }
               </CardContent>
             </Card>
+            <div className="w-full flex justify-end mt-5">
+
+              <Button onClick={handleSubmit}>Submit</Button>
+            </div>
           </TabsContent>
 
-          <TabsContent value="validation">
-            <Card>
-              <CardHeader>
-                <CardTitle>Validation Page</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className=''>
-                  {loadingCoupon ? skeleton.label('w-52') :
-                    <Label htmlFor="validation-title">
-                      Title on Validation Page
-                    </Label>}
-                  {loadingCoupon ? skeleton.input :
-                    <Input
-                      id="validation-title"
-                      placeholder="Enter title for validation page"
-                      value={state.validationTitle}
-                      onChange={e =>
-                        setState((prev) => ({ ...prev, validationTitle: e.target.value }))
-                      }
-                    />}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+
           <TabsContent value="prizeDistributor">
             <PrizeDistributor />
           </TabsContent>
+
+          <TabsContent value="create-user">
+            <UserCreation />
+          </TabsContent>
+          <TabsContent value="edit-user">
+            <UserEdit />
+          </TabsContent>
+
         </Tabs>
 
         <Sheet
@@ -890,7 +764,7 @@ export default function AdminPanel() {
           </SheetContent>
         </Sheet>
         <div className="flex justify-end mt-10">
-          <Button onClick={handleSubmit}>Submit</Button>
+
         </div>
       </div>
     </>

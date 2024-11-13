@@ -119,7 +119,6 @@ export default function PaymentPage({ successCallback }: { successCallback: () =
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data: { paymentLink: string } = await response.json();
-      console.log(data);
       setPaymentLink(data.paymentLink);
     } catch (error: unknown) {
         console.error(error);

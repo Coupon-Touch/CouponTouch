@@ -102,3 +102,32 @@ export const DID_SUBSCRIBER_WIN = gql`query DidSubscriberWin {
     campaignCode
   }
 }`
+
+
+export const GET_ALL_WINNERS = gql`query GetAllWinnerDetails {
+  getAllWinnerDetails {
+    _id
+    winTime
+    campaignCode
+    collectionDate
+    collectionLocation
+    comments
+    subscriber {
+      _id
+      mobile
+      countryCode
+      isPaid
+      lastScratchTime
+      address
+      email
+      name
+    }
+    status
+  }
+}`
+
+export const UPDATE_WIN_STATUS = gql`mutation UpdateStatusofWinByWinnerID($winnerId: String!, $newStatus: String!) {
+  updateStatusofWinByWinnerID(winnerID: $winnerId, newStatus: $newStatus) {
+    isSuccessful
+  }
+}`

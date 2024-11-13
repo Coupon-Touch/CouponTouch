@@ -135,12 +135,12 @@ const REST = ({ app }) => {
   );
   app.use('/api/hook', async (req, res) => {
     try {
-      const { type, customer } = req.body;
-
+      const { type, customer, coupon } = req.body;
       if (type === 'coupon_claimed' && customer && customer.phone) {
         const mobileNumber = customer.phone;
+        const prizeName = coupon.coupon_value;
 
-        await updateSubscriber(mobileNumber, res);
+        await updateSubscriber(mobileNumber, res, prizeName);
 
         res.status(200);
       } else {

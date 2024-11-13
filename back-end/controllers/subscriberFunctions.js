@@ -50,7 +50,7 @@ export const updateSubscriberController = async (
   }
 };
 
-export const updateSubscriber = async (mobile, res) => {
+export const updateSubscriber = async (mobile, res, prizeName) => {
   try {
     let subscriber = await Subscriber.findOne({
       countryCodeMobileNumber: mobile,
@@ -64,6 +64,7 @@ export const updateSubscriber = async (mobile, res) => {
       subscriber: subscriber._id,
       campaignCode: campaignCodeCurrent,
       winTime: Date.now(),
+      prizeName: prizeName,
     });
 
     await newWinner.save();

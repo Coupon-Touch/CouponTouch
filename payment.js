@@ -140,7 +140,6 @@ const PaymentAPI = ({ app }) => {
       await newPayment.save();
 
       response.paymentLink = paymentData.paymentLink;
-      console.log(paymentData);
 
       return res.send(response);
     } catch (error) {
@@ -169,14 +168,10 @@ const PaymentAPI = ({ app }) => {
           await Subscriber.findByIdAndUpdate(payment.subscriber, {
             isPaid: true,
           });
-          console.log(`Subscriber ${payment.subscriber} marked as paid.`);
         }
-
-        console.log(`Payment ${status}:`, payment.referenceId);
 
         res.status(200).send('Success');
       } else {
-        console.log('Payment reference not found:', order.reference);
         res.status(404).send('Payment not found');
       }
     } catch (error) {

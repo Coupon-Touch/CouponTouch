@@ -1,22 +1,15 @@
 import { Route, Routes } from 'react-router-dom';
-import Login from './admin/login';
 import NavBar from './navbar';
-import BulkUpload from './bulkUpload';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import background from '@/assets/albanian/bg.png';
-import AdminPanel from './admin/createCoupon/adminPanel';
 import NotFound from './404';
 import Coupon from './game/coupon';
+import DefaultLoader from '@/DefaultLoader';
 
-const Paths = [
-  { path: '/admin/login', element: <Login /> },
-  { path: '/admin/bulkupload', element: <BulkUpload /> },
-  { path: '/admin/couponSettings', element: <AdminPanel /> },
-];
+const AlbayanAdmin = lazy(() => import('./admin/main'));
 
 export default function Albayan() {
   useEffect(() => {
-
     const body = document.body;
 
     const computedStyle = window.getComputedStyle(body);
@@ -37,21 +30,25 @@ export default function Albayan() {
       <NavBar />
       <div className="flex flex-1 justify-center items-center">
         <div className="container">
-          <Routes>
-            {Paths.map((path, index) => (
-              <Route key={index} path={path.path} element={path.element} />
-            ))}
-            <Route path={'/'} element={<Coupon />} />
-            <Route path={'/*'} element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<DefaultLoader />}>
+            <Routes>
+              <Route path="/admin/*" element={<AlbayanAdmin />} />
+              <Route path={'/'} element={<Coupon />} />
+              <Route path={'/*'} element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </div>
       </div>
       <footer className="mt-8 mb-6 w-full text-center text-gray-500 text-sm">
         © {new Date().getFullYear()}{' '}
-        <a href="https://coupontouch.net/" className='underline' target="__blank">
+        <a
+          href="https://coupontouch.net/"
+          className="underline"
+          target="__blank"
+        >
           coupontouch.net
-        </a>
-        {' '}- All rights reserved. Terms and conditions apply.
+        </a>{' '}
+        - All rights reserved. Terms and conditions apply.
       </footer>
     </div>
   );

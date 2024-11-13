@@ -4,6 +4,7 @@ import { StatusEnum } from '../utilities/assignedStatus.js';
 const winnerSchema = new mongoose.Schema({
   winTime: { type: Date, default: Date.now },
   campaignCode: { type: String, default: null },
+  prizeName: { type: String, default: null },
   collectionDate: { type: Date, default: null },
   collectionLocation: { type: String, default: '' },
   comments: { type: String, default: '' },

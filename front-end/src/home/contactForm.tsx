@@ -52,9 +52,8 @@ export default function ContactForm() {
             formik.resetForm();
             setEmailError(false);
           },
-          error => {
+          () => {
             setEmailError(true);
-            console.log('Error: ', error.text);
           }
         );
     },

@@ -1,3 +1,4 @@
+import { isJWTTokenValid } from '@/jwtUtils';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 
@@ -7,9 +8,18 @@ const authLink = setContext((_, { headers }) => {
   let token;
   if (window.location.pathname.indexOf("/admin/") !== -1) {
     token = localStorage.getItem('adminToken');
+    if (!isJWTTokenValid(token)) {
+      localStorage.removeItem('adminToken');
+      token = null
+    }
   } else {
     token = localStorage.getItem('token');
+    if (!isJWTTokenValid(token)) {
+      localStorage.removeItem('token');
+      token = null
+    }
   }
+
   return {
     headers: {
       ...headers,

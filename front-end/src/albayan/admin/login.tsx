@@ -18,7 +18,7 @@ export default function Login() {
 
   useEffect(() => {
     if (localStorage.getItem('adminToken')) {
-      navigate('../admin/couponSettings');
+      navigate('/albayan/admin/couponSettings');
     }
   }, []);
 
@@ -43,9 +43,8 @@ export default function Login() {
         const { adminLogin } = response.data;
 
         if (adminLogin && adminLogin.isSuccessful) {
-          navigate('../admin/couponSettings');
+          navigate('/albayan/admin/couponSettings');
           localStorage.setItem('adminToken', adminLogin.jwtToken);
-          console.log(adminLogin.message);
         } else {
 
           toast({

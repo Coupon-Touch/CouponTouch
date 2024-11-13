@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import SubscriberInfo from './subscriberInfo';
-import AfterGame from './afterGame';
 import { decodeJWT } from '@/jwtUtils';
-import CountDown from './countDown';
-import PhoneForm, { SubscriberDetails } from './phoneForm';
-import CouponTools from './couponTools';
 import { useLazyQuery } from '@apollo/client';
 import { GET_SUBSCRIBER } from '@/graphQL/apiRequests';
 import { useToast } from '@/hooks/use-toast';
-import PaymentPage from '../payment/paymentPage';
 import { DateTime } from 'luxon';
+import AfterGame from './afterGame';
+import CountDown from './countDown';
+import PhoneForm, { SubscriberDetails } from './phoneForm';
+import CouponTools from './couponTools';
+import PaymentPage from '../payment/paymentPage';
+import SubscriberInfo from './subscriberInfo';
+
+
 
 export default function Coupon() {
   const [openPhoneInfo, setOpenPhoneInfo] = useState(false);
@@ -135,7 +137,6 @@ export default function Coupon() {
   return (
     <>
       <div className="w-full h-full flex justify-center mt-5">
-
         {openPhoneInfo && <PhoneForm successCallback={updateState} />}
         {openCountDown && (
           <CountDown targetDate={countDown} onComplete={updateState} />
@@ -149,6 +150,7 @@ export default function Coupon() {
         )}
         {openAfterGame && <AfterGame successCallback={updateState} />}
       </div>
+
     </>
   );
 }

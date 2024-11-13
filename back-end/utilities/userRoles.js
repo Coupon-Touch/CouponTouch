@@ -1,4 +1,5 @@
 export const UserRole = Object.freeze({
   ADMINUSER: 'AdminUser',
-  SUBSCRIBER: 'Subscriber'
+  SUBSCRIBER: 'Subscriber',
+  DISTRIBUTOR: 'Distributor',
 });

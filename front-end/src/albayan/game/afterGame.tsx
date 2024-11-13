@@ -31,7 +31,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { decodeJWT } from '@/jwtUtils';
 import { cn } from '@/lib/utils';
 
 export default function AfterGame({ successCallback }: { successCallback: () => void }) {
@@ -45,6 +44,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
   const [comments, setComments] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<LocationInterface>({
+    id: 0,
     companyName: '',
     contactName: '',
     phone: '',
@@ -73,9 +73,6 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
   };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const token = window.localStorage.getItem('token');
-    const decoded = token && decodeJWT(token);
-    console.log(decoded);
     updateCollectionData({
       variables: {
         collectionDate: date,

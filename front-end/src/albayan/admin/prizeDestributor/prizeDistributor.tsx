@@ -1,291 +1,369 @@
-'use client'
+import { useQuery, useMutation } from '@apollo/client';
+import { GET_ALL_WINNERS, UPDATE_WIN_STATUS } from '@/graphQL/apiRequests';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-import { useState, useEffect } from 'react'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ChevronLeft, ChevronRight, Loader2, Search } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 
-type CollectionLocation = {
-  address: string
-  city: string
-  state: string
-  zipCode: string
+function formatPhoneNumber(input: string, separator = '-') {
+  const groups = [];
+  const number = input.split('');
+  while (number.length > 0) {
+    groups.push(number.splice(Math.max(0, number.length - 3)).join(''));
+  }
+  groups.reverse();
+  return groups.join(separator);
+}
+const statusOptions = [
+  'Unassigned',
+  'Assigned',
+  'Prize Dispatched',
+  'Customer Claimed',
+] as const;
+type Status = (typeof statusOptions)[number];
+export interface GetAllWinnerDetailsResponse {
+  getAllWinnerDetails: WinnerDetail[];
 }
 
-type PrizeDetails = {
-  campaignCode: string
-  collectionDate: string
-  collectionLocation: CollectionLocation
-  comments: string
+export interface WinnerDetail {
+  _id: string;
+  campaignCode: string;
+  collectionDate: string;
+  collectionLocation: string;
+  status: Status;
+  comments: string;
+  subscriber: Subscriber;
 }
 
-type Person = {
-  id: number
-  name: string
-  email: string
-  phone: string
-  isContacted: boolean
-  isPaid: boolean
-  prizesWon: PrizeDetails[]
+export interface Subscriber {
+  _id: string;
+  mobile: string;
+  countryCode: string;
+  isPaid: boolean;
+  lastScratchTime: Date;
+  address: string;
+  email: string;
+  name: string;
 }
+const statusColorMap = {
+  Unassigned: 'bg-gray-200 text-gray-600',
+  Assigned: 'bg-yellow-200 text-yellow-600',
+  'Prize Dispatched': 'bg-blue-200 text-blue-600',
+  'Customer Claimed': 'bg-green-200 text-green-600',
+};
+const ITEMS_PER_PAGE_OPTIONS = [10, 20, 50, 75, 100];
 
-// Sample data
-const people: Person[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "123-456-7890",
-    isContacted: true,
-    isPaid: false,
-    prizesWon: [
-      {
-        campaignCode: "SUMMER2023",
-        collectionDate: "2023-07-15",
-        collectionLocation: {
-          address: "123 Main St",
-          city: "Anytown",
-          state: "CA",
-          zipCode: "12345"
-        },
-        comments: "Prize collected successfully"
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "987-654-3210",
-    isContacted: false,
-    isPaid: true,
-    prizesWon: [
-      {
-        campaignCode: "WINTER2023",
-        collectionDate: "2023-12-20",
-        collectionLocation: {
-          address: "456 Elm St",
-          city: "Other City",
-          state: "NY",
-          zipCode: "67890"
-        },
-        comments: "Pending collection"
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "987-654-3210",
-    isContacted: false,
-    isPaid: true,
-    prizesWon: [
-      {
-        campaignCode: "WINTER2023",
-        collectionDate: "2023-12-20",
-        collectionLocation: {
-          address: "456 Elm St",
-          city: "Other City",
-          state: "NY",
-          zipCode: "67890"
-        },
-        comments: "Pending collection"
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "987-654-3210",
-    isContacted: false,
-    isPaid: true,
-    prizesWon: [
-      {
-        campaignCode: "WINTER2023",
-        collectionDate: "2023-12-20",
-        collectionLocation: {
-          address: "456 Elm St",
-          city: "Other City",
-          state: "NY",
-          zipCode: "67890"
-        },
-        comments: "Pending collection"
-      }
-    ]
-  },
-  // Add more sample data as needed
-]
-
-export default function PrizeDistributor() {
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filteredPeople, setFilteredPeople] = useState<Person[]>(people)
+export default function DataTable() {
+  const [winnerData, setWinnerData] = useState<WinnerDetail[]>([]);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
+    mobile: true,
     email: true,
-    phone: true,
-    isContacted: true,
-    isPaid: true,
-    prizesWon: true,
-  })
-  const [itemsPerPage, setItemsPerPage] = useState(2);
+    address: true,
+    collectionDate: true,
+    collectionLocation: true,
+    status: true,
+    comments: true,
+  });
+
+  const totalPages = Math.ceil(winnerData.length / itemsPerPage);
+  const [currentPage, setCurrentPage] = useState(1);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
+  const currentData = winnerData.slice(startIndex, endIndex);
+
+  const {
+    loading: dataLoading,
+    data: data,
+    refetch: refetchData,
+  } = useQuery<GetAllWinnerDetailsResponse>(GET_ALL_WINNERS);
+
+  // Set up the mutation
+  const [updateWinStatus] =
+    useMutation(UPDATE_WIN_STATUS);
 
   useEffect(() => {
-    const filtered = people.filter(person =>
-      person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      person.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      person.phone.includes(searchTerm)
-    )
-    setFilteredPeople(filtered)
-    setCurrentPage(1)
-  }, [searchTerm])
+    if (data) {
+      setWinnerData(data.getAllWinnerDetails);
+    }
+  }, [data]);
 
-  const totalPages = Math.ceil(filteredPeople.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const currentPeople = filteredPeople.slice(startIndex, endIndex)
+  const filteredData = useMemo(() => {
+    return winnerData.filter(
+      item =>
+        Object.values(item.subscriber).some(value =>
+          value.toLowerCase().includes(searchTerm.toLowerCase())
+        ) ||
+        item.collectionDate.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.collectionLocation
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        item.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.comments.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [winnerData, searchTerm]);
+  const handleColumnToggle = (columnKey: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({ ...prev, [columnKey]: !prev[columnKey] }));
+  };
 
-  const toggleColumn = (column: keyof typeof visibleColumns) => {
-    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }))
-  }
+  // Handler for updating the status
+  const handleStatusChange = (winnerId: string, newStatus: Status) => {
+    setWinnerData(prev => {
+      return prev.map(winner => {
+        if (winner._id === winnerId) {
+          return {
+            ...winner,
+            status: newStatus,
+          };
+        }
+        return winner;
+      });
+    });
+    updateWinStatus({ variables: { winnerId, newStatus } })
+      .then(response => {
+        if (response.data.updateStatusofWinByWinnerID.isSuccessful) {
+        } else {
+          console.error('Failed to update status.');
+        }
+      })
+      .catch(err => console.error('Error updating status:', err))
+      .finally(() => {
+        refetchData();
+      });
+  };
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-4 flex justify-between items-center">
-        <Input
-          placeholder="Search by name, email, or phone"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {Object.entries(visibleColumns).map(([key, value]) => (
-              <DropdownMenuCheckboxItem
-                key={key}
-                checked={value}
-                onCheckedChange={() => toggleColumn(key as keyof typeof visibleColumns)}
-              >
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-md border bg-white p-10">
-        <Table className='bg-white'>
-          <TableHeader>
-            <TableRow>
-              {visibleColumns.name && <TableHead>Name</TableHead>}
-              {visibleColumns.email && <TableHead>Email</TableHead>}
-              {visibleColumns.phone && <TableHead>Phone</TableHead>}
-              {visibleColumns.isContacted && <TableHead>Contacted</TableHead>}
-              {visibleColumns.isPaid && <TableHead>Paid</TableHead>}
-              {visibleColumns.prizesWon && <TableHead>Prizes Won</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {currentPeople.map((person) => (
-              <TableRow key={person.id}>
-                {visibleColumns.name && <TableCell>{person.name}</TableCell>}
-                {visibleColumns.email && <TableCell>{person.email}</TableCell>}
-                {visibleColumns.phone && <TableCell>{person.phone}</TableCell>}
-                {visibleColumns.isContacted && (
-                  <TableCell>
-                    <Checkbox checked={person.isContacted} disabled />
-                  </TableCell>
-                )}
-                {visibleColumns.isPaid && (
-                  <TableCell>
-                    <Checkbox checked={person.isPaid} disabled />
-                  </TableCell>
-                )}
-                {visibleColumns.prizesWon && (
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" onClick={() => setSelectedPerson(person)}>
-                          View Prizes ({person.prizesWon.length})
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-3xl" aria-describedby={`prize won by ${selectedPerson?.name}`}>
-                        <DialogHeader>
-                          <DialogTitle>Prizes Won by {selectedPerson?.name}</DialogTitle>
-                        </DialogHeader>
-                        <div className="grid gap-4">
-                          {selectedPerson?.prizesWon.map((prize, index) => (
-                            <div key={index} className="border p-4 rounded-lg">
-                              <p><strong>Campaign Code:</strong> {prize.campaignCode}</p>
-                              <p><strong>Collection Date:</strong> {prize.collectionDate}</p>
-                              <Card className="mt-2">
-                                <CardHeader>
-                                  <CardTitle>Collection Location</CardTitle>
-                                </CardHeader>
-                                <CardContent aria-describedby={`Colelction Locatoin ${prize.collectionLocation.city}`}>
-                                  <p>{prize.collectionLocation.address}</p>
-                                  <p>{prize.collectionLocation.city}, {prize.collectionLocation.state} {prize.collectionLocation.zipCode}</p>
-                                </CardContent>
-                              </Card>
-                              <p className="mt-2"><strong>Comments:</strong> {prize.comments}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Previous
-        </Button>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
+    <Card className="w-full max-w-[95vw] mx-auto">
+      <CardHeader>
+        <CardTitle>Winner Details</CardTitle>
+        <CardDescription>
+          A list of all winners and their collection details
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-2 sm:space-y-0 sm:space-x-2">
+          <div className="flex items-center space-x-2">
+            <Input
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+            <Search className="w-4 h-4 text-gray-500" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Columns</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {Object.entries(visibleColumns).map(([key, value]) => (
+                  <DropdownMenuCheckboxItem
+                    key={key}
+                    checked={value}
+                    onCheckedChange={() =>
+                      handleColumnToggle(key as keyof typeof visibleColumns)
+                    }
+                  >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={value => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select items per page" />
+              </SelectTrigger>
+              <SelectContent>
+                {ITEMS_PER_PAGE_OPTIONS.map(option => (
+                  <SelectItem key={option} value={option.toString()}>
+                    {option} items per page
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Select onValueChange={(value) => setItemsPerPage(parseInt(value))}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="10" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="light">10</SelectItem>
-            <SelectItem value="dark">50</SelectItem>
-            <SelectItem value="system">100</SelectItem>
-          </SelectContent>
-        </Select> 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
+
+        <ScrollArea className="w-full">
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="">S.No</TableHead>
+                  {visibleColumns.name && (
+                    <TableHead className="w-[150px]">Name</TableHead>
+                  )}
+                  {visibleColumns.mobile && (
+                    <TableHead className="min-w-[200px]">Mobile</TableHead>
+                  )}
+                  {visibleColumns.email && <TableHead>Email</TableHead>}
+
+                  {visibleColumns.address && (
+                    <TableHead className="min-w-[200px]">Address</TableHead>
+                  )}
+                  {visibleColumns.collectionDate && (
+                    <TableHead>Collection Date</TableHead>
+                  )}
+                  {visibleColumns.collectionLocation && (
+                    <TableHead>Collection Location</TableHead>
+                  )}
+                  {visibleColumns.status && <TableHead>Status</TableHead>}
+                  {visibleColumns.comments && (
+                    <TableHead className="min-w-[150px]">Comments</TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dataLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-24 text-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />
+                      Loading data...
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  currentData.map((winData, idx) => (
+                    <TableRow key={winData._id}>
+
+                      <TableCell className="">
+                        {startIndex + idx + 1}
+                      </TableCell>
+                      {visibleColumns.name && (
+                        <TableCell className="font-medium">
+                          {winData.subscriber.name}
+                        </TableCell>
+                      )}
+                      {visibleColumns.mobile && (
+                        <TableCell>
+                          +
+                          {`(${winData.subscriber.countryCode})${formatPhoneNumber(winData.subscriber.mobile)}`}
+                        </TableCell>
+                      )}
+                      {visibleColumns.email && (
+                        <TableCell>{winData.subscriber.email}</TableCell>
+                      )}
+
+                      {visibleColumns.address && (
+                        <TableCell>{winData.subscriber.address}</TableCell>
+                      )}
+                      {visibleColumns.collectionDate && (
+                        <TableCell>
+                          {new Date(winData.collectionDate).toDateString()}
+                        </TableCell>
+                      )}
+                      {visibleColumns.collectionLocation && (
+                        <TableCell>{winData.collectionLocation}</TableCell>
+                      )}
+                      {visibleColumns.status && (
+                        <TableCell>
+                          <Select
+                            value={winData.status}
+                            onValueChange={value =>
+                              handleStatusChange(winData._id, value as Status)
+                            }
+                          >
+                            <SelectTrigger
+                              className={`w-[130px] ${statusColorMap[winData.status]}`}
+                            >
+                              <SelectValue>{winData.status}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {statusOptions.map(status => (
+                                <SelectItem key={status} value={status}>
+                                  {status}
+                                </SelectItem>
+                          ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
+                      {visibleColumns.comments && (
+                        <TableCell>{winData.comments}</TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground py-4">
+            Showing {startIndex + 1} to{' '}
+            {Math.min(endIndex, filteredData.length)} of {filteredData.length}{' '}
+            entries
+          </div>
+          {!dataLoading && totalPages > 1 && (
+            <div className="flex items-center justify-end space-x-2 py-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage(prev => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
