@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { UserRole } from '../utilities/userRoles.js';
 
 const adminUserSchema = new mongoose.Schema({
   username: {
@@ -8,6 +9,12 @@ const adminUserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
+    required: true,
+  },
+  userRole: {
+    type: String,
+    enum: Object.values(UserRole),
+    default: UserRole.DISTRIBUTOR,
     required: true,
   },
 });

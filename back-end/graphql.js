@@ -1,6 +1,11 @@
 import { gql } from 'graphql-tag';
 import { adminLoginController } from './controllers/loginFunctions.js';
-import { initialDumpController } from './controllers/initialDump.js';
+import {
+  adminUserExists,
+  createAdminUser,
+  getAllAdminUsersController,
+  initialDumpController,
+} from './controllers/initialDump.js';
 import { CountryCodes } from './utilities/countryCodes.js';
 import { storeCouponSettingsController } from './controllers/couponSettings.js';
 import {
@@ -69,6 +74,18 @@ export const typeDefs = gql`
     status: String
   }
 
+  type AdminUser {
+    _id: String
+    username: String
+    userRole: String
+  }
+
+  type AllAdminUsersInfo {
+    isSuccessful: Boolean
+    adminUsers: [AdminUser]
+    message: String
+  }
+
   type Query {
     getCountryCodes: [Int]
     getCouponSettingsAlbayan: JSON
@@ -78,6 +95,8 @@ export const typeDefs = gql`
     getAllWinnerDetails: [WinnerInfo]
     getAllWinsBySubscriberID(subscriberID: String!): [WinnerInfo]
     getLocation: JSON
+    getAllAdminUsers: AllAdminUsersInfo
+    adminUserExists(username: String!): Boolean
   }
 
   type AdminLoginInfo {
@@ -124,6 +143,11 @@ export const typeDefs = gql`
     message: String
   }
 
+  type AdminUserCreatedInfo {
+    isSuccessful: Boolean
+    message: String
+  }
+
   type Mutation {
     adminLogin(username: String, password: String): AdminLoginInfo
     dumpInitialDatabase: DumpDatabaseInfo
@@ -153,11 +177,43 @@ export const typeDefs = gql`
       winnerID: String!
       newStatus: String!
     ): IsUpdatedWinnerInfo
+    createAdminUser(
+      username: String!
+      password: String!
+      userRole: String!
+    ): AdminUserCreatedInfo
   }
 `;
 
 export const resolvers = {
   Query: {
+    adminUserExists: async (_, { username }, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          return await adminUserExists(username);
+        }
+      } catch (error) {
+        console.error('Error in adminUserExists resolver:', error);
+        return false;
+      }
+    },
+    getAllAdminUsers: async (_, __, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          return await getAllAdminUsersController();
+        } else {
+          return [];
+        }
+      } catch (error) {
+        return {
+          isSuccessful: false,
+          message: 'Error getting admin users',
+          adminUsers: [],
+        };
+      }
+    },
     getCountryCodes: (_, args, context) => {
       return CountryCodes;
     },
@@ -270,6 +326,27 @@ export const resolvers = {
     },
   },
   Mutation: {
+    createAdminUser: async (_, args, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          return await createAdminUser(
+            args.username,
+            args.password,
+            args.userRole,
+            false
+          );
+        } else {
+          return {
+            isSuccessful: false,
+            message: 'Permission denied.',
+          };
+        }
+      } catch (error) {
+        console.log('Admin User Creation Failed : ', error);
+        return { isSuccessful: false, message: 'Some error occurred' };
+      }
+    },
     dumpInitialDatabase: async (_, args, context) => {
       try {
         const { decodedToken, isValid } = context;

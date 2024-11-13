@@ -24,7 +24,7 @@ export const validateToken = token => {
 export const prepareAdminToken = user => {
   return jwt.sign(
     {
-      userType: UserRole.ADMINUSER,
+      userType: user.userRole,
       adminId: user._id,
       adminUserName: user.username,
     },
