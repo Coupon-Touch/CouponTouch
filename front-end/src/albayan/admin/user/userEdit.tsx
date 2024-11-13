@@ -18,7 +18,7 @@ export default function Component() {
   const [users, setUsers] = useState<User[]>([
     { id: 1, username: 'john_doe', role: 'admin' },
     { id: 2, username: 'jane_smith', role: 'user' },
-    { id: 3, username: 'bob_johnson', role: 'moderator' },
+    { id: 3, username: 'bob_johnson', role: 'admin' },
   ])
 
   const [isEditingPassword, setIsEditingPassword] = useState(false)
@@ -68,7 +68,6 @@ export default function Component() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="moderator">Moderator</SelectItem>
                     <SelectItem value="user">User</SelectItem>
                   </SelectContent>
                 </Select>
