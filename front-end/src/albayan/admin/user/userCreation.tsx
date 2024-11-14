@@ -5,25 +5,61 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import * as yup from 'yup'
+import { CREATE_ADMIN_USER } from '@/graphQL/apiRequests'
+import { useMutation } from '@apollo/client'
+import { useToast } from '@/hooks/use-toast'
+
+export const UserRole = {
+  ADMINUSER: 'Admin User',
+  DISTRIBUTOR: 'Distributor',
+} as const;
 
 const schema = yup.object().shape({
   username: yup.string().required('Username is required').min(3, 'Username must be at least 3 characters'),
   password: yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
-  role: yup.string().required('Role is required')
+  userRole: yup.string().required('Role is required')
 })
+
 
 export default function UserCreation() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('Distributor')
+  const [userRole, setUserRole] = useState<keyof typeof UserRole>('DISTRIBUTOR')
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [createAdminUser] = useMutation(CREATE_ADMIN_USER)
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setErrors({}) // Clear previous errors
-    schema.validate({ username, password, role }, { abortEarly: false })
+    schema.validate({ username, password, userRole }, { abortEarly: false })
       .then((validatedData) => {
-        console.log('Form submitted:', validatedData)
+
+        createAdminUser({ variables: validatedData })
+          .then(response => {
+            const data = response.data.createAdminUser
+            if (data.isSuccessful) {
+              toast({
+                title: data.message,
+                variant: 'success',
+                duration: 5000
+              })
+              setUsername('')
+              setPassword('')
+              setUserRole('DISTRIBUTOR')
+            } else {
+              toast({
+                title: data.message,
+                variant: 'destructive',
+                duration: 5000
+              })
+            }
+
+          })
+          .catch(error => {
+            console.error('Error creating user:', error)
+            // Optionally, handle error (e.g., show error message)
+          })
       })
       .catch((err) => {
         const fieldErrors: { [key: string]: string } = {}
@@ -69,13 +105,15 @@ export default function UserCreation() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={setRole} required>
+            <Select value={userRole} onValueChange={(value) => setUserRole(value as typeof userRole)} required>
               <SelectTrigger id="role">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="AdminUser">Admin User</SelectItem>
-                <SelectItem value="Distributor">Distributor</SelectItem>
+                {Object.keys(UserRole).map((role) => {
+                  return <SelectItem key={role} value={role}>{UserRole[role as keyof typeof UserRole]}</SelectItem>
+                })}
+
               </SelectContent>
             </Select>
             {errors.role && <p className="text-red-500">{errors.role}</p>}

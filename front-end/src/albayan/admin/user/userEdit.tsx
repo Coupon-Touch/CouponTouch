@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -7,39 +7,135 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label"
 import { Trash2, Key } from 'lucide-react'
 import { AlertDialog, AlertDialogTrigger, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { GET_ALL_ADMIN_USERS, UPDATE_ADMIN_USER, DELETE_ADMIN_USER } from "@/graphQL/apiRequests"
+import { useMutation, useQuery } from '@apollo/client'
+import { UserRole } from './userCreation'
+import { useToast } from '@/hooks/use-toast'
 
 type User = {
-  id: number
+  _id: string
   username: string
-  role: string
+  userRole: string
+}
+type GET_ALL_ADMIN_USERS_INTERFACE = {
+  getAllAdminUsers: {
+    adminUsers?: User[]
+  }
 }
 
+
 export default function Component() {
-  const [users, setUsers] = useState<User[]>([
-    { id: 1, username: 'john_doe', role: 'admin' },
-    { id: 2, username: 'jane_smith', role: 'user' },
-    { id: 3, username: 'bob_johnson', role: 'admin' },
-  ])
+  const { data, loading, error, refetch } = useQuery<GET_ALL_ADMIN_USERS_INTERFACE>(GET_ALL_ADMIN_USERS)
+
+  const [updateUser, { loading: updateUserLoading }] = useMutation<{ updateAdminUser: { isSuccessful: boolean; message: string } }>(UPDATE_ADMIN_USER)
+  const [deleteUserMutation] = useMutation<{ deleteAdminUser: { isSuccessful: boolean; message: string } }>(DELETE_ADMIN_USER)
+
+
+  const [users, setUsers] = useState<User[]>([])
+
+  useEffect(() => {
+    if (data && data.getAllAdminUsers.adminUsers) {
+      setUsers(data.getAllAdminUsers.adminUsers.map((user: User) => {
+        return {
+          _id: user._id,
+          username: user.username,
+          userRole: user.userRole.replaceAll(" ", "").toUpperCase()
+        }
+      }))
+    }
+  }, [data])
 
   const [isEditingPassword, setIsEditingPassword] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<User | null>(null)
   const [deleteConfirmUsername, setDeleteConfirmUsername] = useState('')
+  const { toast } = useToast()
 
-  const deleteUser = (id: number) => {
-    setUsers(users.filter(user => user.id !== id))
+  const handleUpdateUser = (_id: string, userRole?: string, password?: string) => {
+    return new Promise<boolean>((resolve, reject) => {
+
+      const params: { id: string; password?: string; userRole?: string } = {
+        id: _id,
+      }
+      if (password) {
+        params.password = password
+      }
+      if (userRole) {
+        params.userRole = userRole
+      }
+      updateUser({
+        variables: params
+      }).then((response) => {
+        if (response.data?.updateAdminUser.isSuccessful) {
+          toast({
+            title: response.data?.updateAdminUser.message,
+            variant: 'success',
+            duration: 5000
+          })
+          resolve(true)
+
+        } else {
+          toast({
+            title: response.data?.updateAdminUser.message,
+            variant: 'destructive',
+            duration: 5000
+          })
+          resolve(false)
+        }
+      }).catch(() => {
+        toast({
+          title: "Something went wrong",
+          variant: 'destructive',
+          duration: 5000
+        })
+        resolve(false)
+      })
+    })
+
+  }
+
+
+  const deleteUser = (id: string) => {
+    deleteUserMutation({ variables: { id: id } }).then((response) => {
+      if (response.data?.deleteAdminUser.isSuccessful) {
+        toast({
+          title: response.data?.deleteAdminUser.message,
+          variant: 'success',
+          duration: 5000
+        })
+        setUsers(users.filter(user => user._id !== id))
+      } else {
+        toast({
+          title: response.data?.deleteAdminUser.message,
+          variant: 'destructive',
+          duration: 5000
+        })
+      }
+    }).catch(() => {
+      toast({
+        title: "Something went wrong",
+        variant: 'destructive',
+        duration: 5000
+      })
+    })
     setDeleteConfirmUser(null)
     setDeleteConfirmUsername('')
   }
 
-  const changeRole = (id: number, newRole: string) => {
-    setUsers(users.map(user => user.id === id ? { ...user, role: newRole } : user))
+  const changeRole = async (id: string, newRole: string) => {
+    const user = users.find(user => user._id === id) as User
+    if (user.userRole === newRole) return
+    if (await handleUpdateUser(id, newRole)) {
+
+      setUsers(users.map(user => user._id === id ? { ...user, userRole: newRole } : user))
+    }
   }
 
-  const changePassword = () => {
+  const changePassword = async () => {
     // In a real application, you would send this to your backend
-    console.log(`Changing password for user ${editingUser?.username} to ${newPassword}`)
+
+    await handleUpdateUser(editingUser!._id, undefined, newPassword)
     setEditingUser(null)
     setNewPassword('')
     setIsEditingPassword(false)
@@ -59,16 +155,18 @@ export default function Component() {
         </TableHeader>
         <TableBody>
           {users.map(user => (
-            <TableRow key={user.id}>
+            <TableRow key={user._id}>
               <TableCell>{user.username}</TableCell>
               <TableCell>
-                <Select defaultValue={user.role} onValueChange={(value) => changeRole(user.id, value)}>
+                <Select value={user.userRole} onValueChange={(value) => changeRole(user._id, value)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="user">User</SelectItem>
+                    {Object.keys(UserRole).map((role) => {
+                      return <SelectItem key={role} value={role}>{UserRole[role as keyof typeof UserRole]}</SelectItem>
+                    })}
+
                   </SelectContent>
                 </Select>
               </TableCell>
@@ -104,7 +202,7 @@ export default function Component() {
                       <DialogFooter>
                         <Button onClick={() => {
                           changePassword()
-                        }}>Change Password</Button>
+                        }} disabled={updateUserLoading}>Change Password</Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -144,7 +242,7 @@ export default function Component() {
                           Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => deleteUser(deleteConfirmUser!.id)}
+                          onClick={() => deleteUser(deleteConfirmUser!._id)}
                           disabled={deleteConfirmUsername !== deleteConfirmUser?.username}
                         >
                           Delete User

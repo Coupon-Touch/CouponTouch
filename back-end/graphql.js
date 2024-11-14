@@ -3,8 +3,10 @@ import { adminLoginController } from './controllers/loginFunctions.js';
 import {
   adminUserExists,
   createAdminUser,
+  deleteAdminUser,
   getAllAdminUsersController,
   initialDumpController,
+  updateAdminUser,
 } from './controllers/initialDump.js';
 import { CountryCodes } from './utilities/countryCodes.js';
 import { storeCouponSettingsController } from './controllers/couponSettings.js';
@@ -182,6 +184,12 @@ export const typeDefs = gql`
       password: String!
       userRole: String!
     ): AdminUserCreatedInfo
+    updateAdminUser(
+      _id: String!
+      password: String
+      userRole: String
+    ): AdminUserCreatedInfo
+    deleteAdminUser(id: String!): AdminUserCreatedInfo
   }
 `;
 
@@ -336,8 +344,7 @@ export const resolvers = {
           return await createAdminUser(
             args.username,
             args.password,
-            args.userRole,
-            false
+            args.userRole
           );
         } else {
           return {
@@ -347,6 +354,51 @@ export const resolvers = {
         }
       } catch (error) {
         console.log('Admin User Creation Failed : ', error);
+        return { isSuccessful: false, message: 'Some error occurred' };
+      }
+    },
+    updateAdminUser: async (_, { _id, password, userRole }, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          if (_id === decodedToken.adminId && userRole) {
+            return {
+              isSuccessful: false,
+              message: 'Cannot Change your permission.',
+            };
+          }
+          if (!password && !userRole) {
+            return { isSuccessful: false, message: 'No fields to update' };
+          }
+          return await updateAdminUser(_id, password, userRole);
+        } else {
+          return {
+            isSuccessful: false,
+            message: 'Permission denied.',
+          };
+        }
+      } catch (error) {
+        return { isSuccessful: false, message: 'Some error occurred' };
+      }
+    },
+    deleteAdminUser: async (_, args, context) => {
+      try {
+        const { decodedToken, isValid } = context;
+        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+          if (args.id === decodedToken.adminId) {
+            return {
+              isSuccessful: false,
+              message: 'Cannot delete your own account.',
+            };
+          }
+          return await deleteAdminUser(args.id);
+        } else {
+          return {
+            isSuccessful: false,
+            message: 'Permission denied.',
+          };
+        }
+      } catch (error) {
         return { isSuccessful: false, message: 'Some error occurred' };
       }
     },

@@ -131,3 +131,37 @@ export const UPDATE_WIN_STATUS = gql`mutation UpdateStatusofWinByWinnerID($winne
     isSuccessful
   }
 }`
+
+
+export const CREATE_ADMIN_USER = gql`mutation CreateAdminUser($username: String!, $password: String!, $userRole: String!) {
+  createAdminUser(username: $username, password: $password, userRole: $userRole) {
+    message
+    isSuccessful
+  }
+}`
+
+export const GET_ALL_ADMIN_USERS = gql`query GetAllAdminUsers {
+  getAllAdminUsers {
+    isSuccessful
+    message
+    adminUsers {
+      userRole
+      username
+      _id
+    }
+  }
+}`
+
+export const UPDATE_ADMIN_USER = gql`mutation UpdateAdminUser($id: String!, $password: String, $userRole: String) {
+  updateAdminUser(_id: $id, password: $password, userRole: $userRole) {
+    isSuccessful
+    message
+  }
+}`
+
+export const DELETE_ADMIN_USER = gql`mutation DeleteAdminUser($id: String!) {
+  deleteAdminUser(id: $id) {
+    isSuccessful
+    message
+  }
+}`

@@ -4,42 +4,62 @@ import bcrypt from 'bcryptjs';
 import { AdminUser } from '../models/adminUser.js';
 import { UserRole } from '../utilities/userRoles.js';
 
-export const createAdminUser = async (
-  username,
-  password,
-  role,
-  update = false
-) => {
+export const createAdminUser = async (username, password, role) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     if (UserRole[role] === undefined) {
       return { isSuccessful: false, message: 'Invalid role' };
     }
-
-    let adminUser = await AdminUser.findOne({ username: username });
-    if (adminUser) {
-      if (update === false) {
-        return { isSuccessful: false, message: 'Admin user already exists' };
-      }
-      adminUser.password = hashedPassword;
-      adminUser.userRole = UserRole[role];
-      await adminUser.save();
-      return { isSuccessful: true, message: 'Admin user updated successfully' };
-    } else {
-      const newAdmin = new AdminUser({
-        username: username,
-        password: hashedPassword,
-        userRole: UserRole[role],
-      });
-      await newAdmin.save();
-      return { isSuccessful: true, message: 'Admin user created successfully' };
-    }
+    const newAdmin = new AdminUser({
+      username: username,
+      password: hashedPassword,
+      userRole: UserRole[role],
+    });
+    await newAdmin.save();
+    return { isSuccessful: true, message: 'Admin user created successfully' };
   } catch (error) {
-    console.error('Error creating/updating admin user:', error);
-    return {
-      isSuccessful: false,
-      message: 'Admin user creation/update failed',
-    };
+    return { isSuccessful: false, message: 'Admin user already exists' };
+  }
+};
+export const updateAdminUser = async (id, password, role) => {
+  try {
+    let hashedPassword;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+    if (role && UserRole[role] === undefined) {
+      return { isSuccessful: false, message: 'Invalid role' };
+    }
+    const updatedAdmin = await AdminUser.findOne({
+      _id: id,
+    });
+    if (!updatedAdmin) {
+      return { isSuccessful: false, message: 'Admin user not found' };
+    }
+    if (role) {
+      updatedAdmin.userRole = UserRole[role];
+    }
+    if (hashedPassword) {
+      updatedAdmin.password = hashedPassword;
+    }
+    await updatedAdmin.save();
+    return { isSuccessful: true, message: 'User details updated successfully' };
+  } catch (error) {
+    return { isSuccessful: false, message: "Can't Update User" };
+  }
+};
+
+export const deleteAdminUser = async id => {
+  try {
+    const deletedAdmin = await AdminUser.findOneAndDelete({
+      _id: id,
+    });
+    if (!deletedAdmin) {
+      return { isSuccessful: false, message: 'Admin user not found' };
+    }
+    return { isSuccessful: true, message: 'Admin user deleted successfully' };
+  } catch (error) {
+    return { isSuccessful: false, message: 'Error Deleting Admin User' };
   }
 };
 
