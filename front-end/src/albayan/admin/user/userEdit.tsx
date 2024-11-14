@@ -25,7 +25,7 @@ type GET_ALL_ADMIN_USERS_INTERFACE = {
 
 
 export default function Component() {
-  const { data, loading, error, refetch } = useQuery<GET_ALL_ADMIN_USERS_INTERFACE>(GET_ALL_ADMIN_USERS)
+  const { data } = useQuery<GET_ALL_ADMIN_USERS_INTERFACE>(GET_ALL_ADMIN_USERS)
 
   const [updateUser, { loading: updateUserLoading }] = useMutation<{ updateAdminUser: { isSuccessful: boolean; message: string } }>(UPDATE_ADMIN_USER)
   const [deleteUserMutation] = useMutation<{ deleteAdminUser: { isSuccessful: boolean; message: string } }>(DELETE_ADMIN_USER)
@@ -53,7 +53,7 @@ export default function Component() {
   const { toast } = useToast()
 
   const handleUpdateUser = (_id: string, userRole?: string, password?: string) => {
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>((resolve) => {
 
       const params: { id: string; password?: string; userRole?: string } = {
         id: _id,
