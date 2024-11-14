@@ -85,7 +85,7 @@ export interface WinnerDetail {
   _id: string;
   campaignCode: string;
   collectionDate: string;
-  collectionLocation: CollectionLocationInterface;
+  collectionLocation: CollectionLocationInterface | string;
   status: Status;
   comments: string;
   subscriber: Subscriber;
@@ -339,16 +339,16 @@ export default function DataTable() {
                           {new Date(winData.collectionDate).toDateString()}
                         </TableCell>
                       )}
-                      {visibleColumns.collectionLocation && (
-                            <TableCell onClick={() => setCurrentSelectedLocation(winData.collectionLocation)} className='cursor-pointer  hover:bg-white rounded-md transition-all'>
+                          <TableCell onClick={() => { typeof winData.collectionLocation !== 'string' && setCurrentSelectedLocation(winData.collectionLocation) }} className='cursor-pointer hover:bg-white rounded-md transition-all'>
+                            {typeof winData.collectionLocation !== 'string' && visibleColumns.collectionLocation ? (
                               <div className="space-y-1">
                                 <div className="font-semibold">{winData.collectionLocation.companyName}</div>
                                 <div className="text-sm text-muted-foreground">{winData.collectionLocation.address}</div>
                                 <div className="text-sm text-muted-foreground">{winData.collectionLocation.city}, {winData.collectionLocation.state}, {winData.collectionLocation.country}</div>
                                 <div className="text-sm text-muted-foreground">{formatPhoneNumber(winData.collectionLocation.phone)}</div>
                               </div>
-                            </TableCell>
-                      )}
+                            ) : <>{winData.collectionLocation}</>}
+                          </TableCell>
                       {visibleColumns.status && (
                         <TableCell>
                           <Select
