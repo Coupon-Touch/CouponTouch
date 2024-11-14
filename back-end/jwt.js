@@ -29,7 +29,7 @@ export const prepareAdminToken = user => {
       adminUserName: user.username,
     },
     process.env.JWT_SECRET,
-    { expiresIn: '1d' }
+    { expiresIn: '1y' }
   );
 };
 
@@ -61,6 +61,6 @@ export const prepareSubscriberToken = (subscriberDetails, winnerDetails) => {
       collectionDataCollected: collectionDataCollected,
     },
     process.env.JWT_SECRET,
-    { expiresIn: '1d' }
+    { expiresIn: '1h' }
   );
 };
