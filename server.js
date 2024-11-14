@@ -31,7 +31,39 @@ const __dirname = dirname(__filename);
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
-app.use(express.static(join(__dirname, './front-end/dist')));
+
+// Middleware to log static files being served
+
+
+const sendHTML =  (req, res) => {
+  res.set(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  console.log("no caching for ", req.url)
+  res.sendFile(join(__dirname, './front-end/dist/index.html'));
+
+}
+
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api/')) {
+    return next();
+  }
+  const filePath = join(__dirname, './front-end/dist', req.url);
+  res.set('Cache-Control', 'public, max-age=31536000, immutable');
+  if (req.url === '/' || !filePath.includes('..')) {
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        sendHTML(req, res);
+      }
+    });
+  } else {
+    sendHTML(req, res);
+  }
+});
 
 const authMiddleware = (req, res, next) => {
   const authorizationHeader = req.headers.authorization;
@@ -67,7 +99,7 @@ async function startServer() {
 
     if (dbConnected) {
       REST({ app });
-      PaymentAPI({app})
+      PaymentAPI({ app });
       app.use(
         '/api',
         expressMiddleware(server, {
@@ -80,7 +112,6 @@ async function startServer() {
           },
         })
       );
-      serveReact({ app });
     } else {
       app.get('*', (req, res) => {
         res.send('Could Not Connect to database');
@@ -96,11 +127,7 @@ async function startServer() {
   });
 }
 
-const serveReact = ({ app }) => {
-  app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, './front-end/dist/index.html'));
-  });
-};
+
 
 const REST = ({ app }) => {
   app.use('/api/uploadCSV', upload.single('file'), async (req, res) => {
