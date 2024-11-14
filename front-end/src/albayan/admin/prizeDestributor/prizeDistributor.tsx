@@ -35,6 +35,18 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+
+
 function formatPhoneNumber(input: string, separator = '-') {
   const groups = [];
   const number = input.split('');
@@ -55,14 +67,31 @@ export interface GetAllWinnerDetailsResponse {
   getAllWinnerDetails: WinnerDetail[];
 }
 
+export interface CollectionLocationInterface {
+  id: number;
+  companyName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  latitude: string;
+  longitude: string;
+  openingHours: string;
+  website: string;
+}
+
 export interface WinnerDetail {
   _id: string;
   campaignCode: string;
   collectionDate: string;
-  collectionLocation: string;
+  collectionLocation: CollectionLocationInterface;
   status: Status;
   comments: string;
   subscriber: Subscriber;
+  collectionLocationSearch: string;
 }
 
 export interface Subscriber {
@@ -87,6 +116,7 @@ export default function DataTable() {
   const [winnerData, setWinnerData] = useState<WinnerDetail[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [currentSelectedLocation, setCurrentSelectedLocation] = useState<CollectionLocationInterface | null>(null);
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
     mobile: true,
@@ -117,22 +147,41 @@ export default function DataTable() {
 
   useEffect(() => {
     if (data) {
-      setWinnerData(data.getAllWinnerDetails);
+      setWinnerData(data.getAllWinnerDetails.map((item) => {
+        return {
+          ...item,
+          collectionLocationSearch: String(item.collectionLocation),
+          collectionLocation: item.collectionLocation ? JSON.parse(String(item.collectionLocation)) : 'Not Provided',
+          collectionDate: new Date(item.collectionDate).toDateString()
+        }
+      }));
     }
   }, [data]);
 
   const filteredData = useMemo(() => {
-    return winnerData.filter(
-      item =>
-        Object.values(item.subscriber).some(value =>
-          value.toLowerCase().includes(searchTerm.toLowerCase())
-        ) ||
-        item.collectionDate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.collectionLocation
+    return currentData.filter(
+      item => {
+
+        const subsriberSearchResult = Object.values(item.subscriber).some(value => {
+          if (typeof value === 'string') {
+            return value.toLowerCase().includes(searchTerm.toLowerCase())
+          } else if (typeof value === 'number') {
+            return value.toString().includes(searchTerm)
+          }
+          return false
+        }
+        )
+        const dateSearchResult = new Date(item.collectionDate).toDateString().toLowerCase().includes(searchTerm.toLowerCase())
+        const locationSearchResult = item.collectionLocationSearch
           .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        item.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.comments.toLowerCase().includes(searchTerm.toLowerCase())
+          .includes(searchTerm.toLowerCase())
+        const statusSearchResult = item.status.toLowerCase().includes(searchTerm.toLowerCase())
+        const commentSearchResult = item.comments.toLowerCase().includes(searchTerm.toLowerCase())
+
+
+        return subsriberSearchResult || dateSearchResult || locationSearchResult || statusSearchResult || commentSearchResult
+      }
+
     );
   }, [winnerData, searchTerm]);
   const handleColumnToggle = (columnKey: keyof typeof visibleColumns) => {
@@ -166,6 +215,7 @@ export default function DataTable() {
   };
 
   return (
+    <>
     <Card className="w-full max-w-[95vw] mx-auto">
       <CardHeader>
         <CardTitle>Winner Details</CardTitle>
@@ -262,7 +312,7 @@ export default function DataTable() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  currentData.map((winData, idx) => (
+                      filteredData.map((winData, idx) => (
                     <TableRow key={winData._id}>
 
                       <TableCell className="">
@@ -292,7 +342,14 @@ export default function DataTable() {
                         </TableCell>
                       )}
                       {visibleColumns.collectionLocation && (
-                        <TableCell>{winData.collectionLocation}</TableCell>
+                            <TableCell onClick={() => setCurrentSelectedLocation(winData.collectionLocation)} className='cursor-pointer  hover:bg-white rounded-md transition-all'>
+                              <div className="space-y-1">
+                                <div className="font-semibold">{winData.collectionLocation.companyName}</div>
+                                <div className="text-sm text-muted-foreground">{winData.collectionLocation.address}</div>
+                                <div className="text-sm text-muted-foreground">{winData.collectionLocation.city}, {winData.collectionLocation.state}, {winData.collectionLocation.country}</div>
+                                <div className="text-sm text-muted-foreground">{formatPhoneNumber(winData.collectionLocation.phone)}</div>
+                              </div>
+                            </TableCell>
                       )}
                       {visibleColumns.status && (
                         <TableCell>
@@ -365,5 +422,64 @@ export default function DataTable() {
         </div>
       </CardContent>
     </Card>
+
+      <Dialog open={currentSelectedLocation !== null} onOpenChange={(value) => !value && setCurrentSelectedLocation(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Collection Location Details</DialogTitle>
+            <DialogDescription>
+              Detailed information about the collection location.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh]">
+            {currentSelectedLocation && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Company Name</Label>
+                  <p>{currentSelectedLocation.companyName}</p>
+                </div>
+                <div>
+                  <Label>Contact Name</Label>
+                  <p>{currentSelectedLocation.contactName}</p>
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <p>{currentSelectedLocation.email}</p>
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <p>{formatPhoneNumber(currentSelectedLocation.phone)}</p>
+                </div>
+                <div>
+                  <Label>Address</Label>
+                  <p>{currentSelectedLocation.address}</p>
+                </div>
+                <div>
+                  <Label>City</Label>
+                  <p>{currentSelectedLocation.city}</p>
+                </div>
+                <div>
+                  <Label>State</Label>
+                  <p>{currentSelectedLocation.state}</p>
+                </div>
+                <div>
+                  <Label>Country</Label>
+                  <p>{currentSelectedLocation.country}</p>
+                </div>
+                <div>
+                  <Label>Opening Hours</Label>
+                  <p>{currentSelectedLocation.openingHours}</p>
+                </div>
+                <div>
+                  <Label>Website</Label>
+                  <p>{currentSelectedLocation.website}</p>
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </>
+
   );
 }

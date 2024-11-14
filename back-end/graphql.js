@@ -273,7 +273,10 @@ export const resolvers = {
     getAllWinnerDetails: async (_, __, context) => {
       try {
         const { decodedToken, isValid } = context;
-        if (isValid && decodedToken.userType === UserRole.ADMINUSER) {
+        if (
+          (isValid && decodedToken.userType === UserRole.ADMINUSER) ||
+          decodedToken.userType === UserRole.DISTRIBUTOR
+        ) {
           return await getAllWinnersController();
         } else {
           return [];

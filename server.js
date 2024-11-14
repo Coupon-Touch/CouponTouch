@@ -1,6 +1,6 @@
 import express from 'express';
+import compression from 'compression';
 import { ApolloServer } from '@apollo/server';
-import bodyParser from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
 import cors from 'cors';
 import { join } from 'path';
@@ -12,6 +12,8 @@ import { uploadRouter } from './uploadThing.js';
 import { csvUploadController } from './back-end/controllers/csvFunctions.js';
 import { updateSubscriber } from './back-end/controllers/subscriberFunctions.js';
 import multer from 'multer';
+import PaymentAPI from './payment.js';
+import { existsSync } from 'fs';
 dotenv.config();
 
 // Database Connection
@@ -22,20 +24,26 @@ import { typeDefs, resolvers } from './back-end/graphql.js';
 
 // JWT Validators
 import { validateToken } from './back-end/jwt.js';
-import PaymentAPI from './payment.js';
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-app.use(bodyParser.json());
-app.use(cors());
 
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api')) {
+    compression()(req, res, next);
+  } else {
+    next();
+  }
+});
+
+app.use(express.json());
+app.use(cors());
 // Middleware to log static files being served
 
-
-const sendHTML =  (req, res) => {
+const sendHTML = (req, res) => {
   res.set(
     'Cache-Control',
     'no-store, no-cache, must-revalidate, proxy-revalidate'
@@ -43,19 +51,46 @@ const sendHTML =  (req, res) => {
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
   res.set('Surrogate-Control', 'no-store');
-  console.log("no caching for ", req.url)
+  console.log('no caching for ', req.url);
   res.sendFile(join(__dirname, './front-end/dist/index.html'));
-
+};
+function getMimeType(filePath) {
+  const ext = filePath.split('.').pop();
+  const mimeTypes = {
+    js: 'application/javascript',
+    css: 'text/css',
+    html: 'text/html',
+    json: 'application/json',
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    svg: 'image/svg+xml',
+    // Add more types as needed
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
 }
 
 app.use((req, res, next) => {
-  if (req.url.startsWith('/api/')) {
+  if (req.url.startsWith('/api')) {
     return next();
   }
+
   const filePath = join(__dirname, './front-end/dist', req.url);
+  const gzFilePath = `${filePath}.gz`;
+
+  // Set cache headers
   res.set('Cache-Control', 'public, max-age=31536000, immutable');
-  if (req.url === '/' || !filePath.includes('..')) {
-    res.sendFile(filePath, (err) => {
+
+  // Check if the gzipped file exists
+  if (existsSync(gzFilePath) && !req.url.includes('..') && req.url !== '/') {
+    res.set('Content-Encoding', 'gzip');
+    res.set('Content-Type', getMimeType(filePath)); // Optionally, set the correct Content-Type
+    res.sendFile(gzFilePath);
+  } else if (
+    existsSync(filePath) &&
+    !req.url.includes('..') &&
+    req.url !== '/'
+  ) {
+    res.sendFile(filePath, err => {
       if (err) {
         sendHTML(req, res);
       }

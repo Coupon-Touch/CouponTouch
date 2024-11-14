@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
-import Inspect from 'vite-plugin-inspect';
+import { compression } from 'vite-plugin-compression2';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), Inspect()],
+  plugins: [react(), compression()],
   build: {
     outDir: './dist', // Output to the /front-end/dist directory
   },
