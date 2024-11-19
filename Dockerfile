@@ -36,7 +36,7 @@ ENV NODE_ENV=production
 ENV omit=dev
 ENV PORT=8888
 # Expose port
-EXPOSE 8888
+EXPOSE 8080
 
 # Start the server
 CMD ["node", "server.js"]
