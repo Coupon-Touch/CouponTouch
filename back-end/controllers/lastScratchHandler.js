@@ -31,7 +31,7 @@ export const updateLastScratchTimeController = async decodedToken => {
       message: 'Last scratch time successfully updated',
     };
   } catch (error) {
-    console.log('Error in updateLastScratchTimeController:', error);
+    console.error('Error in updateLastScratchTimeController:', error);
 
     return {
       isSuccessful: false,

@@ -234,7 +234,7 @@ export const resolvers = {
           return {};
         }
       } catch (error) {
-        console.log('Error Fetching coupon settings : ', error);
+        console.error('Error Fetching coupon settings : ', error);
         return {};
       }
     },
@@ -247,7 +247,7 @@ export const resolvers = {
           return {};
         }
       } catch (error) {
-        console.log('Error Fetching coupon settings : ', error);
+        console.error('Error Fetching coupon settings : ', error);
         return {};
       }
     },
@@ -262,7 +262,7 @@ export const resolvers = {
           );
         }
       } catch (error) {
-        console.log('Error Fetching Subscriber Details : ', error);
+        console.error('Error Fetching Subscriber Details : ', error);
         return {};
       }
     },
@@ -274,7 +274,7 @@ export const resolvers = {
         );
         return response;
       } catch (error) {
-        console.log('Error Fetching Subscriber Details : ', error);
+        console.error('Error Fetching Subscriber Details : ', error);
         return {};
       }
     },
@@ -290,7 +290,7 @@ export const resolvers = {
           return [];
         }
       } catch (error) {
-        console.log('Error Fetching Winner Details : ', error);
+        console.error('Error Fetching Winner Details : ', error);
         return [];
       }
     },
@@ -304,7 +304,7 @@ export const resolvers = {
           return [];
         }
       } catch (error) {
-        console.log('Error Fetching Winner Details : ', error);
+        console.error('Error Fetching Winner Details : ', error);
         return [];
       }
     },
@@ -353,7 +353,7 @@ export const resolvers = {
           };
         }
       } catch (error) {
-        console.log('Admin User Creation Failed : ', error);
+        console.error('Admin User Creation Failed : ', error);
         return { isSuccessful: false, message: 'Some error occurred' };
       }
     },
@@ -411,7 +411,7 @@ export const resolvers = {
           return { isSuccessful: false, message: 'Permission denied.' };
         }
       } catch (error) {
-        console.log('Initial dump failed : ', error);
+        console.error('Initial dump failed : ', error);
         return { isSuccessful: false, message: 'Some error occurred' };
       }
     },
@@ -419,7 +419,7 @@ export const resolvers = {
       try {
         return await adminLoginController(args, context);
       } catch (error) {
-        console.log('Admin Login Failed : ', error);
+        console.error('Admin Login Failed : ', error);
         return {
           isSuccessful: false,
           message: 'Some error occurred',
@@ -454,7 +454,7 @@ export const resolvers = {
           };
         }
       } catch (error) {
-        console.log('Store Coupon Settings Failed : ', error);
+        console.error('Store Coupon Settings Failed : ', error);
         return {
           isSuccessful: false,
           message: 'Some error occurred',

@@ -15,7 +15,8 @@ export const uploadRouter = {
   })
     // .middleware(({ req }) => auth(req))
     .onUploadComplete(data =>
-      console.log('Scratch Card Background uploaded', data)
+    {
+    }
     ),
 
   // Prize Image upload route - allows PNG, JPEG, WEBP with max file size of 1MB

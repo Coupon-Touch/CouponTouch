@@ -69,7 +69,6 @@ export default function UserCreation() {
           }
         })
         setErrors(fieldErrors)
-        console.log('Validation errors:', fieldErrors)
       })
   }
 
