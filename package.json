@@ -4,6 +4,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "node --env-file=.env server.js",
     "start": "nodemon --env-file=.env server.js",
     "dev": "nodemon --env-file=.env server.js",
     "build": "NODE_ENV=production cd front-end && npm i && npm run build",
