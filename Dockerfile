@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy only package.json files for caching
 COPY ./front-end/package.json ./front-end/package-lock.json ./front-end/
-COPY ./package.json ./package-lock.json ./
+
 
 # Install dependencies for React
 RUN cd ./front-end && npm install
