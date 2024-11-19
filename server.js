@@ -31,6 +31,11 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
+const PORT = process.env.PORT || 8888;
+app.listen(PORT, () => {
+  console.log('Server Up and Running on Port:', PORT);
+});
+
 app.use((req, res, next) => {
   if (req.url.startsWith('/api')) {
     compression()(req, res, next);
@@ -38,7 +43,6 @@ app.use((req, res, next) => {
     next();
   }
 });
-
 app.use(express.json());
 app.use(cors());
 // Middleware to log static files being served
@@ -51,7 +55,6 @@ const sendHTML = (req, res) => {
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
   res.set('Surrogate-Control', 'no-store');
-  console.log('no caching for ', req.url);
   res.sendFile(join(__dirname, './front-end/dist/index.html'));
 };
 function getMimeType(filePath) {
@@ -70,7 +73,10 @@ function getMimeType(filePath) {
 }
 
 app.use((req, res, next) => {
-  if (req.url.startsWith('/api')) {
+  if (
+    req.url.toLowerCase().startsWith('/api') ||
+    req.url.toLowerCase().startsWith('/status')
+  ) {
     return next();
   }
 
@@ -121,6 +127,16 @@ const authMiddleware = (req, res, next) => {
 app.use(authMiddleware);
 
 async function startServer() {
+  let hasError = undefined;
+  app.get('/status', (req, res) => {
+    if (hasError === undefined) {
+      res.status(503).send();
+    } else if (hasError === true) {
+      res.status(500).send();
+    } else {
+      res.status(200).send();
+    }
+  });
   try {
     const dbConnected = await connectToDatabase();
     const server = new ApolloServer({
@@ -132,6 +148,7 @@ async function startServer() {
 
     await server.start();
 
+    hasError = false;
     if (dbConnected) {
       REST({ app });
       PaymentAPI({ app });
@@ -148,21 +165,14 @@ async function startServer() {
         })
       );
     } else {
-      app.get('*', (req, res) => {
-        res.send('Could Not Connect to database');
-      });
       console.error('Database connection failed.');
+      hasError = true;
     }
   } catch (error) {
+    hasError = true;
     console.error('Error starting the server:', error);
   }
-  const PORT = process.env.PORT || 8888;
-  app.listen(PORT, () => {
-    console.log('Server Up and Running on Port:', PORT);
-  });
 }
-
-
 
 const REST = ({ app }) => {
   app.use('/api/uploadCSV', upload.single('file'), async (req, res) => {
@@ -215,6 +225,5 @@ const REST = ({ app }) => {
     res.send({ Status: 'Success' });
   });
 };
-
 
 startServer();
