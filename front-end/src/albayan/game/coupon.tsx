@@ -48,8 +48,12 @@ export default function Coupon() {
         variables: { phoneNumber: `${phone}`, countryCode: `${countryCode}` },
         onCompleted: data => {
           data = data.getSubscriberDetails;
-          setData(data);
-          localStorage.setItem('token', data.jwtToken);
+          if (data && data.jwtToken) {
+            setData(data);
+            localStorage.setItem('token', data.jwtToken);
+          } else {
+            setData(null)
+          }
           resolve(data);
         },
         onError: () => {

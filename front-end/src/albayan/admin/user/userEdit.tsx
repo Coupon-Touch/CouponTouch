@@ -34,7 +34,7 @@ export default function Component() {
   const [users, setUsers] = useState<User[]>([])
 
   useEffect(() => {
-    if (data && data.getAllAdminUsers.adminUsers) {
+    if (data && data.getAllAdminUsers && data.getAllAdminUsers.adminUsers) {
       setUsers(data.getAllAdminUsers.adminUsers.map((user: User) => {
         return {
           _id: user._id,
@@ -98,7 +98,7 @@ export default function Component() {
 
   const deleteUser = (id: string) => {
     deleteUserMutation({ variables: { id: id } }).then((response) => {
-      if (response.data?.deleteAdminUser.isSuccessful) {
+      if (response.data?.deleteAdminUser && response.data?.deleteAdminUser.isSuccessful) {
         toast({
           title: response.data?.deleteAdminUser.message,
           variant: 'success',

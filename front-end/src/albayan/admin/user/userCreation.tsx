@@ -37,8 +37,8 @@ export default function UserCreation() {
 
         createAdminUser({ variables: validatedData })
           .then(response => {
-            const data = response.data.createAdminUser
-            if (data.isSuccessful) {
+            const data = response.data?.createAdminUser
+            if (data?.isSuccessful) {
               toast({
                 title: data.message,
                 variant: 'success',

@@ -24,8 +24,7 @@ import {
   STORE_COUPONSETTINGS,
   GET_COUPONSETTINGS,
 } from '@/graphQL/apiRequests';
-import { useMutation } from '@apollo/client';
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import * as yup from 'yup';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';

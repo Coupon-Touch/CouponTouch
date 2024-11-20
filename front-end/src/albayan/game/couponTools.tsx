@@ -13,6 +13,7 @@ export default function CouponTools({ successCallback }: { successCallback: () =
   const [updateLastScratchTime] = useMutation(UPDATE_LAST_SCRATCH_TIME);
   const [didSubscriberWin] = useLazyQuery(DID_SUBSCRIBER_WIN, { fetchPolicy: 'no-cache' });
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = window.localStorage.getItem('token');
@@ -22,7 +23,9 @@ export default function CouponTools({ successCallback }: { successCallback: () =
     const timeout = setTimeout(() => updateLastScratchTime({
       onCompleted(data) {
         data = data.updateLastScratchTime
-        window.localStorage.setItem("token", data.jwtToken);
+        if (data) {
+          window.localStorage.setItem("token", data.jwtToken);
+        }
       },
       onError(error) {
         console.error(error)
@@ -34,17 +37,18 @@ export default function CouponTools({ successCallback }: { successCallback: () =
     const startInterval = () => {
       return setInterval(() => {
         didSubscriberWin({
-          fetchPolicy: 'no-cache',
           onCompleted(data) {
             data = data.didSubscriberWin
-            if (data.isWon) {
+            if (data && data.isWon) {
 
               window.localStorage.setItem("token", data.jwtToken);
               successCallback()
+            } else {
+              window.location.reload();
             }
           },
           onError(err) {
-            intervalDuration = Math.min(intervalDuration * 2, maxIntervalDuration);
+            intervalDuration = Math.min(intervalDuration + Math.max(Math.floor(intervalDuration / 2), 1), maxIntervalDuration);
             if (intervalDuration === maxIntervalDuration) {
               toast({
                 variant: 'destructive',
@@ -66,8 +70,13 @@ export default function CouponTools({ successCallback }: { successCallback: () =
         interval = startInterval(); // Restart the interval when the page becomes visible
       }
     }
-    const initialApitimeout = setTimeout(() => document.addEventListener("visibilitychange", Listener), initialDelay)
-
+    let initialApitimeout: NodeJS.Timeout;
+    if (!isLoading) {
+      initialApitimeout = setTimeout(() => {
+        document.addEventListener("visibilitychange", Listener);
+        Listener()
+      }, initialDelay);
+    }
 
     return () => {
       document.removeEventListener("visibilitychange", Listener);
@@ -75,9 +84,8 @@ export default function CouponTools({ successCallback }: { successCallback: () =
       clearInterval(interval);
       clearTimeout(initialApitimeout);
     }
-  }, []);
+  }, [isLoading]);
 
-  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <div className={'w-full h-[900px]'}>

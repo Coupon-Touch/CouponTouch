@@ -35,7 +35,7 @@ export default function PaymentIFrame({ link, successCallback }: { link: string,
             }
           },
           onError(err) {
-            intervalDuration = Math.min(intervalDuration + Math.floor(intervalDuration / 3), 60000);
+            intervalDuration = Math.min(intervalDuration + Math.max(Math.floor(intervalDuration / 2), 1), maxIntervalDuration);
 
             if (intervalDuration === maxIntervalDuration) {
               toast({
@@ -63,8 +63,13 @@ export default function PaymentIFrame({ link, successCallback }: { link: string,
         interval = startInterval(); // Restart the interval when the page becomes visible
       }
     }
-
-    const initialApitimeout = setTimeout(() => document.addEventListener("visibilitychange", Listener), initialDelay);
+    let initialApitimeout: NodeJS.Timeout;
+    if (!isLoading) {
+      initialApitimeout = setTimeout(() => {
+        document.addEventListener("visibilitychange", Listener);
+        Listener()
+      }, initialDelay);
+    }
 
 
     return () => {
@@ -72,7 +77,7 @@ export default function PaymentIFrame({ link, successCallback }: { link: string,
       clearInterval(interval)
       clearTimeout(initialApitimeout);
     }
-  }, []);
+  }, [isLoading]);
 
   const handleLoad = () => {
     setIsLoading(false);

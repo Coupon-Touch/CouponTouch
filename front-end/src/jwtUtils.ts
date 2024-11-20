@@ -1,5 +1,5 @@
-export const isJWTTokenValid = (token: string | null) => {
-  if (!token) return false;
+export const isJWTTokenValid = (token: string | null | undefined) => {
+  if (!token || token === null || token === undefined) return false;
 
   const payload = JSON.parse(atob(token.split('.')[1]));
   const expirationTime = payload.exp * 1000;

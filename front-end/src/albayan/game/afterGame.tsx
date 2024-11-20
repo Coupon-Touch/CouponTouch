@@ -81,8 +81,10 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
       },
       onCompleted(data) {
         data = data.updateCollectionDetails;
-        window.localStorage.setItem('token', data.jwtToken);
-        successCallback()
+        if (data) {
+          window.localStorage.setItem('token', data.jwtToken);
+          successCallback()
+        }
       },
     });
     // Handle form submission here
@@ -157,6 +159,7 @@ export default function AfterGame({ successCallback }: { successCallback: () => 
                 </DialogHeader>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
                   {couponSettings &&
+                    Array.isArray(couponSettings.getLocation) &&
                     couponSettings.getLocation.map(
                       (location: LocationInterface, index: number) => (
                         <Card

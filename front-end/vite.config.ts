@@ -11,7 +11,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:8888', // Proxy API requests to the Express server
+      '/api': 'http://localhost:8080', // Proxy API requests to the Express server
     },
   },
   resolve: {
