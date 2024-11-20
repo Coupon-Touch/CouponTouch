@@ -4,6 +4,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useLazyQuery } from '@apollo/client';
 import { DID_SUBSCRIBER_PAY } from '@/graphQL/apiRequests';
 
+const initialDelay = 10000;
+const intervalDurationStartAt = 2000;
+const maxIntervalDuration = 15000;
+
 export default function PaymentIFrame({ link, successCallback }: { link: string, successCallback: Function }) {
   const [isLoading, setIsLoading] = useState(true);
   const [didSubscriberPAY] = useLazyQuery(DID_SUBSCRIBER_PAY, { fetchPolicy: 'no-cache' });
@@ -17,8 +21,8 @@ export default function PaymentIFrame({ link, successCallback }: { link: string,
       return
     }
     let interval: NodeJS.Timeout;
-    let intervalDuration = 5000;
-    const maxIntervalDuration = 15000;
+    let intervalDuration = intervalDurationStartAt;
+
     const startInterval = () => {
       return setInterval(() => {
         didSubscriberPAY({
@@ -59,12 +63,14 @@ export default function PaymentIFrame({ link, successCallback }: { link: string,
         interval = startInterval(); // Restart the interval when the page becomes visible
       }
     }
-    Listener()
-    document.addEventListener("visibilitychange", Listener);
+
+    const initialApitimeout = setTimeout(() => document.addEventListener("visibilitychange", Listener), initialDelay);
+
 
     return () => {
       document.removeEventListener("visibilitychange", Listener);
       clearInterval(interval)
+      clearTimeout(initialApitimeout);
     }
   }, []);
 

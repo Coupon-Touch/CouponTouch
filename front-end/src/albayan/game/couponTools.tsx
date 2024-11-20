@@ -4,6 +4,10 @@ import { useLazyQuery, useMutation } from "@apollo/client";
 import { useEffect, useState } from "react";
 import Loader from "../loader";
 
+const initialDelay = 10000;
+const intervalDurationStartAt = 2000;
+const maxIntervalDuration = 15000;
+const updateLastScratchTimeout = 2000;
 
 export default function CouponTools({ successCallback }: { successCallback: () => void }) {
   const [updateLastScratchTime] = useMutation(UPDATE_LAST_SCRATCH_TIME);
@@ -23,11 +27,10 @@ export default function CouponTools({ successCallback }: { successCallback: () =
       onError(error) {
         console.error(error)
       }
-    }), 1000)
+    }), updateLastScratchTimeout)
 
     let interval: NodeJS.Timeout;
-    let intervalDuration = 5000;
-    const maxIntervalDuration = 60000;
+    let intervalDuration = intervalDurationStartAt;
     const startInterval = () => {
       return setInterval(() => {
         didSubscriberWin({
@@ -63,13 +66,14 @@ export default function CouponTools({ successCallback }: { successCallback: () =
         interval = startInterval(); // Restart the interval when the page becomes visible
       }
     }
-    Listener()
-    document.addEventListener("visibilitychange", Listener);
+    const initialApitimeout = setTimeout(() => document.addEventListener("visibilitychange", Listener), initialDelay)
+
 
     return () => {
       document.removeEventListener("visibilitychange", Listener);
       clearTimeout(timeout);
-      clearInterval(interval)
+      clearInterval(interval);
+      clearTimeout(initialApitimeout);
     }
   }, []);
 
