@@ -31,7 +31,14 @@ const __dirname = dirname(__filename);
 
 const app = express();
 app.use((req, res, next) => {
-  if (req.url.startsWith('/api')) {
+  if (
+    !req.secure &&
+    req.hostname.endsWith('coupontouch.net') &&
+    !req.url.startsWith('/api/hook')
+  ) {
+    res.status(308).send();
+  }
+  if (req.houpourl.startsWith('/api')) {
     compression()(req, res, next);
   } else {
     next();
