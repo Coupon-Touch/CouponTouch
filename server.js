@@ -36,13 +36,11 @@ app.use((req, res, next) => {
     req.hostname.endsWith('coupontouch.net') &&
     !req.url.startsWith('/api/hook')
   ) {
-    res.status(308).send();
-  }
-  if (req.houpourl.startsWith('/api')) {
+    return res.redirect(308, `https://${req.headers.host}${req.url}`);
+  } else if (req.url.startsWith('/api')) {
     compression()(req, res, next);
-  } else {
-    next();
   }
+  next();
 });
 
 app.use(express.json());
