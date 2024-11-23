@@ -36,7 +36,7 @@ app.use((req, res, next) => {
     req.hostname.endsWith('coupontouch.net') &&
     !req.url.startsWith('/api/hook')
   ) {
-    return res.redirect(308, `https://${req.headers.host}${req.url}`);
+    console.log('Need to redirect');
   } else if (req.url.startsWith('/api')) {
     compression()(req, res, next);
   }
