@@ -30,17 +30,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+const compressionMiddleware = compression();
+
 app.use((req, res, next) => {
   if (
     !req.secure &&
     req.hostname.endsWith('coupontouch.net') &&
     !req.url.startsWith('/api/hook')
   ) {
-    console.log('Need to redirect');
+    return res.redirect(308, `https://${req.headers.host}${req.url}`);
   } else if (req.url.startsWith('/api')) {
-    compression()(req, res, next);
+    compressionMiddleware(req, res, next);
+  } else {
+    next();
   }
-  next();
 });
 
 app.use(express.json());
