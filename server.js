@@ -38,7 +38,9 @@ app.use((req, res, next) => {
     req.hostname.endsWith('coupontouch.net') &&
     !req.url.startsWith('/api/hook')
   ) {
-    return res.redirect(308, `https://${req.headers.host}${req.url}`);
+    const redirectUrl = `https://${req.headers.host}${req.url}`
+    consol.log(`currentUrl: ${req.protocol}://${req.headers.host}${req.url}, redirectUrl: ${redirectUrl}`);
+    return res.redirect(308, redirectUrl);
   } else if (req.url.startsWith('/api')) {
     compressionMiddleware(req, res, next);
   } else {
