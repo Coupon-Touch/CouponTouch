@@ -39,7 +39,7 @@ app.use((req, res, next) => {
     !req.url.startsWith('/api/hook')
   ) {
     const redirectUrl = `https://${req.headers.host}${req.url}`
-    consol.log(`currentUrl: ${req.protocol}://${req.headers.host}${req.url}, redirectUrl: ${redirectUrl}`);
+    console.log(`currentUrl: ${req.protocol}://${req.headers.host}${req.url}, redirectUrl: ${redirectUrl}`);
     return res.redirect(308, redirectUrl);
   } else if (req.url.startsWith('/api')) {
     compressionMiddleware(req, res, next);
