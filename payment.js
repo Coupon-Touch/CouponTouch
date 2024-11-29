@@ -150,7 +150,6 @@ const PaymentAPI = ({ app }) => {
 
   app.use('/api/payment/hook', async (req, res) => {
     try {
-      console.log('Webhook hit the backend');
       if (req.headers.secret !== process.env.PAYMENT_WEBHOOK_SECRET) {
         return res.status(401).send('Unauthorized');
       }
@@ -164,18 +163,15 @@ const PaymentAPI = ({ app }) => {
         { new: true }
       );
 
-      console.log('Did the DB query');
       if (payment) {
-        console.log('Found it in DB');
         if (status === 'SUCCESS') {
           await Subscriber.findByIdAndUpdate(payment.subscriber, {
             isPaid: true,
           });
         }
-        console.log('Everything is fine sending the request');
+
         res.status(200).send('Success');
       } else {
-        console.log('dd not found payment in DB');
         res.status(404).send('Payment not found');
       }
     } catch (error) {
