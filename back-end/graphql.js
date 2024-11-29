@@ -260,6 +260,18 @@ export const resolvers = {
             subsriberMobile,
             subscriberCountryCode
           );
+        } else {
+          return {
+            jwtToken: null,
+            mobile: null,
+            countryCode: null,
+            isPaid: false,
+            lastScratchTime: 0,
+            address: null,
+            email: null,
+            emirateID: null,
+            name: null,
+          };
         }
       } catch (error) {
         console.error('Error Fetching Subscriber Details : ', error);

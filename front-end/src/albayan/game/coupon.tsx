@@ -52,6 +52,8 @@ export default function Coupon() {
             setData(data);
             localStorage.setItem('token', data.jwtToken);
           } else {
+            localStorage.removeItem("token")
+
             setData(null)
           }
           resolve(data);
