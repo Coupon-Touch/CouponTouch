@@ -8,16 +8,8 @@ const authLink = setContext((_, { headers }) => {
   let token;
   if (window.location.pathname.indexOf("/admin/") !== -1) {
     token = localStorage.getItem('adminToken');
-    if (!isJWTTokenValid(token)) {
-      localStorage.removeItem('adminToken');
-      token = null
-    }
   } else {
     token = localStorage.getItem('token');
-    if (!isJWTTokenValid(token)) {
-      localStorage.removeItem('token');
-      token = null
-    }
   }
 
   return {

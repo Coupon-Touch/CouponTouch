@@ -43,8 +43,6 @@ export default function CouponTools({ successCallback }: { successCallback: () =
 
               window.localStorage.setItem("token", data.jwtToken);
               successCallback()
-            } else {
-              window.location.reload();
             }
           },
           onError(err) {
