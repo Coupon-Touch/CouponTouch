@@ -791,9 +791,7 @@ export default function AdminPanel() {
                       <SelectValue placeholder="Select a country" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="us">United States</SelectItem>
-                      <SelectItem value="ca">Canada</SelectItem>
-                      <SelectItem value="uk">UAE</SelectItem>
+                      <SelectItem value="UAE">UAE</SelectItem>
                     </SelectContent>
                   </Select>
                   <ErrorMessage field="country" error={locationPanelErrors} />
