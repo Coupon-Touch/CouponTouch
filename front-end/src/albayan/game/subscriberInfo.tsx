@@ -11,6 +11,8 @@ import { useFormik } from 'formik';
 
 import * as Yup from 'yup';
 import { SubscriberDetails } from './phoneForm';
+import { useEffect, useState } from 'react';
+import { decodeJWT } from '@/jwtUtils';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -43,8 +45,13 @@ export default function SubscriberInfo({
   subscriber,
   successCallback,
 }: SubscriberInfoProps) {
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [updateSubscriber, { loading }] = useMutation(UPDATE_SUBSCRIBER);
 
+  useEffect(() => {
+    const token = decodeJWT(localStorage.getItem("token"));
+    setPhoneNumber(token.subscriberCountryCode + "-" + token.subsriberMobile)
+  })
   const { toast } = useToast();
   const formik = useFormik({
     initialValues: {
@@ -94,9 +101,18 @@ export default function SubscriberInfo({
             Oops! Looks like you're not subscribed yet.
           </div>
           <div className="text-[#772639] mt-6">Sign up now!</div>
+
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <div className='flex flex-col justify-center items-center text-sm gap-1 mb-10'>
+          <div>
+            Subscribing with phone number: <span className='text-bold'>+{phoneNumber}</span>
+          </div>
+          <div onClick={() => { localStorage.removeItem("token"); successCallback() }} className='cursor-pointer text-primary underline hover:text-secondary-foreground'>
+            Change phone number
+          </div>
+        </div>
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-4">
             <div className=" text-red-400 -mt-4"></div>

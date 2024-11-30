@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import PaymentIFrame from './iframe'
 import Loader from '../loader'
+import { AlertCircle } from 'lucide-react'
+import { decodeJWT } from '@/jwtUtils'
+import { Checkbox } from '@/components/ui/checkbox'
+
 
 
 const MasterCardIcon = () => (
@@ -94,6 +98,13 @@ export default function PaymentPage({ successCallback }: { successCallback: () =
   const [selectedPlan, setSelectedPlan] = useState("")
   const [paymentLink, setPaymentLink] = useState("");
   const [loading, setLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+
+  useEffect(() => {
+    const token = decodeJWT(localStorage.getItem('token'));
+    setPhoneNumber(token.subscriberCountryCode + "-" + token.subsriberMobile)
+  })
 
   const plans = [
     { duration: "One Year", price: "300" },
@@ -133,6 +144,25 @@ export default function PaymentPage({ successCallback }: { successCallback: () =
         <Card className="w-full max-w-md mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center text-primary">
+              {!isPhoneVerified
+                &&
+                <div className="mb-6 p-4 bg-[#f8f0f0] border border-[#702f2f] rounded-lg text-base flex justify-center">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-[#702f2f] mt-0.5" />
+                    <div>
+                      <p className="font-medium text-[#702f2f]">Please confirm your phone number</p>
+                      <p className="text-sm text-gray-600 mt-1">You are subscribing with: +{phoneNumber}</p>
+                      <button
+                        onClick={() => { localStorage.removeItem("token"); successCallback() }}
+                        className="text-[#702f2f] hover:underline text-sm mt-2"
+                      >
+                        Not correct? Change phone number
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              }
               Please choose Subscription Plan
             </CardTitle>
           </CardHeader>
@@ -155,7 +185,21 @@ export default function PaymentPage({ successCallback }: { successCallback: () =
               <VisaIcon />
               <DinersClubIcon />
             </div>
-            <Button className="w-full" disabled={!selectedPlan} onClick={handlePayment}>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="verify-phone"
+                checked={isPhoneVerified}
+                onCheckedChange={(checked) => setIsPhoneVerified(checked as boolean)}
+              />
+              <Label
+                htmlFor="verify-phone"
+                className="text-xs text-gray-700 tracking-tighter"
+              >
+                I verify that my phone number +{phoneNumber} is correct
+              </Label>
+            </div>
+
+            <Button className="w-full" disabled={!selectedPlan || !isPhoneVerified} onClick={handlePayment}>
               Proceed to Payment
 
             </Button>
