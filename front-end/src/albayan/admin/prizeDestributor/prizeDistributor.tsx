@@ -322,7 +322,6 @@ export default function DataTable() {
                             )}
                             {visibleColumns.mobile && (
                               <TableCell>
-
                                 {`+(${winData.subscriber.countryCode})${formatPhoneNumber(winData.subscriber.mobile)}`}
                               </TableCell>
                             )}
@@ -349,9 +348,6 @@ export default function DataTable() {
                             {visibleColumns.address && (
                               <TableCell>{ }</TableCell>
                             )}</>}
-                          <TableCell>
-
-                          </TableCell>
 
                       {visibleColumns.collectionDate && (
                         <TableCell>
