@@ -88,7 +88,7 @@ export interface WinnerDetail {
   collectionLocation: CollectionLocationInterface | string;
   status: Status;
   comments: string;
-  subscriber: Subscriber;
+  subscriber: Subscriber | null;
   collectionLocationSearch: string;
 }
 
@@ -159,16 +159,14 @@ export default function DataTable() {
   const filteredData = useMemo(() => {
     return currentData.filter(
       item => {
-
-        const subsriberSearchResult = Object.values(item.subscriber).some(value => {
+        const subsriberSearchResult = item.subscriber ? Object.values(item.subscriber).some(value => {
           if (typeof value === 'string') {
             return value.toLowerCase().includes(searchTerm.toLowerCase())
           } else if (typeof value === 'number') {
             return value.toString().includes(searchTerm)
           }
           return false
-        }
-        )
+        }) : true;
         const dateSearchResult = new Date(item.collectionDate).toDateString().toLowerCase().includes(searchTerm.toLowerCase())
         const locationSearchResult = item.collectionLocationSearch
           .toLowerCase()
@@ -311,29 +309,50 @@ export default function DataTable() {
                   </TableRow>
                 ) : (
                       filteredData.map((winData, idx) => (
-                    <TableRow key={winData._id}>
+                        <TableRow key={winData._id} className={!winData.subscriber ? 'bg-red-100 hover:bg-red-100' : ""}>
 
                       <TableCell className="">
                         {startIndex + idx + 1}
                       </TableCell>
-                      {visibleColumns.name && (
-                        <TableCell className="font-medium">
-                          {winData.subscriber.name}
-                        </TableCell>
-                      )}
-                      {visibleColumns.mobile && (
-                        <TableCell>
-                          +
-                          {`(${winData.subscriber.countryCode})${formatPhoneNumber(winData.subscriber.mobile)}`}
-                        </TableCell>
-                      )}
-                      {visibleColumns.email && (
-                        <TableCell>{winData.subscriber.email}</TableCell>
-                      )}
+                          {winData.subscriber ? <>
+                            {visibleColumns.name && (
+                              <TableCell className="font-medium">
+                                {winData.subscriber.name}
+                              </TableCell>
+                            )}
+                            {visibleColumns.mobile && (
+                              <TableCell>
 
-                      {visibleColumns.address && (
-                        <TableCell>{winData.subscriber.address}</TableCell>
-                      )}
+                                {`+(${winData.subscriber.countryCode})${formatPhoneNumber(winData.subscriber.mobile)}`}
+                              </TableCell>
+                            )}
+                            {visibleColumns.email && (
+                              <TableCell>{winData.subscriber.email}</TableCell>
+                            )}
+
+                            {visibleColumns.address && (
+                              <TableCell>{winData.subscriber.address}</TableCell>
+                            )}</> : <>
+                            {visibleColumns.name && (
+                              <TableCell className="font-medium">
+                              </TableCell>
+                            )}
+                            {visibleColumns.mobile && (
+                              <TableCell>
+                                Data did not match
+                              </TableCell>
+                            )}
+                            {visibleColumns.email && (
+                              <TableCell>{ }</TableCell>
+                              )}
+
+                            {visibleColumns.address && (
+                              <TableCell>{ }</TableCell>
+                            )}</>}
+                          <TableCell>
+
+                          </TableCell>
+
                       {visibleColumns.collectionDate && (
                         <TableCell>
                           {new Date(winData.collectionDate).toDateString()}
